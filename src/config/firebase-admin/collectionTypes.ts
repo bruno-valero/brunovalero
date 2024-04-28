@@ -1,5 +1,5 @@
 import { PdfParsedData, PdfParsedMetadata } from "@/src/modules/VectorStoreProcess";
-import { Cotacao } from "@/src/modules/projectExclusive/UpdateDollarPrice";
+import { Cotacao } from "../../modules/projectExclusive/UpdateDollarPrice";
 
 type PlanValue = number | 'unlimited';
 type AmountAndPrice ={
