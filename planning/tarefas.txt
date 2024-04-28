@@ -1,0 +1,23 @@
+
+Nota 1 ----------------------------------------------------------------
+
+construir funcao que cria privilagios para o usuario
+
+o primeiro privilegio sera de "usuario novo"
+(
+    10 perguntas gratuitas, 
+    1 upload de pdf gratuito,
+)
+
+o segundo privilegio sera apos comprar creditos pela primeita vez, chamado de "primeira compra de creditos"
+(
+    10 perguntas gratuitas, 
+    1 upload de pdf gratuito, 
+    1 geracao de quiz para documentos privados gratuita,
+    1 geracao de capa para documentos privados gratuita,
+)
+
+
+Nota 2 ----------------------------------------------------------------
+
+criar funcao para gerar um quiz
