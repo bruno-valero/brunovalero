@@ -1,0 +1,35 @@
+{
+    "pdf-reader":{
+        "free":{
+            "price":"free",
+            "features":{
+                "80 questions per month":"R$00,00 per question",
+                "5 docs upload per month":"R$00,00 per doc upload",
+                "25 docs per user":"",
+                "1 quiz for each public docs":""
+            }
+        },
+        "standard":{
+            "price":"R$20,00/month",
+            "features":{
+                "everythin in free plan":"",
+                "unlimited questions":"R$00,00 per question",
+                "10 docs upload per month":"R$00,00 per doc upload",
+                "50 docs per user":"",
+                "generate 1 cover for each private doc":"",
+                "1 quiz for each private docs":""
+            }
+        },
+        "enterprise":{
+            "price":"R$100,00/month",
+            "features":{
+                "everythin in standard plan":"",
+                "unlimited docs upload":"R$00,00 per doc upload",
+                "unlimited docs per user":"",
+                "ask question about more than one doc at once":"R$00,00 per question",
+                "generate more quizes for each public docs":"",
+                "generate more quizes for each private docs":""
+            }
+        }
+    }
+}

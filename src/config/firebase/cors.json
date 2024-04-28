@@ -1,0 +1,7 @@
+[
+    {
+      "origin": ["localhost", "brunovalero.com", "brunovalero.com.br"],
+      "method": ["GET"],
+      "maxAgeSeconds": 3600
+    }
+]

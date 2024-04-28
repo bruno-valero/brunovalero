@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "acolher-funeraria",
+  "private_key_id": "6f14b1defd3525f4c5a79328a7d8aebe64877cd8",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCXMk2gFVnr2CYH\nzJKbUl8nx8UeML1luLVc3yIXlUzMWBawLQlIx/k9QBRS9BKOpDuhEVA1ainmiLu2\ndynlZ52Xwp112mLu6WN3VyVg1WKuGVvyzfplubnORCrLty6ExYMJ3fqnxfjps4SM\nOdCb59GVKPOGjHFuKxSF3xT+/u3FBo/3QkUn2vwlfWDtpwu6wY3XtTWxD+IA8arG\nsobwXlLCSrbVPOaJqEJRlObcB5WQN1ir/qv4r/OsslKDmLFjVcRSRItUfOJHirw3\nys0i5p13NgasG7pEnYYjgcmBoQZ3irCf05kgZ9OOEkIQkdwWFF3iW0K/EccwOlgi\nEwQ4McndAgMBAAECggEAHi/iLTnOFgc2Ep0O0VmJG5NoYP54thBCj5wSPbSmnG7i\n+sJHJgOdGNRMKoLGGLokGKSxB7UeUAORPN0+XWnKXmQyFXdohMxOumNJGHQKK3nv\nMINdAMXr2cmk5L76V/JqVwQ9mRUu/RQFPQ0HADWw08/VDVJJjGYoBxFy6vWBifJW\nnKZTEXM/smen965X+RyS0C9yOKnm39czo9dDZZjIMI+woEhE6v/J4vsrvgFAZLSS\n2yindGR/mwfRSFsF8sU+XdydNzechWeJ+//Zw20rMV/qYS/+/QQAKJb5rzrAXJ+z\nkLe87AvfyYgQwIv68+NdKvwFa95/UZuTIAS9eA9R0QKBgQDLwbasd1v2hIF8wx1e\nLhYKLk+UlxSlpcVmJ/5x1hfLSfPQxoYouxDgIpDOx464QaM9Cp3Vrc//Vz/YJqX9\n0Wc1OqACOjxg1vCOMv5FcqFM2Kplo04vPtVjy5RSWAUsaoPV5UfUkrONlne8ghNj\nmw2TYeqPnbDbPVBbxMJDC04MzQKBgQC99p3SV2bfDc0XCGfn+IKRFTzeMfhjataB\nnLvz3WaxZAEVfibguY9g/qVY60YUzGAujgOLkaB2QMTLpDise1rzLwDf9C1s4cI+\n5IFx85qts+SykTm7lQP+eD73hx6stQSy1nV9lipAh7Dv95dkKQZAfC5jBk10uVyI\nbUNr5D6xUQKBgQCzNTBepihLPKXKvq1QzUXzNGIn9W1id9eTju963etVkDiSUlli\n74zbJWupgtji9FAHexPxAQukr+9mRC/QeuHEbkiXTPMX1VQELZN4L2bw+Mt901EL\nur7iJAbTGbmLJC/J6/vuWgz0Jfgv41P8Uj5xdzhfkjkfyuCnpfmaEBJYrQKBgQCf\nccBGLNZLomniS0vriMsOu6S7W3YA/EvPvp6DsfHgMvA1+gzn0thlsVdXqyLHkkOo\nz8pp+3GT0AleZBitrVxJgcpaL7lxCozf/SwpWS8bXUM4Hm025XzUulkfqmo0zDuF\nYDx9jO0p/LqmsEqB52038wN8Wm3o6yyf1hYhGRMGAQKBgAz0fUkJo7T8AqIFdoDQ\n0RNMYxRqHkx4dNhdcW60WB80+OT0aTSQfxzCMv/nf9Z/rqvFhLwG0MlM310laX66\nY78hQenxH6Pf1MiRq190GxVdjwfGVwYkMw0YAeF1vSLm2litfcryAuOk0WsYGtzN\n0+xI9YvGfgB73+vEcAvANni5\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-j4u4a@acolher-funeraria.iam.gserviceaccount.com",
+  "client_id": "111510110286915789958",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-j4u4a%40acolher-funeraria.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
