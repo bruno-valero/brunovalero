@@ -4,6 +4,7 @@ import VectorStoreProcess from "../../VectorStoreProcess";
 import PdfGenres from "../PdfGenres";
 
 import { ChatOpenAI, ChatOpenAICallOptions, DallEAPIWrapper } from "@langchain/openai";
+import UpdateDollarPrice from "../UpdateDollarPrice";
 
 
 
@@ -15,8 +16,12 @@ export default class UploadPdfProcess {
     protected dalle3_slim:DallEAPIWrapper
     protected dalle3_wide:DallEAPIWrapper
 
-    constructor({ file }:{ file:File }) {
-        this.fileForge = new FileForge({ file });        
+    constructor({ pdf }:{ pdf:File | Blob }) {
+        if (pdf instanceof File) {
+            this.fileForge = new FileForge({ file:pdf });        
+        } else {
+            this.fileForge = new FileForge({ blob:pdf }); 
+        };
         this.vectorStore = new VectorStoreProcess();  
 
         const model = new ChatOpenAI({
@@ -43,10 +48,22 @@ export default class UploadPdfProcess {
           
     };
 
-    async run() {
+    
+    async completeUpload() {
         const { docId, blob } = await this.uploadToStorage();
+        const { data, metadata } = await this.uploadToVectorStore({ docId, blob });
+        const { genres, price:genrePrice } = await this.generateGenres(docId);
+        const { textResponse:description, price:descriptionPrice } = await this.generateDescription(docId);
+        const { imageURL, inputContent, descriptionSummary, price:imagePrice } = await this.generateImageFromDescription(description, 'slim');
+        const price = genrePrice + descriptionPrice + imagePrice;
+        
     };
 
+    async partialUpload() {
+        const { docId, blob } = await this.uploadToStorage();
+        const { data, metadata } = await this.uploadToVectorStore({ docId, blob });
+    };
+    
     protected async uploadToStorage() {
         const docId = String(new Date().getTime());
         const blob = await this.fileForge.blob();
@@ -60,12 +77,12 @@ export default class UploadPdfProcess {
     };
 
     protected async generateGenres(docId:string) {
-        const resp = await this.vectorStore.search('se o conteúdo for um livro, qual gênero seria adequado para classificá-lo?', docId);
+        const { response:resp, price } = await this.vectorStore.search('se o conteúdo for um livro, qual gênero seria adequado para classificá-lo?', docId);
         const textResponse = resp.text;        
 
         const model = this.openaiChat;
         
-        const allGenres = (new PdfGenres()).genres.map(item => item.genre).join(', ')
+        const allGenres = (new PdfGenres()).genres.map(item => item.genre).join(', ');
         
         
         const content = await this.chat(`
@@ -77,18 +94,18 @@ export default class UploadPdfProcess {
         ${textResponse}
         `);
         const genres = content.split(',').map(item => item.trim());
-        return genres;
-    };    
-
-    protected async generateDescription(docId:string) {
-        const resp = await this.vectorStore.search('qual é o objetivo do conteúdo?', docId);
-        const textResponse = resp.text as string;
-        return textResponse;
+        return { genres, price };
     };
 
-    async generateImage(text:string) {
+    protected async generateDescription(docId:string) {
+        const { response:resp, price } = await this.vectorStore.search('qual é o objetivo do conteúdo?', docId);
+        const textResponse = resp.text as string;
+        return { textResponse, price };
+    };
+
+    protected async summaryDescription(text:string) {
         console.log('generate image: resumindo texto...');
-        const phase = await this.chat(`
+        const phrase = await this.chat(`
         resuma em 1 frase.
 
         ${text}
@@ -100,11 +117,24 @@ export default class UploadPdfProcess {
 
 
         Uma capa bonita para o seguinte conteudo:
-        ${phase}
+        ${phrase}
         `);
 
+        return {content, summary:phrase};
+    };
+
+    protected async generateImageFromDescription(text:string, size:'slim' | 'wide') {
+
+        const {content, summary} = await this.summaryDescription(text);
+
         console.log('generate image: generando a imagem...');
-        const imageURL = await this.dalle3_slim.invoke(content);
+        let dale3:DallEAPIWrapper;
+        if (size === 'slim') {
+            dale3 = this.dalle3_slim;
+        } else {
+            dale3 = this.dalle3_wide;
+        }
+        const imageURL = await dale3.invoke(content);
 
         console.log(imageURL);
         console.log(`imagem gerada:
@@ -112,9 +142,12 @@ export default class UploadPdfProcess {
         ${imageURL}
 
         `);
-        return imageURL;
 
-    }
+        const dollarPrice = (await (new UpdateDollarPrice({})).priceOnBackEnd()).dollarPrice.brl.price;
+        const price = 0.08 * 2 * dollarPrice;
+        return {imageURL, inputContent:content, descriptionSummary:summary, price};
+
+    };
 
     protected async chat(text:string) {
         const model = this.openaiChat;
