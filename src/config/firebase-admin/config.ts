@@ -3,7 +3,7 @@ import { getApps, initializeApp, ServiceAccount } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
-import serviceAccount from './acolher-funeraria-6f14b1defd35.json';
+import serviceAccount from './brunovalero-49561-72a664cdf806.json';
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
 const credentials = credential

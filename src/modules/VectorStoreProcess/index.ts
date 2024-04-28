@@ -11,6 +11,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { RetrievalQAChain } from 'langchain/chains';
 import FileForge from "../FileForge";
 import { PdfGenresOptions } from "../projectExclusive/PdfGenres";
+import UpdateDollarPrice from "../projectExclusive/UpdateDollarPrice";
 
 
 
@@ -30,7 +31,7 @@ export type PdfParsedData = {
     pageContent: string;
     metadata: Record<string, any>;
 }[]
-type PdfParsedMetadata = {
+export type PdfParsedMetadata = {
     source:string,
     type:string,
     genres:string[],
@@ -184,7 +185,7 @@ export default class VectorStoreProcess {
      * @param docId namespace
      * @returns resposta do GPT
      */
-    async search(question:string, docId:string) {
+    async search(question:string, docId:string, chunksAmount?:number) {
         
         console.log(`iniciando...`);       
         const pinecone = new Pinecone();
@@ -198,13 +199,28 @@ export default class VectorStoreProcess {
 
         console.log(`query: ${question}`);       
 
-        const response = await this.askGpt(question, vectorStore)
+        const response = await this.askGpt(question, vectorStore, chunksAmount);
         return response;
 
     };
 
 
-    protected async askGpt(question:string, vectorStore:PineconeStore) {
+    protected async calculateGptPrice(tokens:number) {
+
+        const updateDollarPrice = new UpdateDollarPrice({});
+        const dollarPrice = await updateDollarPrice.priceOnBackEnd();
+
+        const inputPrice = tokens * (0.5 / 1_000_000);
+        const outputPrice = tokens * (1.5 / 1_000_000);
+        const sum = inputPrice + outputPrice;
+        const totalDollar = sum * 2;
+
+        const totalReal = totalDollar * dollarPrice.dollarPrice.brl.price;
+        return totalReal;
+    };
+
+
+    protected async askGpt(question:string, vectorStore:PineconeStore, chunksAmount?:number) {
 
         const openAiChat = new ChatOpenAI({
             openAIApiKey:envs.OPENAI_API_KEY,
@@ -212,32 +228,34 @@ export default class VectorStoreProcess {
             temperature:.3,            
         });
 
+        const template = `
+        Você responde perguntas e passa informações.
+        O usuário enviou um arquivo em pdf.
+        Use estes trechos do conteúdo para sanar a necessidade do usuário.
+        Se os trechos não respondem o pedido  do usuário, responda que você não sabe, não tente inventar uma resposta.
+
+        Se possível adicione mais contexto para a resposta.
+
+        trechos:
+        {context}
+
+        pergunta:
+        {question}
+        `.trim();
         const prompt = new PromptTemplate({
-            template:`
-            Você responde perguntas e passa informações.
-            O usuário enviou um arquivo em pdf.
-            Use estes trechos do conteúdo para sanar a necessidade do usuário.
-            Se os trechos não respondem o pedido  do usuário, responda que você não sabe, não tente inventar uma resposta.
-
-            Se possível adicione mais contexto para a resposta.
-
-            trechos:
-            {context}
-
-            pergunta:
-            {question}
-            `.trim(),
-            inputVariables:['context', 'question']
+            template,
+            inputVariables:['context', 'question'],            
         });
 
-        const chain = RetrievalQAChain.fromLLM(openAiChat, vectorStore.asRetriever(), { 
+        const chain = RetrievalQAChain.fromLLM(openAiChat, vectorStore.asRetriever(chunksAmount ?? 5), { 
             prompt, 
             returnSourceDocuments:true,
-            verbose:true,
+            verbose:true,            
          });   
-         
+        const tokens = Math.ceil(template.split('').length / 3.5) + (600 * (chunksAmount ?? 5))
+         const price = await this.calculateGptPrice(tokens)
          const response = await chain._call({query:question});
-         return response;
+         return { response, price };
 
     };
 
