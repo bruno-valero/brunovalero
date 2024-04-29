@@ -43,9 +43,17 @@ export type CollectionTypes = {
                 }
             }
         },
+        plans:{
+            readPdf:{
+                free:Plan,
+                standard:Plan,
+                enterprise:Plan,
+            },
+        },
         
     },
     users:Record<string, {
+        // new collection
         control:{
             PrivilegesFreeServices:{
                 privilegeTitle:string,
@@ -68,18 +76,19 @@ export type CollectionTypes = {
         readPdf:{
             // data on doc
             plans:{
-                free:Plan,
-                standard:Plan,
-                enterprise:Plan,
+                current:'free' | 'standard' | 'enterprise',
+
             },
             // new collection
             data:Record<string, {
                 id:string,
                 public:boolean,
+                price:number,
                 description:string,
                 dateOfCreation:string,
                 metadata:PdfParsedMetadata,
-                imageCover:{url:string, active:boolean}[],
+                imageCover:{url:string, active:boolean, storagePath:string}[],
+                // new collection
                 questions:Record<string, {
                     id:string,
                     question:string,
@@ -88,12 +97,18 @@ export type CollectionTypes = {
                         text:string,
                     },
                 }>,
+                // new collection
                 quiz:Record<string, {
                     id:string,
                     title:string,
                     description:string,
-                    imageBackground:string,
-                    chunksRelated:PdfParsedData[],
+                    public:boolean,
+                    price:number,
+                    imageBackground:{
+                        wide:{url:string, path:string},
+                        slim:{url:string, path:string},
+                    },
+                    chunksRelated:{pageContent:string, metadata:PdfParsedData[0]['info']}[],
                     questions:Record<string, {
                         id:string,
                         question:string,
@@ -106,8 +121,22 @@ export type CollectionTypes = {
                             e:string,
                         },
                     }>,
+                    tries?:Record<string, {
+                        id:string,
+                        questions:Record<string, {
+                            id:string,
+                            timeAnswering:number,
+                            rightOption:'a' | 'b' | 'c' | 'd' | 'e',
+                            answer:'a' | 'b' | 'c' | 'd' | 'e',
+                        }>,
+                        score:number,
+                        performanceObservation:string,
+                        tip:string,
+                    }>,
                 }>,                
             }>
         }
     }
 }
+
+export type QuizPdf = CollectionTypes['services']['readPdf']['data']['']['quiz'][0];
