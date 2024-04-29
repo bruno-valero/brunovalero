@@ -43,6 +43,11 @@ export type PdfParsedMetadata = {
     docId:string,   
 }
 
+export type VectorStoreProcessSearchResponse = {
+    text:string,
+    sourceDocuments:{pageContent:string, metadata:PdfParsedData[0]['info']}[],
+};
+
 
 export default class VectorStoreProcess {
 
@@ -254,7 +259,7 @@ export default class VectorStoreProcess {
          });   
         const tokens = Math.ceil(template.split('').length / 3.5) + (600 * (chunksAmount ?? 5))
          const price = await this.calculateGptPrice(tokens)
-         const response = await chain._call({query:question});
+         const response = (await chain._call({query:question})) as VectorStoreProcessSearchResponse;
          return { response, price };
 
     };

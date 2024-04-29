@@ -3,8 +3,18 @@ import FileForge from "../../FileForge";
 import VectorStoreProcess from "../../VectorStoreProcess";
 import PdfGenres from "../PdfGenres";
 
-import { ChatOpenAI, ChatOpenAICallOptions, DallEAPIWrapper } from "@langchain/openai";
-import UpdateDollarPrice from "../UpdateDollarPrice";
+import { CollectionTypes } from "@/src/config/firebase-admin/collectionTypes";
+import { admin_firestore } from "@/src/config/firebase-admin/config";
+
+import firebaseInit from "@/src/config/firebase/init";
+import { FirebaseApp, getApps, initializeApp } from "firebase/app";
+import { Auth, getAuth } from 'firebase/auth';
+import { Database, getDatabase } from 'firebase/database';
+import { Firestore, getFirestore } from 'firebase/firestore';
+import { FirebaseStorage, getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
+import AiFeatures from "./AiFeatures";
+import Description from "./Description";
+import Quiz from "./Quiz";
 
 
 
@@ -12,9 +22,25 @@ export default class UploadPdfProcess {
 
     protected fileForge:FileForge;
     protected vectorStore:VectorStoreProcess;
-    protected openaiChat:ChatOpenAI<ChatOpenAICallOptions>
-    protected dalle3_slim:DallEAPIWrapper
-    protected dalle3_wide:DallEAPIWrapper
+    // protected openaiChat:ChatOpenAI<ChatOpenAICallOptions>
+    // protected dalle3_slim:DallEAPIWrapper
+    // protected dalle3_wide:DallEAPIWrapper
+    protected firebase:{
+        app: null;
+        auth: null;
+        database: null;
+        db: null;
+        storage: null;
+    } | {
+        app: FirebaseApp;
+        auth: Auth;
+        database: Database;
+        db: Firestore;
+        storage: FirebaseStorage;
+    };
+    protected aiFeatures:AiFeatures;
+    protected description:Description;
+    quiz:Quiz;
 
     constructor({ pdf }:{ pdf:File | Blob }) {
         if (pdf instanceof File) {
@@ -23,53 +49,80 @@ export default class UploadPdfProcess {
             this.fileForge = new FileForge({ blob:pdf }); 
         };
         this.vectorStore = new VectorStoreProcess();  
-
-        const model = new ChatOpenAI({
-            openAIApiKey:envs.OPENAI_API_KEY,
-            model:'gpt-3.5-turbo',
-            temperature:.3, 
-        });  
-        this.openaiChat = model;
-
-        const dalle3_slim = new DallEAPIWrapper({
-            n: 1, // Default
-            model: "dall-e-3", // Default
-            apiKey: envs.OPENAI_API_KEY,// Default   
-            size:'1024x1792',
-        });
-        const dalle3_wide = new DallEAPIWrapper({
-            n: 1, // Default
-            model: "dall-e-3", // Default
-            apiKey: envs.OPENAI_API_KEY,// Default   
-            size:'1792x1024',
-        });
-        this.dalle3_slim = dalle3_slim;
-        this.dalle3_wide = dalle3_wide;
+        this.aiFeatures = new AiFeatures();        
           
+        this.firebase = firebaseInit({ envs, initializeApp, getAuth, getDatabase, getFirestore, getStorage, getApps })
+        this.description = new Description();
+        this.quiz = new Quiz();
     };
 
     
-    async completeUpload() {
-        const { docId, blob } = await this.uploadToStorage();
+    async completeUpload({ pdfUrl, docId }:{ pdfUrl:string, docId:string }) {
+        const blob = await (await fetch(pdfUrl)).blob();
         const { data, metadata } = await this.uploadToVectorStore({ docId, blob });
         const { genres, price:genrePrice } = await this.generateGenres(docId);
-        const { textResponse:description, price:descriptionPrice } = await this.generateDescription(docId);
+        const { textResponse:description, price:descriptionPrice } = await this.description.generateDescription(docId);
         const { imageURL, inputContent, descriptionSummary, price:imagePrice } = await this.generateImageFromDescription(description, 'slim');
-        const price = genrePrice + descriptionPrice + imagePrice;
+
+        const quiz = await this.quiz.generateQuiz({docId, isPublic:true, quizFocus:`Qual o objetivo desse conteúdo`, userId:'public'});        
+        const price = genrePrice + descriptionPrice + imagePrice + quiz.price;
         
+        const userId = 'public';
+        const fileName = `${docId}`;
+        const { blob:imageBlob, path, url } = await this.uploadImageToStorage({ userId, fileName, imageURL, uploadContent:'cover' });
+        
+        metadata.genres = genres;
+
+        const newDoc:Partial<CollectionTypes['services']['readPdf']['data'][0]> = {
+            id:docId,
+            description,
+            public:true,
+            price,
+            imageCover:[{url, active:true, storagePath:path}],
+            metadata,
+            dateOfCreation:String(new Date().getTime()),
+        };
+        await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).set(newDoc);
+        await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).collection('quiz').doc(quiz.id).set(quiz);
     };
 
-    async partialUpload() {
-        const { docId, blob } = await this.uploadToStorage();
+    async partialUpload({ pdfUrl, docId }:{ pdfUrl:string, docId:string }) {
+        const blob = await (await fetch(pdfUrl)).blob();
         const { data, metadata } = await this.uploadToVectorStore({ docId, blob });
+        const { genres, price:genrePrice } = await this.generateGenres(docId);
+        const { textResponse:description, price:descriptionPrice } = await this.description.generateDescription(docId);
+
+        const price = genrePrice + descriptionPrice;
+
+        const newDoc:CollectionTypes['services']['readPdf']['data'][0] = {
+            id:docId,
+            description,
+            public:true,
+            price,
+            imageCover:[],
+            metadata,
+            questions:{},
+            quiz:{},
+            dateOfCreation:String(new Date().getTime()),
+        };
+        await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).set(newDoc);
     };
-    
-    protected async uploadToStorage() {
-        const docId = String(new Date().getTime());
-        const blob = await this.fileForge.blob();
-        // ....
-        return { docId, blob };
-    };
+
+    protected async uploadImageToStorage({ userId, fileName, imageURL, uploadContent }:{ userId:string, fileName:string, imageURL:string, uploadContent:'cover' }) {
+        const { storage } = this.firebase;
+
+        const pathTypes = {
+            cover:`services/readPdf/covers/${userId}/${fileName}`,            
+        };
+        const path = pathTypes[uploadContent];
+
+        const blob = await (await fetch(imageURL)).blob();
+
+        const file = ref(storage!, path);
+        await uploadBytes(file, blob);
+        const url = await getDownloadURL(file);
+        return { blob, url, path:pathTypes[uploadContent] };
+    };    
 
     protected async uploadToVectorStore({ docId, blob }:{ docId:string, blob:Blob }) {
         const { data, metadata } = await this.vectorStore.PDFloader({ blob, docId });
@@ -78,14 +131,12 @@ export default class UploadPdfProcess {
 
     protected async generateGenres(docId:string) {
         const { response:resp, price } = await this.vectorStore.search('se o conteúdo for um livro, qual gênero seria adequado para classificá-lo?', docId);
-        const textResponse = resp.text;        
-
-        const model = this.openaiChat;
+        const textResponse = resp.text; 
         
         const allGenres = (new PdfGenres()).genres.map(item => item.genre).join(', ');
         
         
-        const content = await this.chat(`
+        const { content, price:priceGenre } = await this.aiFeatures.gpt3(`
         esta é a lista de gêneros.
         ${allGenres}
         leia o trecho a seguir e responda separado por vírgulas quais gêneros da lista são os gêneros do conteúdo. 
@@ -94,70 +145,18 @@ export default class UploadPdfProcess {
         ${textResponse}
         `);
         const genres = content.split(',').map(item => item.trim());
-        return { genres, price };
-    };
-
-    protected async generateDescription(docId:string) {
-        const { response:resp, price } = await this.vectorStore.search('qual é o objetivo do conteúdo?', docId);
-        const textResponse = resp.text as string;
-        return { textResponse, price };
-    };
-
-    protected async summaryDescription(text:string) {
-        console.log('generate image: resumindo texto...');
-        const phrase = await this.chat(`
-        resuma em 1 frase.
-
-        ${text}
-        `);
-
-        console.log('generate image: traduzindo o resumo para inglês...');
-        const content = await this.chat(`
-        traduza para o inglês.
-
-
-        Uma capa bonita para o seguinte conteudo:
-        ${phrase}
-        `);
-
-        return {content, summary:phrase};
-    };
+        return { genres, price:priceGenre + price };
+    };          
 
     protected async generateImageFromDescription(text:string, size:'slim' | 'wide') {
 
-        const {content, summary} = await this.summaryDescription(text);
+        const {content, summary} = await this.description.summaryDescription(text);
 
-        console.log('generate image: generando a imagem...');
-        let dale3:DallEAPIWrapper;
-        if (size === 'slim') {
-            dale3 = this.dalle3_slim;
-        } else {
-            dale3 = this.dalle3_wide;
-        }
-        const imageURL = await dale3.invoke(content);
-
-        console.log(imageURL);
-        console.log(`imagem gerada:
-
-        ${imageURL}
-
-        `);
-
-        const dollarPrice = (await (new UpdateDollarPrice({})).priceOnBackEnd()).dollarPrice.brl.price;
-        const price = 0.08 * 2 * dollarPrice;
+        const { imageURL, inputContent, price } = await this.aiFeatures.generateImage(content.content, size);
+        
         return {imageURL, inputContent:content, descriptionSummary:summary, price};
 
-    };
-
-    protected async chat(text:string) {
-        const model = this.openaiChat;
-                
-        const chatResp = await model.invoke(text);
-
-        const content = chatResp.content;
-        if (typeof content !== 'string') throw new Error("Houve um problema com a resosta.");
-        return content;
-    };    
+    };   
 
 
 };
