@@ -131,16 +131,28 @@ export default class FileForge {
         };
     };
 
-    protected blobToDataURL(blob:Blob) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-                const base64 = reader.result;
-                resolve(base64);
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-        });
+    protected async blobToDataURL(blob:Blob) {
+        if (typeof window === 'undefined') {
+            const arrayBuffer = await blob.arrayBuffer();            
+            const buffer = Buffer.from(arrayBuffer)
+            const base64String = buffer.toString('base64');
+            return base64String;
+        } else {
+            const arrayBuffer = await blob.arrayBuffer();
+            const uint8Array = new Uint8Array(arrayBuffer);
+            const byteArray = Array.from(uint8Array);
+            const base64String = btoa(String.fromCharCode.apply(null, byteArray));
+            return base64String;
+            // return new Promise((resolve, reject) => {
+            //     const reader = new FileReader();
+            //     reader.onload = () => {
+            //         const base64 = reader.result;
+            //         resolve(base64);
+            //     };
+            //     reader.onerror = reject;
+            //     reader.readAsDataURL(blob);
+            // });
+        }
     };
 
     protected base64toBlob(dataURL:string) {

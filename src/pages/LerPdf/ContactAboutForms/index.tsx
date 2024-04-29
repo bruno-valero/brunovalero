@@ -7,7 +7,6 @@ export default function ContactAboutLerPdf() {
     const whatsappMessage = `Olá Bruno, tudo bem?
                 
     Me interessei pelo seu serviço de Leitura de PDFs. Gostaria de saber mais a respeito.`
-
     
 
 

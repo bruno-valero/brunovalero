@@ -5,6 +5,8 @@ import VectorStoreProcess from "@/src/modules/VectorStoreProcess";
 import ContactAboutLerPdf from "./ContactAboutForms";
 
 
+
+
 interface CardFormProps {
     imageSrc:string, 
     text:string
@@ -24,7 +26,8 @@ function CardForm({ imageSrc, text }:CardFormProps) {
 
 
 export default function LerPdf() {
-
+    
+    
     const vectorStore = new VectorStoreProcess();
     // const test = new UploadPdfProcess({ pdf:new File([new Blob()], 'oi') })
     // test.generateImage('O objetivo do conteúdo é abordar a importância do investimento em educação real em oposição à instrução formal, discutir as mudanças e tendências no cenário econômico e social, como a substituição de ações por equity tokens, moedas fiduciárias por cryptocurrency, e sistemas democráticos por democracias societárias e sistemas de consenso. Além disso, o texto também aborda a crise moral, financeira e demográfica nas sociedades ocidentais, a insustentabilidade dos Estados Sociais e a iminência de seu colapso, e a pirâmide de Maslow como uma forma de compreender as necessidades humanas hierarquicamente.')

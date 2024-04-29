@@ -21,3 +21,9 @@ o segundo privilegio sera apos comprar creditos pela primeita vez, chamado de "p
 Nota 2 ----------------------------------------------------------------
 
 criar funcao para gerar um quiz
+
+Nota 3 ----------------------------------------------------------------
+
+quando o osuario consluir o quiz:
+apresentar os resultados
+fazer um programa que leia os resultados dele, compare os acertos e erros com os trechos retirados para formar o quiz, e entao de a ele um feedback personalizado
