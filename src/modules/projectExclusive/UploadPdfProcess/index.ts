@@ -3,9 +3,10 @@ import FileForge from "../../FileForge";
 import VectorStoreProcess from "../../VectorStoreProcess";
 import PdfGenres from "../PdfGenres";
 
-import { CollectionTypes } from "@/src/config/firebase-admin/collectionTypes";
+import { CollectionTypes } from "@/src/config/firebase-admin/collectionTypes/collectionTypes";
 import { admin_firestore } from "@/src/config/firebase-admin/config";
 
+import { Pdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
 import firebaseInit from "@/src/config/firebase/init";
 import { FirebaseApp, getApps, initializeApp } from "firebase/app";
 import { Auth, getAuth } from 'firebase/auth';
@@ -13,6 +14,7 @@ import { Database, getDatabase } from 'firebase/database';
 import { Firestore, getFirestore } from 'firebase/firestore';
 import { FirebaseStorage, getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import AiFeatures from "./AiFeatures";
+import CheckPrivileges from "./CheckPrivileges";
 import Description from "./Description";
 import Quiz from "./Quiz";
 
@@ -41,6 +43,7 @@ export default class UploadPdfProcess {
     protected aiFeatures:AiFeatures;
     protected description:Description;
     quiz:Quiz;
+    checkPrivileges:CheckPrivileges;
 
     constructor({ pdf }:{ pdf:File | Blob }) {
         if (pdf instanceof File) {
@@ -54,20 +57,21 @@ export default class UploadPdfProcess {
         this.firebase = firebaseInit({ envs, initializeApp, getAuth, getDatabase, getFirestore, getStorage, getApps })
         this.description = new Description();
         this.quiz = new Quiz();
+        this.checkPrivileges = new CheckPrivileges();
     };
 
     
-    async completeUpload({ pdfUrl, docId }:{ pdfUrl:string, docId:string }) {
+    async completeUpload({ pdfUrl, docId, userId }:{ pdfUrl:string, docId:string, userId?:string }) {
         const blob = await (await fetch(pdfUrl)).blob();
         const { data, metadata } = await this.uploadToVectorStore({ docId, blob });
         const { genres, price:genrePrice } = await this.generateGenres(docId);
         const { textResponse:description, price:descriptionPrice } = await this.description.generateDescription(docId);
         const { imageURL, inputContent, descriptionSummary, price:imagePrice } = await this.generateImageFromDescription(description, 'slim');
 
-        const quiz = await this.quiz.generateQuiz({docId, isPublic:true, quizFocus:`Qual o objetivo desse conteúdo`, userId:'public'});        
+        userId = userId ?? 'public';
+        const quiz = await this.quiz.generateQuiz({docId, isPublic:true, quizFocus:`Qual o objetivo desse conteúdo`, userId});        
         const price = genrePrice + descriptionPrice + imagePrice + quiz.price;
         
-        const userId = 'public';
         const fileName = `${docId}`;
         const { blob:imageBlob, path, url } = await this.uploadImageToStorage({ userId, fileName, imageURL, uploadContent:'cover' });
         
@@ -75,6 +79,7 @@ export default class UploadPdfProcess {
 
         const newDoc:Partial<CollectionTypes['services']['readPdf']['data'][0]> = {
             id:docId,
+            userId,
             description,
             public:true,
             price,
@@ -83,10 +88,10 @@ export default class UploadPdfProcess {
             dateOfCreation:String(new Date().getTime()),
         };
         await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).set(newDoc);
-        await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).collection('quiz').doc(quiz.id).set(quiz);
+        await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).collection('quiz').doc(quiz.id).set(quiz);        
     };
 
-    async partialUpload({ pdfUrl, docId }:{ pdfUrl:string, docId:string }) {
+    async partialUpload({ pdfUrl, docId, userId }:{ pdfUrl:string, docId:string, userId:string }) {
         const blob = await (await fetch(pdfUrl)).blob();
         const { data, metadata } = await this.uploadToVectorStore({ docId, blob });
         const { genres, price:genrePrice } = await this.generateGenres(docId);
@@ -94,8 +99,9 @@ export default class UploadPdfProcess {
 
         const price = genrePrice + descriptionPrice;
 
-        const newDoc:CollectionTypes['services']['readPdf']['data'][0] = {
+        const newDoc:Pdf = {
             id:docId,
+            userId,
             description,
             public:true,
             price,
@@ -106,7 +112,11 @@ export default class UploadPdfProcess {
             dateOfCreation:String(new Date().getTime()),
         };
         await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).set(newDoc);
+        
+        const { isFree } = await this.checkPrivileges.check({ currentAction:'pdfUpload', userId });
     };
+
+    
 
     protected async uploadImageToStorage({ userId, fileName, imageURL, uploadContent }:{ userId:string, fileName:string, imageURL:string, uploadContent:'cover' }) {
         const { storage } = this.firebase;

@@ -1,4 +1,4 @@
-import { CollectionTypes } from "@/src/config/firebase-admin/collectionTypes";
+import { CollectionTypes } from "@/src/config/firebase-admin/collectionTypes/collectionTypes";
 import { admin_firestore } from "@/src/config/firebase-admin/config";
 import fromCollection from "@/src/config/firebase/firestore";
 import { Firestore } from "firebase/firestore";
