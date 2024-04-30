@@ -1,4 +1,4 @@
-import envs from "@/envs";
+import envs, { isProduction } from "@/envs";
 import FileForge from "../../FileForge";
 import VectorStoreProcess from "../../VectorStoreProcess";
 import PdfGenres from "../PdfGenres";
@@ -13,6 +13,7 @@ import { Auth, getAuth } from 'firebase/auth';
 import { Database, getDatabase } from 'firebase/database';
 import { Firestore, getFirestore } from 'firebase/firestore';
 import { FirebaseStorage, getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
+import StripeBackend from "../../stripe/backend/StripeBackend";
 import AiFeatures from "./AiFeatures";
 import CheckPrivileges from "./CheckPrivileges";
 import Description from "./Description";
@@ -44,6 +45,7 @@ export default class UploadPdfProcess {
     protected description:Description;
     quiz:Quiz;
     checkPrivileges:CheckPrivileges;
+    stripeBackend:StripeBackend;
 
     constructor({ pdf }:{ pdf:File | Blob }) {
         if (pdf instanceof File) {
@@ -58,6 +60,7 @@ export default class UploadPdfProcess {
         this.description = new Description();
         this.quiz = new Quiz();
         this.checkPrivileges = new CheckPrivileges();
+        this.stripeBackend = new StripeBackend(isProduction ? 'production' : 'test');
     };
 
     
@@ -111,9 +114,24 @@ export default class UploadPdfProcess {
             quiz:{},
             dateOfCreation:String(new Date().getTime()),
         };
-        await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).set(newDoc);
         
         const { isFree } = await this.checkPrivileges.check({ currentAction:'pdfUpload', userId });
+        
+        if (!isFree) {
+            const customer = '';
+            const metadata = {};
+            const amount = price * 100;
+            const currency = 'brl';
+            
+            const pi = await this.stripeBackend.createPaymentIntent({ customer, metadata, amount, currency, moreParams:{confirm:true} });
+            const piResponse = await this.stripeBackend.stripe.paymentIntents.retrieve(pi.id);
+            const paymentStatus = piResponse.status;
+            if (paymentStatus === 'succeeded') {
+                await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).set(newDoc);
+            }
+
+        };
+
     };
 
     
