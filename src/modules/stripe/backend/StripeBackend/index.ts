@@ -22,26 +22,28 @@ export default class StripeBackend {
         return { stripe };
     };
 
-    async createSetupIntent({customer, metadata}:{customer:string, metadata:Record<string, string>}) {
+    async createSetupIntent({customer, metadata, moreParams}:{customer:string, metadata:Record<string, string>, moreParams?:Partial<Stripe.SetupIntentCreateParams>}) {
         if (!customer) throw new Error('Id do customer não enviado');
         if (!metadata) throw new Error('metadata não enviado');
         const si = await this.stripe.setupIntents.create({
+            ...moreParams,
             customer,
             metadata,
         });
         return si;
     };
 
-    async createPaymentIntent({customer, metadata, amount, currency}:{customer:string, metadata:Record<string, string>, amount:number, currency:string}) {
+    async createPaymentIntent({customer, metadata, amount, currency, moreParams}:{customer:string, metadata:Record<string, string>, amount:number, currency:string, moreParams?:Partial<Stripe.PaymentIntentCreateParams>}) {
         if (!amount) throw new Error('amount não enviado');
         if (!currency) throw new Error('currency não enviado');
         if (!customer) throw new Error('Id do customer não enviado');
         if (!metadata) throw new Error('metadata não enviado');
         const pi = await this.stripe.paymentIntents.create({
+            ...moreParams,
             amount,
             currency,
             customer,
-            metadata,
+            metadata,            
         });
         return pi;
     };
@@ -55,7 +57,7 @@ export default class StripeBackend {
      * @param quantity - [number?] a quantidade de itens que será comprada (o valor padrã é 1)
      *  
      */
-    async createInstallments({installments, productId, customer, quantity}:{installments:number, productId:string, customer:string, quantity?:number}) {
+    async createInstallments({installments, productId, customer, quantity, moreParams}:{installments:number, productId:string, customer:string, quantity?:number, moreParams?:Partial<Stripe.SubscriptionCreateParams>}) {
         // pega dados do produto
         const product = await this.stripe.products.retrieve(productId);
         if (!product.id) throw new Error('Produto não encontrado');
@@ -79,6 +81,7 @@ export default class StripeBackend {
             return Math.floor(date.setMonth(date.getMonth() + installments) / 1000);
         }
         const subscription =  await this.stripe.subscriptions.create({
+            ...moreParams,
             customer,
             items:[{price:price.id, quantity:quantity ?? 1}],
             cancel_at:calcCancelAt(installments),       
@@ -88,11 +91,12 @@ export default class StripeBackend {
     };
 
 
-    async createProduct({ name, metadata, unit_amount }:{ name:string, metadata:Record<string, string>, unit_amount:number }) {
+    async createProduct({ name, metadata, unit_amount, moreParams }:{ name:string, metadata:Record<string, string>, unit_amount:number, moreParams?:Partial<Stripe.ProductCreateParams> }) {
         if (!name) throw new Error('Nome do produto não enviado');
         if (!metadata) throw new Error('metadata não enviado');
         if (!unit_amount) throw new Error('unit_amount não enviado');
         const product = await this.stripe.products.create({
+            ...moreParams,
             name,
             active:true,
             metadata,

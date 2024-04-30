@@ -17,6 +17,7 @@ import { getAuth } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from "firebase/storage";
+import CheckPrivileges from "./CheckPrivileges";
 
 type UploadImageToStorage = ({ userId, fileName, imageURL, uploadContent }:{ userId:string, fileName:string, imageURL:string, uploadContent:'cover' | 'quizSlim' | 'quizWide' }) => Promise<{ blob: Blob; url: string; path: string; }>;
 export default class Quiz {
@@ -36,10 +37,12 @@ export default class Quiz {
         db: Firestore;
         storage: FirebaseStorage;
     }
+    checkPrivileges:CheckPrivileges;
 
     constructor() {
         this.vectorStore = new VectorStoreProcess();
         this.aiFeatures = new AiFeatures();
+        this.checkPrivileges = new CheckPrivileges();
 
         this.firebase = firebaseInit({ envs, initializeApp, getAuth, getDatabase, getFirestore, getStorage, getApps })
     };
@@ -232,8 +235,13 @@ export default class Quiz {
 
     };
 
-    async addQuiz({ quiz, docId }:{ quiz:QuizPdf, isPublic:boolean, userId:string, docId:string }) {
+    async addQuiz({ quiz, docId }:{ quiz:QuizPdf, docId:string }) {
         await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).collection('quiz').doc(quiz.id).set(quiz);
+        const { isFree } = await this.checkPrivileges.check({ currentAction:'pdfUpload', userId:quiz.userId });
+        if (!isFree) {
+            // payment process
+            const price = quiz.price;
+        }
     };
 
     async performanceAnalysis({ quizQuestions, quizTryQuestions }:{ quizQuestions:QuizPdf['questions'], quizTryQuestions:QuizPdfTry['questions'] }) {
