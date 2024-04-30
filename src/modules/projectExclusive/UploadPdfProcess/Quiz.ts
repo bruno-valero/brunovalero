@@ -1,4 +1,4 @@
-import { QuizPdf } from "@/src/config/firebase-admin/collectionTypes";
+
 import firebaseInit from "@/src/config/firebase/init";
 import { randomBytes } from "crypto";
 import { FirebaseApp } from "firebase/app";
@@ -10,6 +10,8 @@ import VectorStoreProcess, { VectorStoreProcessSearchResponse } from "../../Vect
 import AiFeatures from "./AiFeatures";
 
 import envs from "@/envs";
+import { QuizPdf, QuizPdfTry } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
+import { admin_firestore } from "@/src/config/firebase-admin/config";
 import { getApps, initializeApp } from "firebase/app";
 import { getAuth } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
@@ -91,7 +93,7 @@ export default class Quiz {
         ${questions}
         `);
 
-        const data = JSON.parse(questionAndAlternatives) as [string, string[]][];
+        const data = JSON.parse(questionAndAlternatives) as [string, ('a' | 'b' | 'c' | 'd' | 'e')[]][];
         const price = priceVectorSearch + priceQuestions + priceQuestionsAndAlternatives;
 
         return { data, price, vectorSearchResponse:response };
@@ -195,21 +197,23 @@ export default class Quiz {
 
         const regExp = new RegExp(/[a-z]\)/, 'i');
         const quiz:QuizPdf = {
+            id:quizId,
+            docId,
+            userId,
+            title:quizFocus,
+            description,
             public:isPublic,
             price,
             chunksRelated:vectorSearchResponse.sourceDocuments,
-            title:quizFocus,
-            description,
-            id:quizId,
             imageBackground:{
                 slim:{url:urlSlim, path:pathSlim},
                 wide:{url:urlWide, path:pathWide},
             },
-            questions:data.reduce((acc:QuizPdf['questions'], item) => {
-                const options = item[1].map(item => item.replace(regExp, '').trim())                    
+            questions:data.reduce((acc:QuizPdf['questions'], questionData) => {
+                const options = questionData[1].map(item => item.replace(regExp, '').trim())                    
                 const question:QuizPdf['questions'][0] = {
                     id:randomBytes(32).toString('hex'),
-                    answer:item[1][0],
+                    answer:questionData[1][0],
                     options:{
                         a:options[0],
                         b:options[1],
@@ -217,7 +221,7 @@ export default class Quiz {
                         d:options[3],
                         e:options[4],
                     },
-                    question:item[0],
+                    question:questionData[0],
                 }
                 acc[question.id] = question;
                 return acc;
@@ -228,7 +232,108 @@ export default class Quiz {
 
     };
 
-    async addQuiz({ quiz, isPublic,  }:{ quiz:QuizPdf, isPublic:boolean,  }) {
+    async addQuiz({ quiz, docId }:{ quiz:QuizPdf, isPublic:boolean, userId:string, docId:string }) {
+        await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).collection('quiz').doc(quiz.id).set(quiz);
+    };
+
+    async performanceAnalysis({ quizQuestions, quizTryQuestions }:{ quizQuestions:QuizPdf['questions'], quizTryQuestions:QuizPdfTry['questions'] }) {
+
+        const performance = Object.values(quizQuestions).map((item, i) => {
+            const id = item.id;
+            const question = item.question;
+            const tryAnswer = quizTryQuestions[id].answer;
+            const isRightAnswer = tryAnswer === item.answer;
+            const timeToAnswer = `${Math.ceil(quizTryQuestions[id].timeAnswering / 1000)} segundos`;
+
+            return {
+                objectReport:{
+                    questionId:id,
+                    isRightAnswer,
+                },
+                textReport:`
+                Questão ${i+1}) ${question}
+                Resultado: ${isRightAnswer ? 'acertou' : 'errou'}
+                Tempo para responder: ${timeToAnswer}
+                `.trim().replaceAll(/  /ig, ''),
+            }
+        }).reduce((acc:{ objectReport:{questionId:string, isRightAnswer:boolean}[], textReport:string[] }, item) => {
+            acc.objectReport = [...acc.objectReport, item.objectReport];
+            acc.textReport = [...acc.textReport, item.textReport];
+            return acc;
+        }, { objectReport:[], textReport:[] })
+
+        const { content, price } = await this.aiFeatures.gpt3(`
+            O usuário leu um conteúdo e com base nele respondeu um quiz.
+            Abaixo estão listadas as perguntas do quiz. Para cada pergunta está indicando se ele acertou e quanto tempo demorou para responder.
+            Com base nessas informações, faça uma análise de desempemho.
+
+            questões:
+            
+            ${performance.textReport.join('\n\n')}
+        `);
+
+        return { content, performance:performance.objectReport, price };
+    };
+
+    async tipBasedOnPerformance({ performanceAnalysis, chunksRelated }:{ performanceAnalysis:string, chunksRelated:QuizPdf['chunksRelated'] }) {
+        const { content, price } = await this.aiFeatures.gpt3(`
+            O usuário respondeu um quiz relacionado a um conteúdo que ele leu.
+            Ao finalizar o quiz, uma análize de performance foi gerada como formato de feedback.
+            Para melhor ajudar o usuário, leia os trechos do conteúdo e com base neles fornceça algumas dicas sobre o que ele deveria fazer para ter um melhor entendimento do conteúdo.
+            Se possível passe algum conhecimento com base nos trechos que aparentemente o usuário ainda não tenha captado.
+
+            análize de performance:
+            ${performanceAnalysis}
+
+            terchos do conteúdo:
+            ${chunksRelated.map((item, i) => {
+                const pageContent = item.pageContent
+                const { page, lines } = item.metadata;
+                const linesData = lines?.split('-');
+                const linesLoc = linesData ? `linha ${linesData[0]} à linha ${linesData[1]} ` : '';
+                
+                return `
+                trecho ${i + 1} -----------------------------------------
+
+                ${pageContent}
+
+                Informações adicionais do trecho -----------------
+                Página: ${page}
+                Localização: ${linesLoc}
+                `.trim().replaceAll(/  /ig, '')
+            }).join('\n\n')}        
+        `)
+
+        return { content, price };
+    }
+
+    async newQuizTry({ quiz, quizTryQuestions, userId }:{ quiz:QuizPdf, quizTryQuestions:QuizPdfTry['questions'], userId:string }) {
+        const quizQuestions = quiz.questions;
+        const quizTries = quiz.tries;
+        const chunksRelated = quiz.chunksRelated;
+
+        const { content:performanceAnalysis, price:pricePerformanceAnalysis, performance } = await this.performanceAnalysis({ quizQuestions, quizTryQuestions });
+        const { content:tipBasedOnPerformance, price:priceTipBasedOnPerformance } = await this.tipBasedOnPerformance({ performanceAnalysis, chunksRelated });
+        const rightQuestions = performance.filter(item => item.isRightAnswer).length;
+        const score = Number((rightQuestions / performance.length).toFixed(2));
+        const newTry:QuizPdfTry = {
+            id:String(new Date().getTime()),            
+            quizId:quiz.id,
+            questions:quizTryQuestions,
+            performanceObservation:performanceAnalysis,
+            tip:tipBasedOnPerformance,
+            score,
+            userId,
+        };
+
+        await admin_firestore
+            .collection('services').doc('readPdf')
+            .collection('data').doc(quiz.docId)
+            .collection('quiz').doc(quiz.id)
+            .collection('tries').doc(newTry.id).set(newTry);
+        
+        return newTry;
+
 
     };
 
