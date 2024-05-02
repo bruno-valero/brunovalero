@@ -54,9 +54,9 @@ export default function fromCollection (name:string, ref:FirestoreRef) {
   }
 
 
-  const onSnapshotExecute = async (callback:(props:{id: string, data: DocumentData}[]) => any, ref:Obj<any>, refName:string, collRef=coll) => { 
-
-    ref[refName] = onSnapshot(collRef, snapshot => {
+  const onSnapshotExecute = async (callback:(props:{id: string, data: DocumentData}[]) => any, ref:Obj<any>, refName:string, collRef=coll, queries?:QueryFieldFilterConstraint[]) => { 
+    
+    ref[refName] = onSnapshot(queries ? query(collRef, ...queries) : collRef, snapshot => {
       const data = snapshot.docs.map((doc) => ({
         id: doc.id,
         data: doc.data(),

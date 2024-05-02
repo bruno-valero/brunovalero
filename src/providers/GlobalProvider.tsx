@@ -13,8 +13,12 @@ import { Envs } from '@/envs';
 import { Firestore } from 'firebase/firestore';
 import { FirebaseStorage } from 'firebase/storage';
 import { createContext, useContext, useState } from 'react';
+import z from "zod";
+import { userSchema } from "../config/firebase-admin/collectionTypes/users";
 import firebaseInit from '../config/firebase/init';
+import useFirebaseUser from "../hooks/useFirebaseUser";
 import useResize, { Dimensions } from "../hooks/useResize";
+import FirebaseUserBase from "../modules/FIREBASE/FirebaseUserBase";
 
 export type GlobalProviderType = { 
   login: { 
@@ -26,6 +30,8 @@ export type GlobalProviderType = {
     envs:Envs, 
   }; 
   dimensions:Dimensions,
+  globalUser:FirebaseUserBase<z.infer<typeof userSchema>>,
+  resetedState:UseState<number>,
   firebase: { 
     auth:Auth | null, 
     database:Database | null, 
@@ -54,7 +60,7 @@ export default function GlobalContextProvider({ children, fromServer }:GlobalCon
 
   const { app, auth, database, db, storage } =  firebaseInit({ envs:fromServer.envs, initializeApp, getAuth, getDatabase, getFirestore, getStorage, getApps });
   const { dimensions } = useResize();
-
+  const { globalUser, resetedState } = useFirebaseUser({ auth:auth!, db:db! });
   const context:GlobalProviderType = { 
     login:{ 
       user:[user, setUser], 
@@ -62,6 +68,8 @@ export default function GlobalContextProvider({ children, fromServer }:GlobalCon
     }, 
     publicError:[publicError, setPublicError], 
     dimensions,
+    globalUser:globalUser.current,
+    resetedState,
     fromServer, 
     firebase:{ 
       auth, 

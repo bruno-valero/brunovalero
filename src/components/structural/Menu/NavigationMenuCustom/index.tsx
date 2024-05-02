@@ -12,12 +12,18 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger
 } from "@/components/ui/navigation-menu";
+import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 
 interface NavigationMenuCustomProps {
   components: { title: string; href?: string; action?:() => void; description: string }[];
 }
 
 export function NavigationMenuCustom({ components }:NavigationMenuCustomProps) {
+
+  const globalState = useGlobalProvider();
+  const [, setResetedState] = globalState.resetedState;
+  const globalUser = globalState.globalUser;
+
   return (
     <NavigationMenu navMenuVPClassName={'left-[-150px]'} >
       <NavigationMenuList>
@@ -25,7 +31,7 @@ export function NavigationMenuCustom({ components }:NavigationMenuCustomProps) {
         <NavigationMenuItem>
           <NavigationMenuTrigger className='h-[80px]' >
             {/* <img src={user.image} alt={user.fullName ?? user.name} className='h-[60px] w-[60px] rounded-full' /> */}
-            <span>Mais</span>
+            <span>{globalUser.data ? `Olá, ${globalUser.data.name.split(' ')[0]}` : `Mais`}</span>
           </NavigationMenuTrigger>
           <NavigationMenuContent >
             <ul className="grid max-w-[300px] gap-3 p-4 md:w-[500px] ">

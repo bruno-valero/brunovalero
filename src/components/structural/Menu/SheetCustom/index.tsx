@@ -11,6 +11,7 @@ import { NavigationMenuCustom } from '../NavigationMenuCustom/index';
 import colors from '@/src/constants/colors';
 import brand from '@/src/images/brand.png';
 import Social from '@/src/modules/Social';
+import { useGlobalProvider } from '@/src/providers/GlobalProvider';
 import { Alert } from '../../Alert';
 
 const side = 'left';
@@ -24,11 +25,19 @@ export function SheetCustom({ children }:SheetCustomProps) {
   const path = usePathname();
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // const globalState = useGlobalProvider();
-  // const [, setResetedState] = globalState.resetedState;
+  const globalState = useGlobalProvider();
+  const [, setResetedState] = globalState.resetedState;
+  const globalUser = globalState.globalUser;
   
 
   const components: { title: string; href?: string; action?:() => void; description: string }[] = [
+    {
+      title: globalUser.data ? "Sair" : "Login com Google",
+      // href: "/carteirinha",
+      description:
+      globalUser.data ? "Faça o logout da plataforma" : "Faça login para poder testar algumas funcionalidades da plataforma.",
+        action:async() => globalUser.data ? await globalUser.userAuth.logout() : await globalUser.createWithLogin(),
+    },    
     {
       title: "Entre em contato",
       // href: "/carteirinha",
