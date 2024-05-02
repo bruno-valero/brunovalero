@@ -241,7 +241,7 @@ export default class Quiz {
         if (!isFree) {
             // payment process
             const price = quiz.price;
-        }
+        };
     };
 
     async performanceAnalysis({ quizQuestions, quizTryQuestions }:{ quizQuestions:QuizPdf['questions'], quizTryQuestions:QuizPdfTry['questions'] }) {

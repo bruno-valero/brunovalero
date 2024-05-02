@@ -37,7 +37,8 @@ export default class CheckPrivileges {
 
         const privilegesResponse = await admin_firestore.collection('users').doc(userId).collection('control').doc('PrivilegesFreeServices').get();
         const privileges = (privilegesResponse.exists ? privilegesResponse.data() : null) as UsersControl['PrivilegesFreeServices'] | null;        
-        
+        console.log(`userId: ${userId}`)
+        console.log(`Buscando os privilégios: ${privileges}`)
         let  hasSubtracted = false;
         
         if (Object.values(privileges ?? {}).length > 1) {
@@ -92,6 +93,7 @@ export default class CheckPrivileges {
 
         };
 
+        console.log(`Atualizando privilégios: ${privileges}`)
         await admin_firestore.collection('users').doc(userId).collection('control').doc('PrivilegesFreeServices').update(privileges ?? {});
 
         return { isFree:hasSubtracted }

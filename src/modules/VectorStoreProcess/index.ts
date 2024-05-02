@@ -118,11 +118,14 @@ export default class VectorStoreProcess {
             chunkOverlap:0,
         });
         const splittedPdf = (await splitter.splitDocuments(data)).map((item, i) => {
+            
+            // item.metadata
             const page = {...item} as PdfParsedData[0];
+            console.log(`page: ${JSON.stringify(page)}`)
             const metadata = {
-                ...page.info,
+                ...data[0].info,
                 lines:page.metadata?.loc?.lines?.from ? `${page.metadata.loc.lines.from}-${page.metadata.loc.lines.to}` : '',
-                vectorID:`${page.info.docId}-${i}`,
+                vectorID:`${data[0].info.docId}-${i}`,
             };
             const resp = {...page};
             resp.metadata = metadata;
@@ -173,15 +176,22 @@ export default class VectorStoreProcess {
 
     async PDFloader({url, filePath, blob, genres, docId }:{url?:string, filePath?:string, genres?:PdfGenresOptions[], blob:Blob, docId:string}) {
         const file = 'src/modules/VectorStoreProcess/Vade_mecum_2023.pdf';        
-        // const { data, metadata } = await this.readPdf({filePath:filePath??file})        
+        // const { data, metadata } = await this.readPdf({filePath:filePath??file})     
+        console.log(`lendo o pdf...${docId}`);   
         const { data, metadata } = await this.readPdf({url, filePath, genres, blob, docId});   
+        console.log('dividindo o pdf...');   
+        console.log(`data[0].info: ${JSON.stringify(data[0].info)}`);   
         const splittedPdf:PdfParsedData = await this.pdfSplitter({data, splitterOptions:{encodingName:'cl100k_base', chunkSize:600, chunkOverlap:0}})
-                
-        this.logInfoPdfPreload({metadata, splittedPdf});
 
+        const price = (splittedPdf.length * 600) * (0.13 / 1_000_000)
+        
+        console.log('fazendo os logs...');   
+        this.logInfoPdfPreload({metadata, splittedPdf});
+        
+        console.log('inserindo no banco de dados vetorial...');   
         await this.pineconeAddPdf({ splittedPdf });
 
-        return { data, metadata };
+        return { data, metadata, price };
     };
 
     /**

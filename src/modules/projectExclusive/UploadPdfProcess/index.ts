@@ -1,5 +1,4 @@
 import envs, { isProduction } from "@/envs";
-import FileForge from "../../FileForge";
 import VectorStoreProcess from "../../VectorStoreProcess";
 import PdfGenres from "../PdfGenres";
 
@@ -7,6 +6,7 @@ import { CollectionTypes } from "@/src/config/firebase-admin/collectionTypes/col
 import { admin_firestore } from "@/src/config/firebase-admin/config";
 
 import { Pdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
+import { UsersUser } from "@/src/config/firebase-admin/collectionTypes/users";
 import firebaseInit from "@/src/config/firebase/init";
 import { FirebaseApp, getApps, initializeApp } from "firebase/app";
 import { Auth, getAuth } from 'firebase/auth';
@@ -17,13 +17,13 @@ import StripeBackend from "../../stripe/backend/StripeBackend";
 import AiFeatures from "./AiFeatures";
 import CheckPrivileges from "./CheckPrivileges";
 import Description from "./Description";
+import Payment from "./Payment";
 import Quiz from "./Quiz";
 
 
 
 export default class UploadPdfProcess {
 
-    protected fileForge:FileForge;
     protected vectorStore:VectorStoreProcess;
     // protected openaiChat:ChatOpenAI<ChatOpenAICallOptions>
     // protected dalle3_slim:DallEAPIWrapper
@@ -45,14 +45,10 @@ export default class UploadPdfProcess {
     protected description:Description;
     quiz:Quiz;
     checkPrivileges:CheckPrivileges;
-    stripeBackend:StripeBackend;
+    payment:Payment;
+    stripeBackend:StripeBackend
 
-    constructor({ pdf }:{ pdf:File | Blob }) {
-        if (pdf instanceof File) {
-            this.fileForge = new FileForge({ file:pdf });        
-        } else {
-            this.fileForge = new FileForge({ blob:pdf }); 
-        };
+    constructor() {
         this.vectorStore = new VectorStoreProcess();  
         this.aiFeatures = new AiFeatures();        
           
@@ -60,20 +56,22 @@ export default class UploadPdfProcess {
         this.description = new Description();
         this.quiz = new Quiz();
         this.checkPrivileges = new CheckPrivileges();
+        this.payment = new Payment();
         this.stripeBackend = new StripeBackend(isProduction ? 'production' : 'test');
     };
 
     
-    async completeUpload({ pdfUrl, docId, userId }:{ pdfUrl:string, docId:string, userId?:string }) {
+    async completeUpload({ pdfUrl, docId, userId }:{ pdfUrl:string, docId:string, userId?:string }) {        
+
         const blob = await (await fetch(pdfUrl)).blob();
-        const { data, metadata } = await this.uploadToVectorStore({ docId, blob });
+        const { data, metadata, price:pricePdfLoader } = await this.uploadToVectorStore({ docId, blob });
         const { genres, price:genrePrice } = await this.generateGenres(docId);
         const { textResponse:description, price:descriptionPrice } = await this.description.generateDescription(docId);
         const { imageURL, inputContent, descriptionSummary, price:imagePrice } = await this.generateImageFromDescription(description, 'slim');
 
         userId = userId ?? 'public';
         const quiz = await this.quiz.generateQuiz({docId, isPublic:true, quizFocus:`Qual o objetivo desse conteúdo`, userId});        
-        const price = genrePrice + descriptionPrice + imagePrice + quiz.price;
+        const price = pricePdfLoader + genrePrice + descriptionPrice + imagePrice + quiz.price;
         
         const fileName = `${docId}`;
         const { blob:imageBlob, path, url } = await this.uploadImageToStorage({ userId, fileName, imageURL, uploadContent:'cover' });
@@ -94,14 +92,28 @@ export default class UploadPdfProcess {
         await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).collection('quiz').doc(quiz.id).set(quiz);        
     };
 
-    async partialUpload({ pdfUrl, docId, userId }:{ pdfUrl:string, docId:string, userId:string }) {
+    async partialUpload({ pdfUrl, docId, user }:{ pdfUrl:string, docId:string, user:Partial<UsersUser> }) {
+        const userId = user.uid!
+
+        console.log('checando privilégios...')
+        const { isFree } = await this.checkPrivileges.check({ currentAction:'pdfUpload', userId });
+        if (!isFree) {
+            const stripeId = isProduction ? 'stripeId' : 'stripeIdDev'
+            const hasId = !!user[stripeId];
+            if (!hasId) throw new Error("Identificador do Stripe não encontrado.");
+            
+            const paymentMethods = await this.stripeBackend.stripe.customers.listPaymentMethods(user[stripeId]!);
+            if (paymentMethods.data.length === 0) throw new Error("Não há nenhum cartão de crédito cadastrado.");
+        }
+        
         const blob = await (await fetch(pdfUrl)).blob();
         const { data, metadata } = await this.uploadToVectorStore({ docId, blob });
         const { genres, price:genrePrice } = await this.generateGenres(docId);
+        console.log('gerando descrição...')
         const { textResponse:description, price:descriptionPrice } = await this.description.generateDescription(docId);
-
+        
         const price = genrePrice + descriptionPrice;
-
+        
         const newDoc:Pdf = {
             id:docId,
             userId,
@@ -114,25 +126,34 @@ export default class UploadPdfProcess {
             quiz:{},
             dateOfCreation:String(new Date().getTime()),
         };
-        
-        const { isFree } = await this.checkPrivileges.check({ currentAction:'pdfUpload', userId });
+
         
         if (!isFree) {
-            const customer = '';
-            const metadata = {};
-            const amount = price * 100;
-            const currency = 'brl';
-            
-            const pi = await this.stripeBackend.createPaymentIntent({ customer, metadata, amount, currency, moreParams:{confirm:true} });
-            const piResponse = await this.stripeBackend.stripe.paymentIntents.retrieve(pi.id);
-            const paymentStatus = piResponse.status;
-            if (paymentStatus === 'succeeded') {
-                await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).set(newDoc);
-            }
-
+            console.log('cobrando pagamento...')
+            this.payment.uploadPdfPay({ price, docId, newDoc, user });
+        } else {
+            console.log('atualizando o banco de dados...')
+            await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).set(newDoc);
         };
 
     };
+
+    async askQuestion({ question, docId, user }:{ question:string, docId:string, user:Partial<UsersUser> }) {
+        
+        console.log('checando privilégios...')
+        const { isFree } = await this.checkPrivileges.check({ currentAction:'pdfUpload', userId:user.uid! });
+        if (!isFree) {
+            const stripeId = isProduction ? 'stripeId' : 'stripeIdDev'
+            const hasId = !!user[stripeId];
+            if (!hasId) throw new Error("Identificador do Stripe não encontrado.");
+            
+            const paymentMethods = await this.stripeBackend.stripe.customers.listPaymentMethods(user[stripeId]!);
+            if (paymentMethods.data.length === 0) throw new Error("Não há nenhum cartão de crédito cadastrado.");
+        };
+
+        const { response:resp, price } = await this.vectorStore.search(question, docId);
+        const textResponse = encodeURIComponent(resp.text as string);        
+    }
 
     
 
@@ -153,8 +174,8 @@ export default class UploadPdfProcess {
     };    
 
     protected async uploadToVectorStore({ docId, blob }:{ docId:string, blob:Blob }) {
-        const { data, metadata } = await this.vectorStore.PDFloader({ blob, docId });
-        return { data, metadata };
+        const { data, metadata, price } = await this.vectorStore.PDFloader({ blob, docId });
+        return { data, metadata, price };
     };
 
     protected async generateGenres(docId:string) {

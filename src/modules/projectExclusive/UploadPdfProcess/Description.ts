@@ -12,13 +12,20 @@ export default class Description {
         this.aiFeatures = new AiFeatures();
     };
 
+    /**
+     * 
+     * @param docId 
+     * @returns O texto da resposa encodificada com o método "encodeURIComponent" e o preço da requisição
+     */
     async generateDescription(docId:string) {
         const { response:resp, price } = await this.vectorStore.search('qual é o objetivo do conteúdo?', docId);
-        const textResponse = resp.text as string;
+        const textResponse = encodeURIComponent(resp.text as string);
+
         return { textResponse, price };
     };
 
     async summaryDescription(text:string) {
+        text = decodeURIComponent(text);
         console.log('generate image: resumindo texto...');
         const phrase = await this.aiFeatures.gpt3(`
         resuma em 1 frase.
