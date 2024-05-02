@@ -1,5 +1,6 @@
 import { PdfParsedData, PdfParsedMetadata } from "@/src/modules/VectorStoreProcess";
 
+/** Serviço de upload e leitura de PDFs */
 export type ReadPdf = {
     /** (Não sei se usarei esta variável) Panos disponíveis para este serviço. */
     plans:{
@@ -15,6 +16,8 @@ export type ReadPdf = {
 export type Pdf = {
     /** ID único do pdf. */
     id:string,
+    /** Título opcional, customizável pelo usuário. */
+    customTitle?:string,
     /** ID único do usuário que gerou o pdf (se foi gerado pelo adm o ID deve ser "public"). */
     userId:string,
     /** Preço para a geração do pdf. */
@@ -23,6 +26,16 @@ export type Pdf = {
     description:string,
     /** Indica se o pdf é público. */
     public:boolean,
+    /** Indica se o pagamento foi feito. */
+    payment?:{
+        /** ID único do pagamento fornecido pelo stripe. */
+        stripeId:string,
+        /** Indica se o pagamento foi devilvido. */
+        devolution?:{
+            /** ID único da devolução fornecido pelo stripe. */
+            stripeId:string,
+        },
+    },
     /** Data de criação do pdf (deve estar em formato timestamp, porém transformado em string). */
     dateOfCreation:string,
     /** Metadata do pdf. */
@@ -41,7 +54,7 @@ export type Pdf = {
     /** **Nova coleção no documento** Um objeto, onde cada chave é uma Pergunta que pode ser gerada após o processo de upload e leituda de um pdf atravéz do serviço "readPdf". */
     questions:Record<string, QuestionPdf>,
     /** **Nova coleção no documento:** Um objeto, onde cada chave é um Quiz que pode ser gerado após ou durante o processo de upload e leituda de um pdf atravéz do serviço "readPdf". */
-    quiz:Record<string, QuizPdf>,                
+    quiz:Record<string, QuizPdf>,
 }
 
 /** Pergunta que pode ser gerada após o processo de upload e leituda de um pdf atravéz do serviço "readPdf". */

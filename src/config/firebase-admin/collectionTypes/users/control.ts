@@ -3,7 +3,27 @@
 export type UsersControl = {
     /** Privilégios de recursos gratuitos que o usuário recebe por fazer certas ações no sistema */
     PrivilegesFreeServices:Record<string, UsersControlPrivileges>,
+    /** **Document do Firestore** Dados financeiros com relação ou modelo de negócio */
+    financialData:UsersFinancialData,
 };
+
+/** **Document do Firestore** Dados financeiros com relação ou modelo de negócio */
+export type UsersFinancialData = {
+    /** Quantidade de créditos que o usuário comprou e mantém reservado */
+    credits:number,
+    /** Número de formas de pagamento que o usuário tem registrado.
+     * 
+     * As formas de pagamento em si não são registradas no sistema por questão de segurança.
+     * 
+     * Esta variável somente indica se o usuário já cadastrou alguma forma de pagamento, visando facilitar a comunicação com o Front End.
+     */
+    paymentMethods:number,
+    /** Os planos de assinatura que o usuário possui ativos */
+    activePlan:{
+        /** Indica qual plano de assinatura o usuário assinou para o serviço de "Leitura de PDFs" */
+        readPdf:'free' | 'standard' | 'enterprise',
+    }
+}
 
 
 /** Um dos Privilégios de recursos gratuitos que o usuário recebe por fazer certas ações no sistema */
