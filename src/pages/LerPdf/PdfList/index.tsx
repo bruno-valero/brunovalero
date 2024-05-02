@@ -35,6 +35,7 @@ export default function PdfList() {
     const [ questionList, setQuestionList ] = questionListHook.pdfQuestions;
     const [showQuestion, setShowQuestion ] = questionListHook.showQuestion;
     const [askQuestion, setAskQuestion] = questionListHook.askQuestion;
+    const [showQuestionList, setShowQuestionList] = questionListHook.showQuestionList;
 
     const questionHooks = {
         showQuestions:[showQuestions, setShowQuestions],
@@ -42,23 +43,27 @@ export default function PdfList() {
         showQuestion:[showQuestion, setShowQuestion],
         askQuestion:[askQuestion, setAskQuestion],
         details:[details, setDetails],
+        showQuestionList:[showQuestionList, setShowQuestionList],
     } as {
         showQuestions:UseState<boolean>,
         questionList:UseState<QuestionPdf[]>,
         showQuestion:UseState<QuestionPdf | null>,
         askQuestion:UseState<boolean>,
         details:UseState<Pdf | null>,
+        showQuestionList:UseState<boolean>,
     }
 
     
 
     const goToQuestions = useCallback((show:boolean) => {
         setShowQuestions(show);
+        setShowQuestionList(show);
     }, [setDetails]);
     
     const choosePdf = useCallback((pdf:Pdf | null) => {
         setDetails(pdf);
         setShowQuestions(false);
+        setShowQuestionList(false);
     }, [setDetails]);
 
 

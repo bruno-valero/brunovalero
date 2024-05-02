@@ -6,6 +6,8 @@ import { FaThList } from "react-icons/fa";
 import { FaFilePdf } from "react-icons/fa6";
 import { MdQuiz } from "react-icons/md";
 
+import { RiQuestionnaireFill } from "react-icons/ri";
+
 interface QuestionsMenuProps {
     questionHooks:{
         showQuestions:UseState<boolean>,
@@ -13,6 +15,8 @@ interface QuestionsMenuProps {
         showQuestion:UseState<QuestionPdf | null>,
         askQuestion:UseState<boolean>,
         details:UseState<Pdf | null>,
+        showQuestionList:UseState<boolean>,
+
     }
 }
 
@@ -29,24 +33,59 @@ export default function QuestionsMenu({ questionHooks }:QuestionsMenuProps) {
     const [ showQuestion, setShowQuestion ] = questionHooks.showQuestion;
     const [askQuestion, setAskQuestion] = questionHooks.askQuestion;
     const [details, setDetails] = questionHooks.details;
+    const [showQuestionList, setShowQuestionList] = questionHooks.showQuestionList;
+
+    function goToAskQuestion() {
+        setShowQuestion(null);
+        setAskQuestion(true);
+        setShowQuestionList(false);
+    }
+
+    function goToQuestionList() {
+        setShowQuestion(null);
+        setAskQuestion(false);
+        setShowQuestionList(true);
+    }
 
 
     return (
-        <>               
-            <button onClick={() => {}} className="bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center gap-2" >
-                <FaThList style={{color:colors.valero(.8)}} size={22} />
-                <span  className='' style={{color:colors.valero(.8)}} >Perguntas</span>                                     
-            </button>
-            <div className="bg-gray-100 rounded shadow gap-2 flex items-center justify-center"  >                
-                <button className="py-3 pl-3 pr-2 text-white font-bold rounded flex gap-2 items-center justify-center" >
-                    <MdQuiz color={colors.valero(.8)} size={22} />
-                    <span  className='' style={{color:colors.valero(.8)}} >Quiz</span>
-                </button>
-            </div>
-            <button onClick={() => {}} className="bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center gap-2" >                
-                <FaFilePdf size={26} style={{color:colors.valero(.8)}} />
-                <span  className='' style={{color:colors.valero(.8)}} >Lista de PDFs</span>                                     
-            </button>
+        <>            
+            {showQuestionList ? (
+                <>
+                    <button onClick={() => goToAskQuestion()} className="bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center gap-2" >
+                        {/* <FaThList style={{color:colors.valero(.8)}} size={22} /> */}
+                        <RiQuestionnaireFill style={{color:colors.valero(.8)}} size={22} />
+                        <span  className='' style={{color:colors.valero(.8)}} >Perguntar</span>                                     
+                    </button>
+                    <div className="bg-gray-100 rounded shadow gap-2 flex items-center justify-center"  >                
+                        <button className="py-3 pl-3 pr-2 text-white font-bold rounded flex gap-2 items-center justify-center" >
+                            <MdQuiz color={colors.valero(.8)} size={22} />
+                            <span  className='' style={{color:colors.valero(.8)}} >Quiz</span>
+                        </button>
+                    </div>
+                    <button onClick={() => {}} className="bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center gap-2" >                
+                        <FaFilePdf size={26} style={{color:colors.valero(.8)}} />
+                        <span  className='' style={{color:colors.valero(.8)}} >Lista de PDFs</span>                                     
+                    </button>
+                </>
+            ) : (
+                <>
+                    <button onClick={() => goToQuestionList()} className="bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center gap-2" >
+                        <FaThList style={{color:colors.valero(.8)}} size={22} />
+                        <span  className='' style={{color:colors.valero(.8)}} >Perguntas</span>                                     
+                    </button>
+                    <div className="bg-gray-100 rounded shadow gap-2 flex items-center justify-center"  >                
+                        <button className="py-3 pl-3 pr-2 text-white font-bold rounded flex gap-2 items-center justify-center" >
+                            <MdQuiz color={colors.valero(.8)} size={22} />
+                            <span  className='' style={{color:colors.valero(.8)}} >Quiz</span>
+                        </button>
+                    </div>
+                    <button onClick={() => {}} className="bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center gap-2" >                
+                        <FaFilePdf size={26} style={{color:colors.valero(.8)}} />
+                        <span  className='' style={{color:colors.valero(.8)}} >Lista de PDFs</span>                                     
+                    </button>
+                </>
+            )}   
         </>
     );
 

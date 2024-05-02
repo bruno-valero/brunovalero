@@ -1,4 +1,4 @@
-import { PdfParsedData, PdfParsedMetadata } from "@/src/modules/VectorStoreProcess";
+import { PdfParsedData, PdfParsedMetadata, VectorStoreResponseSourceDocuments } from "@/src/modules/VectorStoreProcess";
 
 /** Serviço de upload e leitura de PDFs */
 export type ReadPdf = {
@@ -68,7 +68,7 @@ export type QuestionPdf = {
     /** Resposta da pergunta */
     response:{
         /** Trechos do texto que foram usados para responder a pergunta */
-        chunksRelated:PdfParsedData[],
+        chunksRelated:VectorStoreResponseSourceDocuments,
         /** Texto da resposta, ou seja, a resposta em si  */
         text:string,
     },
