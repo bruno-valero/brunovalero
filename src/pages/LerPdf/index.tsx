@@ -1,7 +1,6 @@
 import colors from "@/src/constants/colors";
 import leitura from '@/src/images/leitura.png';
 import trial from '@/src/images/trial.png';
-import VectorStoreProcess from "@/src/modules/VectorStoreProcess";
 import ContactAboutLerPdf from "./ContactAboutForms";
 import PdfList from "./PdfList";
 
@@ -29,12 +28,10 @@ function CardForm({ imageSrc, text }:CardFormProps) {
 export default function LerPdf() {
     
     
-    const vectorStore = new VectorStoreProcess();
+    // const vectorStore = new VectorStoreProcess();
     // Promise.all([
-    //     '1714560173927', '1714560477995', 
-    //     '1714560824585', '1714560991196', 
-    //     '1714561168219', '1714561850526',
-    //     '1714562068100', '1714132407108'
+    //     '1714565595194', '1714564378253', 
+    //     '1714140791133'
     // ].map(async(item) => {
     //     await vectorStore.pineconeDeletePdf(item);
     //     console.log(`${item} - deletado!`)

@@ -42,10 +42,28 @@ export default class UserManagement {
         return { authUser:user, userData:data };
     };
 
-    protected async getStripeId(uid:string) {
-        const userSnap = await admin_firestore.collection('users').doc(uid).get();
-        const user = (userSnap.exists ? userSnap.data() : null) as UsersUser | null;
-        if (!user) throw new Error(`Usuário "${uid}" não encontrado`);
+
+    /**
+     * Busca o identificador único de usuário sedido pelo Stripe. 
+     * 
+     * Se ele não for encontrado no banco de dados, cria um novo usuário no Stripe e salva seu ID no banco de dados, em seguida retorna seu valor.
+     * 
+     * Se ele for encontrado no banco de dados, retorna seu valor.
+     * 
+     * @param uid **string -** ID único de usuário fornecido pelo Firebase Auth
+     * @param userData **Omit(UsersUser, 'control') [opicional] -** Dados do usuário, se forem passados, evita uma requisição ao Firebase para obtê-los.
+     * @returns Retorna o ID único do usuário sedido pelo Stripe, correspondente com o modo atual, seja "Desenvolvimento" ou "Produção"
+     */
+    async getStripeId({ uid, userData }:{uid:string, userData?:Omit<UsersUser, 'control'>}) {
+        
+        let user:Omit<UsersUser, 'control'> | null;
+        if (userData) {
+            user = userData;
+        } else {
+            const userSnap = await admin_firestore.collection('users').doc(uid).get();
+            user = (userSnap.exists ? userSnap.data() : null) as Omit<UsersUser, 'control'> | null;
+            if (!user) throw new Error(`Usuário "${uid}" não encontrado`);
+        }
 
         const idType = isProduction ? 'stripeId' : 'stripeIdDev';
         if (!user[idType]) {

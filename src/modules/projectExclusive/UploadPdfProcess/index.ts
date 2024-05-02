@@ -5,7 +5,7 @@ import PdfGenres from "../PdfGenres";
 import { CollectionTypes } from "@/src/config/firebase-admin/collectionTypes/collectionTypes";
 import { admin_firestore } from "@/src/config/firebase-admin/config";
 
-import { Pdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
+import { Pdf, QuestionPdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
 import { UsersUser } from "@/src/config/firebase-admin/collectionTypes/users";
 import firebaseInit from "@/src/config/firebase/init";
 import { FirebaseApp, getApps, initializeApp } from "firebase/app";
@@ -14,6 +14,8 @@ import { Database, getDatabase } from 'firebase/database';
 import { Firestore, getFirestore } from 'firebase/firestore';
 import { FirebaseStorage, getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import StripeBackend from "../../stripe/backend/StripeBackend";
+import UserManagement from "../UserManagement";
+import UserFinancialData from "../UserManagement/UserFinancialData";
 import AiFeatures from "./AiFeatures";
 import CheckPrivileges from "./CheckPrivileges";
 import Description from "./Description";
@@ -46,7 +48,9 @@ export default class UploadPdfProcess {
     quiz:Quiz;
     checkPrivileges:CheckPrivileges;
     payment:Payment;
-    stripeBackend:StripeBackend
+    stripeBackend:StripeBackend;
+    userManagement:UserManagement;
+    financialData:UserFinancialData;
 
     constructor() {
         this.vectorStore = new VectorStoreProcess();  
@@ -58,6 +62,8 @@ export default class UploadPdfProcess {
         this.checkPrivileges = new CheckPrivileges();
         this.payment = new Payment();
         this.stripeBackend = new StripeBackend(isProduction ? 'production' : 'test');
+        this.userManagement = new UserManagement();
+        this.financialData = new UserFinancialData();
     };
 
     
@@ -92,18 +98,13 @@ export default class UploadPdfProcess {
         await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).collection('quiz').doc(quiz.id).set(quiz);        
     };
 
-    async partialUpload({ pdfUrl, docId, user }:{ pdfUrl:string, docId:string, user:Partial<UsersUser> }) {
+    async partialUpload({ pdfUrl, docId, user, autoBuy, minCredits }:{ pdfUrl:string, docId:string, user:Partial<UsersUser>, autoBuy?:boolean, minCredits?:number }) {
         const userId = user.uid!
 
         console.log('checando privilégios...')
         const { isFree } = await this.checkPrivileges.check({ currentAction:'pdfUpload', userId });
         if (!isFree) {
-            const stripeId = isProduction ? 'stripeId' : 'stripeIdDev'
-            const hasId = !!user[stripeId];
-            if (!hasId) throw new Error("Identificador do Stripe não encontrado.");
-            
-            const paymentMethods = await this.stripeBackend.stripe.customers.listPaymentMethods(user[stripeId]!);
-            if (paymentMethods.data.length === 0) throw new Error("Não há nenhum cartão de crédito cadastrado.");
+            await this.financialData.checkMinCredits({ uid:userId, autoBuy, minCredits });
         }
         
         const blob = await (await fetch(pdfUrl)).blob();
@@ -130,7 +131,9 @@ export default class UploadPdfProcess {
         
         if (!isFree) {
             console.log('cobrando pagamento...')
-            this.payment.uploadPdfPay({ price, docId, newDoc, user });
+            await this.financialData.spendCredits({ uid:userId, amount:price, autoBuy, minCredits });
+            console.log('atualizando o banco de dados...')
+            await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).set(newDoc);
         } else {
             console.log('atualizando o banco de dados...')
             await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).set(newDoc);
@@ -138,21 +141,71 @@ export default class UploadPdfProcess {
 
     };
 
-    async askQuestion({ question, docId, user }:{ question:string, docId:string, user:Partial<UsersUser> }) {
+
+    /**
+     * Faz uma checagem nos créditos do usuário para saber se estão dentro do valor mínimo estabelecido.
+     * 
+     * Caso não tenha o valor estipulado e não possuir a opção de "autoBuyCredits" habilitada e não tiver o argumento autoBuy = true, então retorna um erro.
+     * 
+     * Caso tenha permitido a compra automática, executa a compra e quando tiver o valor estipulado, continua o processo.    * 
+     * 
+     * Faz uma busca no banco de dados vetorial (Pinecone) baseando-se na pergunta do usuário. Em seguida apresenta alguns trechos encontrados para o chat gpt-3.5-turbo pedindo para responder a pergunta do usuário através dos trechos.
+     * 
+     * Após receber a resposta juntamente com o preço da requisição, cobra dos créditos do usuário, atualiza o banco de dados com a resposta e retorna o texto gerado pelo gpt.
+     * 
+     * @param question **string -** Texto da pergunta realizada pelo usuário.
+     * @param docId **string -** ID único do documento ao qual receberá a pergunta.
+     * @param user **Omit(UsersUser, 'control') -** Dados de usuário ppresentes no banco de dados (Firebase).
+     * @param autoBuy **boolean -** Opção que, se for ativa, permite com que caso o usuário não possua créditos suficientes para realizar a pergunta
+     * @param minCredits **number [opicional] -** Determinará qual o valor mínimo que o usuário deve ter reservado
+     * @returns
+     */
+    async askQuestion({ question, docId, user, autoBuy, minCredits }:{ question:string, docId:string, user:Omit<UsersUser, 'control'>, autoBuy?:boolean, minCredits?:number }) {
         
+        const docSnap = await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).get();
+        const doc = (docSnap.exists ? docSnap.data() : null) as Pdf | null;
+        if (!doc) throw new Error("documento inválido");
+        
+        const uid = user.uid
         console.log('checando privilégios...')
-        const { isFree } = await this.checkPrivileges.check({ currentAction:'pdfUpload', userId:user.uid! });
-        if (!isFree) {
-            const stripeId = isProduction ? 'stripeId' : 'stripeIdDev'
-            const hasId = !!user[stripeId];
-            if (!hasId) throw new Error("Identificador do Stripe não encontrado.");
-            
-            const paymentMethods = await this.stripeBackend.stripe.customers.listPaymentMethods(user[stripeId]!);
-            if (paymentMethods.data.length === 0) throw new Error("Não há nenhum cartão de crédito cadastrado.");
+        const { isFree } = await this.checkPrivileges.check({ currentAction:'questions', userId:uid });
+        console.log(`A pergnta ${isFree ? 'não será cobrada :)' : 'será cobrada!'}`)
+        if (!isFree) {      
+            await this.financialData.checkMinCredits({ uid, autoBuy, minCredits });           
         };
 
         const { response:resp, price } = await this.vectorStore.search(question, docId);
-        const textResponse = encodeURIComponent(resp.text as string);        
+        const textResponse = encodeURIComponent(resp.text as string);       
+        const chunksRelated = resp.sourceDocuments;
+
+        if (!isFree) {
+            await this.financialData.spendCredits({ uid, amount:price, autoBuy, minCredits });
+        }
+
+        // const oi:ReadPdf = '';
+        // oi.data[''].questions['']
+        const newQuestion:QuestionPdf = {
+            id:String(new Date().getTime()),
+            question,
+            response:{
+                text:textResponse,
+                chunksRelated,
+            },
+            userId:user.uid,
+        };
+
+        
+        const questions:Pdf['questions'] = {
+            ...doc.questions,
+            [newQuestion.id]:newQuestion,
+        };
+
+        const update = JSON.parse(JSON.stringify(newQuestion));
+
+        console.log(`${JSON.stringify(update, null, 2)}`);
+        await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).collection('questions').doc(newQuestion.id).set(update);
+
+        return update;
     }
 
     
