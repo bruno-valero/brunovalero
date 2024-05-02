@@ -9,6 +9,20 @@ export type UsersControl = {
 
 /** **Document do Firestore** Dados financeiros com relação ou modelo de negócio */
 export type UsersFinancialData = {
+    /** Opção ativada pelo usuário que permite a compra automática de créditos quando o valor a ser gasto supera os créditos
+     * 
+     * Este objeto contém os dados referentes a esta permissão
+     * 
+     */
+    autoBuyCredits:{
+        /** Opção ativada pelo usuário que permite a compra automática de créditos quando o valor a ser gasto supera os créditos
+         * 
+         * se o valor for **true**, significa que o usuário permitiu a compra automática.
+         */
+        allow:boolean,
+        /** Valor a ser usado para realizar a compra automática de créditos quando o valor a ser gasto supera os créditos */
+        amount:number
+    },
     /** Quantidade de créditos que o usuário comprou e mantém reservado */
     credits:number,
     /** Número de formas de pagamento que o usuário tem registrado.

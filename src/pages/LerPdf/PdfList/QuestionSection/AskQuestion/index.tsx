@@ -1,12 +1,16 @@
 import { Textarea } from "@/components/ui/textarea";
 import { Pdf, QuestionPdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
 import colors from "@/src/constants/colors";
+import Post from "@/src/modules/Request/Post";
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import { UseState } from "@/utils/common.types";
 import cutTextMask from "@/utils/functions/masks/cutTextMask";
+import { useForm } from "react-hook-form";
 import { IoSendSharp } from "react-icons/io5";
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { RxDotFilled } from "react-icons/rx";
+import z from "zod";
 
 interface AskQuestionProps {
     questionHooks:{
@@ -17,6 +21,11 @@ interface AskQuestionProps {
         details:UseState<Pdf | null>,
     }
 }
+
+const questionSchema = z.object({
+    question:z.string().min(20, 'A pergunta deve ter no mínimo 20 caracteres. Digite uma pergunta mais bem elaborada.')
+});
+type Question = z.infer<typeof questionSchema>
 
 export default function AskQuestion({ questionHooks }:AskQuestionProps) {
 
@@ -31,6 +40,23 @@ export default function AskQuestion({ questionHooks }:AskQuestionProps) {
     const [ showQuestion, setShowQuestion ] = questionHooks.showQuestion;
     const [askQuestion, setAskQuestion] = questionHooks.askQuestion;
     const [details, setDetails] = questionHooks.details;
+
+    const { register, handleSubmit, formState:{ errors } } = useForm<Question>({ resolver:zodResolver(questionSchema) });   
+
+    async function sendQuestion({ question }:Question) {
+        console.log(question)
+        const apiPath = `/api/readPdf/send-question`;
+        const post = new Post(apiPath);
+        post.addData({ question, docId:details?.id??null, uid:globalUser.data?.uid });
+        const resp = await post.send();
+        const { error, data } = await resp?.json();
+        if (error || !data) {
+            alert(`Houve um erro: ${error ?? 'Os dados não vieram'}`);
+            return;
+        }
+        console.log(`resposta: ${data}`);
+        setShowQuestion(data as QuestionPdf);
+    }
 
     return (
         <div className="w-full flex flex-col gap-3 items-center justify-center" >
@@ -59,11 +85,18 @@ export default function AskQuestion({ questionHooks }:AskQuestionProps) {
                     </span>                    
                 </p>
 
-                <Textarea placeholder={`Faça uma pergunta...`} className="outline-none mt-4 text-lg font-medium h-[300px]" style={{outlineWidth:0, borderWidth:2, borderColor:colors.valero(), color:colors.valero()}}  />
-                <button className="flex gap-3 items-center justify-center text-xl w-full p-4" style={{color:colors.valero()}} >
-                    Enviar
-                    <IoSendSharp color={colors.valero()} size={22} />
-                </button>
+                <form  onSubmit={handleSubmit(sendQuestion)} className="w-full" >
+                    <Textarea {...register('question')} placeholder={`Faça uma pergunta...`} className="outline-none mt-4 text-lg font-medium h-[300px]" style={{outlineWidth:0, borderWidth:2, borderColor:colors.valero(), color:colors.valero()}}  />
+                    {errors.question && (
+                    <span className="text-red-500 text-base font-semibold" >
+                        {errors.question.message}
+                    </span>
+                    )}
+                    <button type="submit" className="flex gap-3 items-center justify-center text-xl w-full p-4" style={{color:colors.valero()}} >
+                        Enviar
+                        <IoSendSharp color={colors.valero()} size={22} />
+                    </button>
+                </form>
             </div>
 
         </div>

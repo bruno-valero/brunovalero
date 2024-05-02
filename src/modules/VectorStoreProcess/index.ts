@@ -43,9 +43,11 @@ export type PdfParsedMetadata = {
     docId:string,   
 }
 
+export type VectorStoreResponseSourceDocuments = {pageContent:string, metadata:PdfParsedData[0]['info']}[];
+
 export type VectorStoreProcessSearchResponse = {
     text:string,
-    sourceDocuments:{pageContent:string, metadata:PdfParsedData[0]['info']}[],
+    sourceDocuments:VectorStoreResponseSourceDocuments,
 };
 
 
@@ -95,6 +97,7 @@ export default class VectorStoreProcess {
                 info
             }
         });
+        
         const dataItem = data[0].info;
         const metadata:PdfParsedMetadata = {
             source:dataItem.source,
@@ -122,8 +125,10 @@ export default class VectorStoreProcess {
             // item.metadata
             const page = {...item} as PdfParsedData[0];
             console.log(`page: ${JSON.stringify(page)}`)
+            const { page:oi, ...info } = data[0].info
             const metadata = {
-                ...data[0].info,
+                ...info,
+                page:page.metadata?.loc?.pageNumber,
                 lines:page.metadata?.loc?.lines?.from ? `${page.metadata.loc.lines.from}-${page.metadata.loc.lines.to}` : '',
                 vectorID:`${data[0].info.docId}-${i}`,
             };
@@ -175,14 +180,13 @@ export default class VectorStoreProcess {
     };
 
     async PDFloader({url, filePath, blob, genres, docId }:{url?:string, filePath?:string, genres?:PdfGenresOptions[], blob:Blob, docId:string}) {
-        const file = 'src/modules/VectorStoreProcess/Vade_mecum_2023.pdf';        
-        // const { data, metadata } = await this.readPdf({filePath:filePath??file})     
+            
         console.log(`lendo o pdf...${docId}`);   
         const { data, metadata } = await this.readPdf({url, filePath, genres, blob, docId});   
         console.log('dividindo o pdf...');   
         console.log(`data[0].info: ${JSON.stringify(data[0].info)}`);   
         const splittedPdf:PdfParsedData = await this.pdfSplitter({data, splitterOptions:{encodingName:'cl100k_base', chunkSize:600, chunkOverlap:0}})
-
+        
         const price = (splittedPdf.length * 600) * (0.13 / 1_000_000)
         
         console.log('fazendo os logs...');   
@@ -214,7 +218,7 @@ export default class VectorStoreProcess {
 
         console.log(`query: ${question}`);       
 
-        const response = await this.askGpt(question, vectorStore, chunksAmount);
+        const response = await this.askGpt(question, vectorStore, chunksAmount);        
         return response;
 
     };

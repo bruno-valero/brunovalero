@@ -14,12 +14,14 @@ export default function useQuestionsList({ pdfId }:{ pdfId?:string }) {
 
     const [pdfQuestions, setPdfQuestions] = useState<QuestionPdf[]>([]);
 
+    const [showQuestionList, setShowQuestionList ] = useState(true);
     const [showQuestion, setShowQuestion ] = useState<QuestionPdf | null>(null);
     const [askQuestion, setAskQuestion] = useState(false);
 
     useEffect(() => {
         if (pdfQuestions.length === 0) {
             setAskQuestion(true);
+            setShowQuestionList(false);
         }
     }, [pdfQuestions]);
 
@@ -28,8 +30,9 @@ export default function useQuestionsList({ pdfId }:{ pdfId?:string }) {
         globalUser.userAuth.onAuthStateChanged(async(user) => {            
             if (!pdfId) return;
             fromCollection('services', db!).getDocById('readPdf').getCollection('data').getDocById(pdfId).getCollection('questions').onSnapshotExecute((snap) => {
-                const pdfs = snap.map(item => item.data) as QuestionPdf[];
-                setPdfQuestions(pdfs);
+                const questions = snap.map(item => item.data) as QuestionPdf[];
+                setPdfQuestions(questions);
+                console.log(`questions: ${JSON.stringify(questions, null, 2)}`);
             }, snaps, `pdf ${pdfId} questions`)                
             
             if (user) {  
@@ -41,12 +44,13 @@ export default function useQuestionsList({ pdfId }:{ pdfId?:string }) {
             Object.values(snaps).map(item => item());
         }
 
-    },[]);
+    },[pdfId]);
 
     const data = {
         pdfQuestions:[pdfQuestions, setPdfQuestions] as UseState<QuestionPdf[]>,
         showQuestion:[showQuestion, setShowQuestion ] as UseState<QuestionPdf | null>,
         askQuestion: [askQuestion, setAskQuestion] as UseState<boolean>,
+        showQuestionList: [showQuestionList, setShowQuestionList] as UseState<boolean>,
     }
     return data;
 
