@@ -9,7 +9,7 @@ const tags = Array.from({ length: 50 }).map(
 
 export function ScrollComponent({ children, className, style }:{ children:ReactNode, className?:string, style?:CSSProperties }) {
   return (
-    <ScrollArea className={twMerge("h-72 w-48 rounded-md border", className)} style={style} >
+    <ScrollArea className={twMerge("rounded-md border", className)} style={style} >
       { children }
     </ScrollArea>
   )
