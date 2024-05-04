@@ -4,6 +4,7 @@ import { useEffect, useMemo } from "react";
 import { Pdf, QuestionPdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
 import colors from "@/src/constants/colors";
 import { UseState } from "@/utils/common.types";
+import { PdfFunctions } from "..";
 import AskQuestion from "./AskQuestion";
 import ShowQuestionContent from "./ShowQuestionContent";
 
@@ -15,11 +16,13 @@ interface QuestionSectionProps {
         askQuestion:UseState<boolean>,
         details:UseState<Pdf | null>,
         showQuestionList:UseState<boolean>,
-        
-    }
+        search:UseState<string>,
+    },
+    functions:PdfFunctions,
+    
 }
 
-export default function QuestionSection({ questionHooks  }:QuestionSectionProps) {
+export default function QuestionSection({ questionHooks, functions  }:QuestionSectionProps) {
 
     const globalState = useGlobalProvider();
     const [, setResetedState] = globalState.resetedState;
@@ -33,6 +36,7 @@ export default function QuestionSection({ questionHooks  }:QuestionSectionProps)
     const [askQuestion, setAskQuestion] = questionHooks.askQuestion;
     const [details, setDetails] = questionHooks.details;
     const [showQuestionList, setShowQuestionList] = questionHooks.showQuestionList;
+    const [search, setSearch] = questionHooks.search;
 
     function gotToQuestion(question:QuestionPdf) {
         setShowQuestion(question);
@@ -40,27 +44,33 @@ export default function QuestionSection({ questionHooks  }:QuestionSectionProps)
         setAskQuestion(false);
     }
 
-    const questionListMemo = useMemo(() => questionList.map(item => (
-        <button onClick={() => gotToQuestion(item)} className="rounded-md shadow p-4 w-full my-2" >
+    const { choosePdf, goToQuestions } = functions;
+
+    const questionListMemo = useMemo(() => {
+        // const replace = search.replaceAll(/[^a-zA-Z\s.,!?áàâãéèêíìîóòôõúùûçÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ]/ig, '')
+        const replace = search.replaceAll(/[^a-zA-Z\s]/ig, '')
+        const regexp = new RegExp(replace, 'ig');
+        const questionFilter = questionList.filter(item => regexp.test(item.question.replaceAll(/[^a-zA-Z\s]/ig, '')) || regexp.test(decodeURIComponent(item.response.text).replaceAll(/[^a-zA-Z\s]/ig, '')));
+        return questionFilter.map(item => (
+        <button key={item.id} onClick={() => gotToQuestion(item)} className="rounded-md shadow p-4 w-full my-2" >
             <h3 className="text-lg font-semibold" style={{color:colors.valero()}} >
                 {item.question}
             </h3>
         </button>
-    )), [questionList]) 
+    ))
+}, [questionList, search]) 
 
     useEffect(() => {
-        console.log(`showQuestion ${showQuestion}`)
-        console.log(`askQuestion ${askQuestion}`)
-        // console.log(`showQuestion ${showQuestion}`)
-    }, [showQuestion, askQuestion, questionList])
+        
+    }, []);
 
 
     return (
         <div className="w-full" >
             {showQuestion && !askQuestion && !showQuestionList ? (
-                <ShowQuestionContent question={showQuestion} />
+                <ShowQuestionContent questionHooks={questionHooks} />
             ) : ((questionList.length === 0 || askQuestion) && !showQuestionList) ? (
-                <AskQuestion questionHooks={questionHooks} />
+                <AskQuestion questionHooks={questionHooks} functions={functions} />
             ) : questionListMemo}
         </div>
     );

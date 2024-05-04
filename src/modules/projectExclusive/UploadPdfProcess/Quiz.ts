@@ -17,6 +17,7 @@ import { getAuth } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from "firebase/storage";
+import UserFinancialData from "../UserManagement/UserFinancialData";
 import CheckPrivileges from "./CheckPrivileges";
 
 type UploadImageToStorage = ({ userId, fileName, imageURL, uploadContent }:{ userId:string, fileName:string, imageURL:string, uploadContent:'cover' | 'quizSlim' | 'quizWide' }) => Promise<{ blob: Blob; url: string; path: string; }>;
@@ -38,12 +39,12 @@ export default class Quiz {
         storage: FirebaseStorage;
     }
     checkPrivileges:CheckPrivileges;
-
+    financialData:UserFinancialData
     constructor() {
         this.vectorStore = new VectorStoreProcess();
         this.aiFeatures = new AiFeatures();
         this.checkPrivileges = new CheckPrivileges();
-
+        this.financialData = new UserFinancialData()
         this.firebase = firebaseInit({ envs, initializeApp, getAuth, getDatabase, getFirestore, getStorage, getApps })
     };
 
@@ -81,12 +82,15 @@ export default class Quiz {
 
     protected async generateQuestions({ quizFocus, docId }:{ quizFocus:string, docId:string }) {
         const { response, price:priceVectorSearch } = await this.vectorStore.search(quizFocus, docId, 8);
+        console.log(`Vector Store Response::: ${response.sourceDocuments.map(item => item.pageContent).join('\n\n')}`)
         const {content:questions, price:priceQuestions} = await this.aiFeatures.gpt3(`
         Com base no trecho abaixo, gere 30 questoes sobre "${quizFocus}". 
         Gere 5 alternativas (a, b, c, d, e) para cada questao, onde a penas a alternativa "a" contém a resposta verdadeira.
 
-        ${response}
+        ${response.sourceDocuments.map(item => item.pageContent).join('\n\n')}
         `);
+
+        console.log(`questions: ${questions}`)
 
         const {content:questionAndAlternatives, price:priceQuestionsAndAlternatives} = await this.aiFeatures.gpt3(`
         retorne as questões nesse formato:
@@ -94,12 +98,14 @@ export default class Quiz {
 
         questões:
         ${questions}
-        `);
+        `, true);   
 
-        const data = JSON.parse(questionAndAlternatives) as [string, ('a' | 'b' | 'c' | 'd' | 'e')[]][];
+        console.log(`questionAndAlternatives: ${questionAndAlternatives}`)
+
+        const data = JSON.parse(questionAndAlternatives) as {questoes:[string, ('a' | 'b' | 'c' | 'd' | 'e')[]][]};
         const price = priceVectorSearch + priceQuestions + priceQuestionsAndAlternatives;
 
-        return { data, price, vectorSearchResponse:response };
+        return { data:data.questoes, price, vectorSearchResponse:response };
     };
     
     protected async generateDescription({ vectorSearchResponse }:{ vectorSearchResponse:VectorStoreProcessSearchResponse }) {
@@ -213,7 +219,7 @@ export default class Quiz {
                 wide:{url:urlWide, path:pathWide},
             },
             questions:data.reduce((acc:QuizPdf['questions'], questionData) => {
-                const options = questionData[1].map(item => item.replace(regExp, '').trim())                    
+                const options = questionData[1].map(item => item.replace(regExp, '').trim())
                 const question:QuizPdf['questions'][0] = {
                     id:randomBytes(32).toString('hex'),
                     answer:questionData[1][0],
@@ -231,17 +237,27 @@ export default class Quiz {
             }, {}),            
         };
 
-        return quiz;
+        console.log(`quiz: ${JSON.stringify(quiz, null, 2)}`);
+        const serialized = JSON.parse(JSON.stringify(quiz)) as QuizPdf;
+        return serialized;
 
     };
 
-    async addQuiz({ quiz, docId }:{ quiz:QuizPdf, docId:string }) {
-        await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).collection('quiz').doc(quiz.id).set(quiz);
-        const { isFree } = await this.checkPrivileges.check({ currentAction:'pdfUpload', userId:quiz.userId });
-        if (!isFree) {
-            // payment process
-            const price = quiz.price;
+    async addQuiz({ quizFocus, docId, isPublic, userId, autoBuy, minCredits }:{ quizFocus:string, docId:string, isPublic:boolean, userId:string, autoBuy?:boolean, minCredits?:number }) {
+        const { isFree } = await this.checkPrivileges.check({ currentAction:'quizGeneration', userId });
+        console.log(`A pergnta ${isFree ? 'não será cobrada :)' : 'será cobrada!'}`)
+        if (!isFree) {      
+            await this.financialData.checkMinCredits({ uid:userId, autoBuy, minCredits });           
         };
+        const quiz = await this.generateQuiz({ quizFocus, docId, isPublic, userId });
+        await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).collection('quiz').doc(quiz.id).set(quiz);
+
+        const price = quiz.price;
+
+        if (!isFree) {
+            await this.financialData.spendCredits({ uid:userId, amount:price, autoBuy, minCredits });
+        }
+        return quiz;
     };
 
     async performanceAnalysis({ quizQuestions, quizTryQuestions }:{ quizQuestions:QuizPdf['questions'], quizTryQuestions:QuizPdfTry['questions'] }) {
@@ -250,7 +266,8 @@ export default class Quiz {
             const id = item.id;
             const question = item.question;
             const tryAnswer = quizTryQuestions[id].answer;
-            const isRightAnswer = tryAnswer === item.answer;
+            const regex = new RegExp(tryAnswer, 'ig')
+            const isRightAnswer = regex.test(item.answer);
             const timeToAnswer = `${Math.ceil(quizTryQuestions[id].timeAnswering / 1000)} segundos`;
 
             return {
@@ -268,7 +285,7 @@ export default class Quiz {
             acc.objectReport = [...acc.objectReport, item.objectReport];
             acc.textReport = [...acc.textReport, item.textReport];
             return acc;
-        }, { objectReport:[], textReport:[] })
+        }, { objectReport:[], textReport:[] });
 
         const { content, price } = await this.aiFeatures.gpt3(`
             O usuário leu um conteúdo e com base nele respondeu um quiz.
@@ -289,6 +306,7 @@ export default class Quiz {
             Ao finalizar o quiz, uma análize de performance foi gerada como formato de feedback.
             Para melhor ajudar o usuário, leia os trechos do conteúdo e com base neles fornceça algumas dicas sobre o que ele deveria fazer para ter um melhor entendimento do conteúdo.
             Se possível passe algum conhecimento com base nos trechos que aparentemente o usuário ainda não tenha captado.
+            Responda na segunda pessoa do singular (você).
 
             análize de performance:
             ${performanceAnalysis}

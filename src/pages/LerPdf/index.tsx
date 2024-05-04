@@ -1,6 +1,7 @@
 import colors from "@/src/constants/colors";
 import leitura from '@/src/images/leitura.png';
 import trial from '@/src/images/trial.png';
+import UploadPdfProcess from "@/src/modules/projectExclusive/UploadPdfProcess";
 import ContactAboutLerPdf from "./ContactAboutForms";
 import PdfList from "./PdfList";
 
@@ -27,7 +28,8 @@ function CardForm({ imageSrc, text }:CardFormProps) {
 
 export default function LerPdf() {
     
-    
+    const pdf = new UploadPdfProcess()
+    // pdf.regenerateGenres('1714710089867', 'W4cd8j5ZsUUI4akQ77csf0GORIv1')
     // const vectorStore = new VectorStoreProcess();
     // Promise.all([
     //     '1714565595194', '1714564378253', 
