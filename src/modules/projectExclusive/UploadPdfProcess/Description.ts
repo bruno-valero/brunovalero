@@ -39,7 +39,7 @@ export default class Description {
 
 
         Uma capa bonita para o seguinte conteudo:
-        ${phrase}
+        ${phrase.content}
         `);
 
         return {content, summary:phrase};

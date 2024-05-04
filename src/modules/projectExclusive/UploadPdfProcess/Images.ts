@@ -13,7 +13,9 @@ import { getAuth } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
 import { getFirestore } from 'firebase/firestore';
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
+import UserFinancialData from "../UserManagement/UserFinancialData";
 import AiFeatures from "./AiFeatures";
+import CheckPrivileges from "./CheckPrivileges";
 import Description from "./Description";
 
 
@@ -34,13 +36,16 @@ export default class Images {
     };
     protected description:Description;
     protected aiFeatures:AiFeatures;
+    checkPrivileges:CheckPrivileges;
+    financialData:UserFinancialData;
 
     constructor() {
 
         this.firebase = firebaseInit({ envs, initializeApp, getAuth, getDatabase, getFirestore, getStorage, getApps });
         this.description = new Description();
         this.aiFeatures = new AiFeatures();
-
+        this.checkPrivileges = new CheckPrivileges();
+        this.financialData = new UserFinancialData();
     };
 
 
@@ -67,11 +72,16 @@ export default class Images {
 
         const { imageURL, inputContent, price } = await this.aiFeatures.generateImage(content.content, size);
         
-        return {imageURL, inputContent:content, descriptionSummary:summary, price};
+        return {imageURL, inputContent:content, descriptionSummary:summary, price:price + summary.price};
 
     };   
 
-    async addNewImage({ docId, userId }:{ docId:string, userId:string }) {
+    async addNewImage({ docId, userId, autoBuy, minCredits }:{ docId:string, userId:string, autoBuy?:boolean, minCredits?:number }) {
+
+        const { isFree } = await this.checkPrivileges.check({ currentAction:'coverGenerationForPrivateDocs', userId });
+        if (!isFree) {
+            await this.financialData.checkMinCredits({ uid:userId, autoBuy, minCredits });
+        }
 
         const { textResponse:description, price:descriptionPrice } = await this.description.generateDescription(docId);
         const { imageURL, inputContent, descriptionSummary, price:imagePrice } = await this.generateImageFromDescription(description, 'slim');
@@ -90,7 +100,18 @@ export default class Images {
         const newImage = {url, active:true, storagePath:path};
 
         const imageCover = [...covers, newImage];
-        await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).update({ imageCover });
+        
+
+        const price = descriptionPrice + imagePrice
+        if (!isFree) {
+            console.log('cobrando pagamento...');
+            await this.financialData.spendCredits({ uid:userId, amount:price, autoBuy, minCredits });
+            console.log('atualizando o banco de dados...')
+            await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).update({ imageCover });
+        } else {
+            console.log('atualizando o banco de dados...')
+            await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).update({ imageCover });
+        };
         
         return { newImage, imageCover};
     };

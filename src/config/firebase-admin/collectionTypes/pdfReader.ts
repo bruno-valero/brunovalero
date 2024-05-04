@@ -18,6 +18,8 @@ export type Pdf = {
     id:string,
     /** Título opcional, customizável pelo usuário. */
     customTitle?:string,
+    /** Url do pdf guardado no Firebase Storage. */
+    pdfUrl:string,
     /** ID único do usuário que gerou o pdf (se foi gerado pelo adm o ID deve ser "public"). */
     userId:string,
     /** Preço para a geração do pdf. */
@@ -63,6 +65,8 @@ export type QuestionPdf = {
     id:string,
     /** ID único do usuário que realizou a pergunta. */
     userId:string,
+    /** Preço da pergunta. */
+    price:number,
     /** Texto da pergunta, ou seja, a pergunta em si */
     question:string,
     /** Resposta da pergunta */
@@ -121,7 +125,7 @@ export type QuizPdf = {
         /** Texto da pergunta. */
         question:string,
         /** Resposta correta da pergunta. */
-        answer:'a' | 'b' | 'c' | 'd' | 'e',
+        answer:string,
         /** Opções de resposta. */
         options:{
             a:string,
@@ -150,9 +154,9 @@ export type QuizPdfTry = {
         /** Tempo gasto para responder a pergunta. */
         timeAnswering:number,
         /** Opção correta da pergunta. */
-        rightOption:'a' | 'b' | 'c' | 'd' | 'e',
+        rightOption:string,
         /** Resposta selecionada pelo usuário. */
-        answer:'a' | 'b' | 'c' | 'd' | 'e' | 'none',
+        answer:string,
     }>,
     /** Pontuação da tentativa. */
     score:number,
