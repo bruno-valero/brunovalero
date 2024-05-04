@@ -187,7 +187,7 @@ export default class VectorStoreProcess {
         console.log(`data[0].info: ${JSON.stringify(data[0].info)}`);   
         const splittedPdf:PdfParsedData = await this.pdfSplitter({data, splitterOptions:{encodingName:'cl100k_base', chunkSize:600, chunkOverlap:0}})
         
-        const price = (splittedPdf.length * 600) * (0.13 / 1_000_000)
+        const price = ((splittedPdf.length * 600) * (0.13 / 1_000_000) * (await (new UpdateDollarPrice({}).priceOnBackEnd())).dollarPrice.brl.price) * 2
         
         console.log('fazendo os logs...');   
         this.logInfoPdfPreload({metadata, splittedPdf});

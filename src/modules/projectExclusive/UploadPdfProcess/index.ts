@@ -68,21 +68,30 @@ export default class UploadPdfProcess {
 
     
     async completeUpload({ pdfUrl, docId, userId }:{ pdfUrl:string, docId:string, userId?:string }) {        
-
+        userId = userId ?? 'public';
         const blob = await (await fetch(pdfUrl)).blob();
         const { data, metadata, price:pricePdfLoader } = await this.uploadToVectorStore({ docId, blob });
+        let realGenres:string[]
+        let realGenresPrice = 0;
         const { genres, price:genrePrice } = await this.generateGenres(docId);
+        realGenres = genres;
+        const allGenres = (new PdfGenres()).genres.map(item => item.genre)
+        if (realGenres.some(item => !allGenres.includes(item as any))) {
+            const { genres:regenerated, price:regeneratedPrice } = await this.regenerateGenres(docId, userId) 
+            realGenresPrice = regeneratedPrice;
+            realGenres = regenerated;
+        }
         const { textResponse:description, price:descriptionPrice } = await this.description.generateDescription(docId);
         const { imageURL, inputContent, descriptionSummary, price:imagePrice } = await this.generateImageFromDescription(description, 'slim');
 
-        userId = userId ?? 'public';
+        
         const quiz = await this.quiz.generateQuiz({docId, isPublic:true, quizFocus:`Qual o objetivo desse conteúdo`, userId});        
         const price = pricePdfLoader + genrePrice + descriptionPrice + imagePrice + quiz.price;
         
         const fileName = `${docId}`;
         const { blob:imageBlob, path, url } = await this.uploadImageToStorage({ userId, fileName, imageURL, uploadContent:'cover' });
         
-        metadata.genres = genres;
+        metadata.genres = realGenres;
 
         const newDoc:Partial<CollectionTypes['services']['readPdf']['data'][0]> = {
             id:docId,
@@ -109,14 +118,26 @@ export default class UploadPdfProcess {
         
         const blob = await (await fetch(pdfUrl)).blob();
         const { data, metadata } = await this.uploadToVectorStore({ docId, blob });
+        let realGenres:string[]
+        let realGenresPrice = 0;
         const { genres, price:genrePrice } = await this.generateGenres(docId);
+        realGenres = genres;
+        const allGenres = (new PdfGenres()).genres.map(item => item.genre)
+        if (realGenres.some(item => !allGenres.includes(item as any))) {
+            const { genres:regenerated, price:regeneratedPrice } = await this.regenerateGenres(docId, user.uid!) 
+            realGenresPrice = regeneratedPrice;
+            realGenres = regenerated;
+        }
         console.log('gerando descrição...')
         const { textResponse:description, price:descriptionPrice } = await this.description.generateDescription(docId);
         
-        const price = genrePrice + descriptionPrice;
+        const price = genrePrice + descriptionPrice + realGenresPrice;
         
+        metadata.genres = realGenres;
+
         const newDoc:Pdf = {
             id:docId,
+            pdfUrl,
             userId,
             description,
             public:true,
@@ -187,6 +208,7 @@ export default class UploadPdfProcess {
         const newQuestion:QuestionPdf = {
             id:String(new Date().getTime()),
             question,
+            price,
             response:{
                 text:textResponse,
                 chunksRelated,
@@ -194,15 +216,10 @@ export default class UploadPdfProcess {
             userId:user.uid,
         };
 
-        
-        const questions:Pdf['questions'] = {
-            ...doc.questions,
-            [newQuestion.id]:newQuestion,
-        };
-
         const update = JSON.parse(JSON.stringify(newQuestion));
 
         console.log(`${JSON.stringify(update, null, 2)}`);
+        console.log(`price: ${price})}`);
         await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).collection('questions').doc(newQuestion.id).set(update);
 
         return update;
@@ -236,7 +253,7 @@ export default class UploadPdfProcess {
         const textResponse = resp.text; 
         
         const allGenres = (new PdfGenres()).genres.map(item => item.genre).join(', ');
-        
+        console.log(`possibleGenres: ${textResponse}`)
         
         const { content, price:priceGenre } = await this.aiFeatures.gpt3(`
         esta é a lista de gêneros.
@@ -246,9 +263,19 @@ export default class UploadPdfProcess {
 
         ${textResponse}
         `);
+        console.log(`genres: ${content}`)
         const genres = content.split(',').map(item => item.trim());
         return { genres, price:priceGenre + price };
-    };          
+    };      
+    
+    async regenerateGenres(docId: string, uid:string) {
+
+        const { genres, price } = await this.generateGenres(docId);
+
+        console.log(`genres: ${genres}`)
+
+        return { genres, price }
+    };
 
     protected async generateImageFromDescription(text:string, size:'slim' | 'wide') {
 

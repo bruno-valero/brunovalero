@@ -2,6 +2,9 @@ import envs from "@/envs";
 import { ChatOpenAI, ChatOpenAICallOptions, DallEAPIWrapper } from "@langchain/openai";
 import UpdateDollarPrice from "../UpdateDollarPrice";
 
+import OpenAI from "openai";
+
+
 
 export default class AiFeatures {
 
@@ -14,7 +17,7 @@ export default class AiFeatures {
         const model = new ChatOpenAI({
             openAIApiKey:envs.OPENAI_API_KEY,
             model:'gpt-3.5-turbo',
-            temperature:.3, 
+            temperature:.3,            
         });  
         this.openaiChat = model;
 
@@ -39,6 +42,7 @@ export default class AiFeatures {
     async generateImage(text:string, size:'slim' | 'wide') {
 
         console.log('generate image: generando a imagem...');
+        console.log(`descrição: ${text}`);
         let dale3:DallEAPIWrapper;
         if (size === 'slim') {
             dale3 = this.dalle3_slim;
@@ -55,12 +59,36 @@ export default class AiFeatures {
 
     };
 
-    async gpt3(text:string) {
+    async gpt3(text:string, json?:boolean) {
         const model = this.openaiChat;
                 
-        const chatResp = await model.invoke(text);
+        let resp:string | null
 
-        const content = chatResp.content;
+        if (json) {  
+
+            const openai = new OpenAI({apiKey:envs.OPENAI_API_KEY});
+            const completion = await openai.chat.completions.create({
+                messages: [
+                  {
+                    role: "system",
+                    content: "Você é um assistente que responde em JSON.",
+                  },
+                  { role: "user", content: text },
+                ],
+                model: "gpt-3.5-turbo-0125",
+                response_format: { type: "json_object" },
+                temperature:.3,
+                max_tokens:16000,
+              });
+              resp = completion.choices[0].message.content
+              console.log(`resp: ${resp}`);
+        } else {
+            const chatResp = await model.invoke(text);
+            resp = chatResp.content as any;
+        }
+
+
+        const content = resp;
         if (typeof content !== 'string') throw new Error("Houve um problema com a resosta.");
         
         
@@ -68,7 +96,7 @@ export default class AiFeatures {
         const tokens = text.split('').length;
         const inputPrice = tokens * (0.5 / 1_000_000);
         const outputPrice = tokens * (1.5 / 1_000_000);
-        const price = (inputPrice + outputPrice) * dollarPrice;
+        const price = ((inputPrice + outputPrice) * dollarPrice) * 2;
         return { content , price};
     };    
 

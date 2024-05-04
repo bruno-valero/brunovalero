@@ -11,6 +11,7 @@ import { IoSendSharp } from "react-icons/io5";
 import { zodResolver } from '@hookform/resolvers/zod';
 import { RxDotFilled } from "react-icons/rx";
 import z from "zod";
+import { PdfFunctions } from "../..";
 
 interface AskQuestionProps {
     questionHooks:{
@@ -19,7 +20,8 @@ interface AskQuestionProps {
         showQuestion:UseState<QuestionPdf | null>,
         askQuestion:UseState<boolean>,
         details:UseState<Pdf | null>,
-    }
+    },
+    functions:PdfFunctions,
 }
 
 const questionSchema = z.object({
@@ -27,7 +29,7 @@ const questionSchema = z.object({
 });
 type Question = z.infer<typeof questionSchema>
 
-export default function AskQuestion({ questionHooks }:AskQuestionProps) {
+export default function AskQuestion({ questionHooks, functions }:AskQuestionProps) {
 
     const globalState = useGlobalProvider();
     const [, setResetedState] = globalState.resetedState;
@@ -55,7 +57,8 @@ export default function AskQuestion({ questionHooks }:AskQuestionProps) {
             return;
         }
         console.log(`resposta: ${data}`);
-        setShowQuestion(data as QuestionPdf);
+        // setShowQuestion(data as QuestionPdf);
+        functions.gotToQuestion(data as QuestionPdf)
     }
 
     return (
@@ -85,7 +88,7 @@ export default function AskQuestion({ questionHooks }:AskQuestionProps) {
                     </span>                    
                 </p>
 
-                <form  onSubmit={handleSubmit(sendQuestion)} className="w-full" >
+                <form  onSubmit={handleSubmit(sendQuestion)} className="w-full flex flex-col gap-2" >
                     <Textarea {...register('question')} placeholder={`Faça uma pergunta...`} className="outline-none mt-4 text-lg font-medium h-[300px]" style={{outlineWidth:0, borderWidth:2, borderColor:colors.valero(), color:colors.valero()}}  />
                     {errors.question && (
                     <span className="text-red-500 text-base font-semibold" >
