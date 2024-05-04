@@ -30,7 +30,7 @@ const getQuiz = cache(async (id:string) => {
   
     return {
       title:quiz.title,
-      description:quiz.description,
+      description:quiz.description.split(':')[1],
       openGraph:{
         images:[
           {
