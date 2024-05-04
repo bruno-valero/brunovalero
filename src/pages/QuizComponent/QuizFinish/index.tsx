@@ -1,7 +1,9 @@
 import { Separator } from "@/components/ui/separator";
 import { QuizPdf, QuizPdfTry } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
 import colors from "@/src/constants/colors";
+import Post from "@/src/modules/Request/Post";
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
+import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -17,6 +19,7 @@ interface QuizQuestionProps {
 };
 
 export default function QuizFinish({ quiz, tries, questions }: QuizQuestionProps) {    
+    const router = useRouter();
 
     const globalState = useGlobalProvider();
     const [, setResetedState] = globalState.resetedState;
@@ -25,7 +28,7 @@ export default function QuizFinish({ quiz, tries, questions }: QuizQuestionProps
     const { db, storage } = globalState.firebase;
     const [publicError, setPublicError] = globalState.publicError;
 
-    function millisecondsToTime(ms:number) {
+    function millisecondsToTime(ms:number, notMillis?:boolean) {
         let seconds = Math.floor((ms / 1000) % 60);
         let minutes = Math.floor((ms / (1000 * 60)) % 60);
         let hours = Math.floor((ms / (1000 * 60 * 60)) % 24);
@@ -37,6 +40,9 @@ export default function QuizFinish({ quiz, tries, questions }: QuizQuestionProps
         const h = (hours < 10) ? `0${hours}` : hours;
         const mss = (milliseconds < 10) ? `00${milliseconds}` : (milliseconds < 100) ? `0${milliseconds}` : milliseconds;
         
+        if (notMillis) {
+            return hours ? `${h}:${m}:${s}:${mss}` : `${m}:${s}`;
+        };
         return hours ? `${h}:${m}:${s}:${mss}` : `${m}:${s}:${mss}`;
     };
 
@@ -86,9 +92,22 @@ export default function QuizFinish({ quiz, tries, questions }: QuizQuestionProps
 
     }, [tries, quiz]);
 
+    async function sendTry(newTry?:QuizPdfTry['questions']) {
+        if (!newTry) return null;
+        if (!quiz || !globalUser.data) return;
+        type Data = { docId:string, uid:string, quizTryQuestions:QuizPdfTry['questions'], quiz:QuizPdf }
+        const data:Data =  { docId:quiz.docId, uid:globalUser.data.uid, quizTryQuestions:newTry, quiz };
+        const path = `/api/readPdf/add-quiz-try`;
+        const post = new Post(path);
+        post.addData(data);
+        const resp = await post.send();
+        const json = (await resp?.json() as {data: QuizPdfTry});
+        console.log(`json: ${JSON.stringify(json, null, 2)}`);
+        router.push(`/ler-pdf/quiz/${quiz.docId}-${quiz.id}/${json.data.id}`);
+    };
+
     return (
-        <div className="w-full h-full flex flex-col items-start justify-center" >
-            
+        <div className="w-full h-full flex flex-col items-start justify-center" >            
             <h2 className="text-lg font-semibold" style={{color:colors.valero()}} >
                 {quiz?.title}
             </h2>
@@ -96,6 +115,9 @@ export default function QuizFinish({ quiz, tries, questions }: QuizQuestionProps
             
             <div className="w-full flex gap-8 mt-4" >
                 <div className="flex flex-col gap-3 mt-4" >
+                    <span className="text-lg font-semibold" style={{color:colors.valero()}} >
+                        Tempo: {millisecondsToTime(Object.values(newTry?.data.questions ?? {}).reduce((acc, item) => item.timeAnswering + acc, 0), true)}
+                    </span>
                     <span className="text-lg font-bold" style={{color:colors.valero()}} >
                         Score: {newTry?.data.score}%
                     </span>
@@ -111,7 +133,7 @@ export default function QuizFinish({ quiz, tries, questions }: QuizQuestionProps
                         Parabéns!
                     </span>
                     <span className="text-base font-normal" >
-                        Você possúi um bom conhecimento relacionado ao tema "{quiz?.title}".
+                        Você possui um bom conhecimento relacionado ao tema "{quiz?.title}".
                     </span>
                     <span className="text-base font-normal" >
                         Seria interessante fazer algumas perguntas sobre o assunto, pois ainda ficaram algumas lacunas.
@@ -128,7 +150,7 @@ export default function QuizFinish({ quiz, tries, questions }: QuizQuestionProps
             </div>
 
             <div className="w-full flex items-center justify-center mt-4" >     
-                <button onClick={() => {}} className={twMerge("flex gap-2 items-center justify-center p-2 px-6 text-white rounded shadow")} style={{backgroundColor:colors.valero()}} >
+                <button onClick={() => sendTry(newTry?.data.questions)} className={twMerge("flex gap-2 items-center justify-center p-2 px-6 text-white rounded shadow")} style={{backgroundColor:colors.valero()}} >
                     {/* <BsArrowLeft size={25} color="white" /> */}
                     <span>Enviar</span>
                 </button>                

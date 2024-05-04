@@ -288,9 +288,10 @@ export default class Quiz {
         }, { objectReport:[], textReport:[] });
 
         const { content, price } = await this.aiFeatures.gpt3(`
-            O usuário leu um conteúdo e com base nele respondeu um quiz.
+            O participante leu um conteúdo e com base nele respondeu um quiz.
             Abaixo estão listadas as perguntas do quiz. Para cada pergunta está indicando se ele acertou e quanto tempo demorou para responder.
             Com base nessas informações, faça uma análise de desempemho.
+            Tente usar o conteúdo da questão ao invéz do número dela.
 
             questões:
             
@@ -337,9 +338,12 @@ export default class Quiz {
         const quizQuestions = quiz.questions;
         const quizTries = quiz.tries;
         const chunksRelated = quiz.chunksRelated;
-
+        console.log(`quizQuestions: ${JSON.stringify(quizQuestions, null, 2)}\n\n`);
+        console.log(`quizTryQuestions: ${JSON.stringify(quizTryQuestions, null, 2)}\n\n`);
         const { content:performanceAnalysis, price:pricePerformanceAnalysis, performance } = await this.performanceAnalysis({ quizQuestions, quizTryQuestions });
+        console.log(`performanceAnalysis: ${JSON.stringify(performanceAnalysis, null, 2)}\n\n`);
         const { content:tipBasedOnPerformance, price:priceTipBasedOnPerformance } = await this.tipBasedOnPerformance({ performanceAnalysis, chunksRelated });
+        console.log(`tipBasedOnPerformance: ${JSON.stringify(tipBasedOnPerformance, null, 2)}\n\n`);
         const rightQuestions = performance.filter(item => item.isRightAnswer).length;
         const score = Number((rightQuestions / performance.length).toFixed(2));
         const newTry:QuizPdfTry = {
@@ -351,6 +355,8 @@ export default class Quiz {
             score,
             userId,
         };
+
+        console.log(`newTry: ${JSON.stringify(newTry, null, 2)}\n\n`);
 
         await admin_firestore
             .collection('services').doc('readPdf')
