@@ -3,7 +3,7 @@ import fromCollection from "@/src/config/firebase/firestore";
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import { UseState } from "@/utils/common.types";
 import { where } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export default function usePdfList() {
 
@@ -14,6 +14,7 @@ export default function usePdfList() {
     const { db } = globalState.firebase;
 
     const [pdfList, setPdfList] = useState<Pdf[]>([]);
+    const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
 
     useEffect(() => {
         const snaps = {} as Record<string, any>
@@ -40,7 +41,7 @@ export default function usePdfList() {
                 // const publicPdfs = snapPublic.map(doc => doc.data as Pdf);
                 // setPdfList(publicPdfs);
             }
-        });
+        });        
 
         return () => {
             Object.values(snaps).map(item => item());
@@ -48,8 +49,32 @@ export default function usePdfList() {
 
     },[]);
 
+    const genres = useMemo(() => {
+        const gen = pdfList.map(item => item.metadata.genres);
+        const uniqueGenres =  gen.reduce((acc, item) => [...acc, ...item], []).reduce((acc:Record<string, any>, item) => {
+            acc[item] = '';
+            return acc;
+        },{});
 
-    return [pdfList, setPdfList] as UseState<Pdf[]>;
+        return Object.keys(uniqueGenres);
+    }, [pdfList]);
+
+
+    const filteredList = useMemo(() => {
+        // alert(selectedGenres)
+        console.log(selectedGenres);
+        const list = pdfList.filter(item => selectedGenres.length > 0 ? (item.metadata.genres.filter(g => selectedGenres.includes(g)).length > 0) : true);
+        console.log(list)
+        return list
+    }, [pdfList, selectedGenres])
+
+
+    return {
+        pdfList:[pdfList, setPdfList] as UseState<Pdf[]>,
+        selectedGenres:[selectedGenres, setSelectedGenres] as UseState<string[]>,
+        filteredList,
+        genres,
+    };
 
 
 }
