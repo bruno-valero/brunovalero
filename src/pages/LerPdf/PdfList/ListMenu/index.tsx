@@ -1,3 +1,4 @@
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import colors from "@/src/constants/colors";
 import Post from "@/src/modules/Request/Post";
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
@@ -6,15 +7,18 @@ import { ChangeEvent, RefObject } from "react";
 import { FaFilter, FaThList } from "react-icons/fa";
 import { IoGrid } from "react-icons/io5";
 import { TiPlus } from "react-icons/ti";
+import { PdfHooks } from "..";
 
 
-export default function ListMenu({ getPdfRef }:{ getPdfRef:RefObject<HTMLInputElement> }) {
+export default function ListMenu({ getPdfRef, questionHooks }:{ getPdfRef:RefObject<HTMLInputElement>, questionHooks: PdfHooks }) {
 
     const globalState = useGlobalProvider();
     const [, setResetedState] = globalState.resetedState;
     const globalUser = globalState.globalUser;
     const { db, storage } = globalState.firebase;
     const [publicError, setPublicError] = globalState.publicError;
+
+    const { genres, selectedGenres:[selectedGenres, setSelectedGenres] } = questionHooks;
 
 
     async function uploadToStorage(pdf:File) {
@@ -64,16 +68,46 @@ export default function ListMenu({ getPdfRef }:{ getPdfRef:RefObject<HTMLInputEl
             await uploadToStorage(item);
         }, Promise.resolve()));
         
+    };
+
+    function toggleGenres(item: string) {
+        setSelectedGenres(prev => {
+            return !prev.includes(item) ? [...prev, item] : prev.filter(data => data !== item)
+            })
+
     }
 
-
+    
     return (
         <>
-            <button className="bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center  "  >
+            {/* <button className="bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center  "  >
                 <FaFilter color={colors.valero(.8)} />
                 <span  className='' style={{color:colors.valero(.8)}} >Filtro</span>
-            </button>                
+            </button>                 */}
+            <Popover>
+                <PopoverTrigger className="bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center" >
+                    <FaFilter color={colors.valero(.8)} />
+                    <span  className='' style={{color:colors.valero(.8)}} >Filtro</span>
+                </PopoverTrigger>
+                <PopoverContent>
+                    <ul className="p-2 flex flex-col gap-1" >
+                        <li className="w-full" >
+                            <button onClick={() => setSelectedGenres([])} className="rounded w-full shadow p-2" style={{backgroundColor:selectedGenres.length === 0 ? colors.valero() : 'white', color:selectedGenres.length === 0 ? 'white' : colors.valero()}} >
+                                Selecionar Todos
+                            </button>
+                        </li>
+                        {genres.map(item => (
+                            <li className="w-full" >
+                                <button onClick={() => toggleGenres(item)} className="rounded w-full shadow p-2" style={{backgroundColor:selectedGenres.includes(item) ? colors.valero() : 'white', color:selectedGenres.includes(item) ? 'white' : colors.valero()}} >
+                                    {item}
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                </PopoverContent>
+            </Popover>
             <div className="bg-gray-100 rounded shadow gap-2 flex items-center justify-center"  >
+
                 <button className="py-3 pr-3 pl-2 text-white font-bold rounded flex items-center justify-center" style={{}} >
                     <IoGrid size={26} className="text-black" style={{color:colors.valero(.8)}} />
                 </button>

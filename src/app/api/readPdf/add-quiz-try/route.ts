@@ -9,7 +9,7 @@ import { NextResponse } from "next/server";
 export async function POST(req:Request) {
 
     try {
-        const { docId, uid, quizTryQuestions, quiz } = await req.json() as {  docId:string, uid:string, quizTryQuestions:QuizPdfTry['questions'], quiz:QuizPdf };
+        const { docId, uid, quizTryQuestions, quiz } = await req.json() as { docId:string, uid:string, quizTryQuestions:QuizPdfTry['questions'], quiz:QuizPdf };
         if (!uid) throw new Error("Usuário não encontrado");        
         if (!docId) throw new Error("Id do Documento inválido");         
 

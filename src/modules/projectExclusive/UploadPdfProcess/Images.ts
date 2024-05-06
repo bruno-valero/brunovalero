@@ -52,8 +52,9 @@ export default class Images {
     protected async uploadImageToStorage({ userId, fileName, imageURL, uploadContent }:{ userId:string, fileName:string, imageURL:string, uploadContent:'cover' }) {
         const { storage } = this.firebase;
 
+        const imageId = new Date().getTime()
         const pathTypes = {
-            cover:`services/readPdf/covers/${userId}/${fileName}`,            
+            cover:`services/readPdf/covers/${userId}/${fileName}/${imageId}`,
         };
         const path = pathTypes[uploadContent];
 
