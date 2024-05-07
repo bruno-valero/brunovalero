@@ -32,16 +32,17 @@ type Question = z.infer<typeof questionSchema>
 export default function AskQuestion({ questionHooks, functions }:AskQuestionProps) {
 
     const globalState = useGlobalProvider();
-    const [, setResetedState] = globalState.resetedState;
+    const [, setResetedState] = globalState.resetedState ?? [];
     const globalUser = globalState.globalUser;
-    const { db, storage } = globalState.firebase;
-    const [publicError, setPublicError] = globalState.publicError;
+    const { db, storage } = globalState.firebase ?? {};
+    const [publicError, setPublicError] = globalState.publicError ?? [];
+    const dimensions = globalState.dimensions;
 
 
-    const [ questionList, setQuestionList ] = questionHooks.questionList;
-    const [ showQuestion, setShowQuestion ] = questionHooks.showQuestion;
-    const [askQuestion, setAskQuestion] = questionHooks.askQuestion;
-    const [details, setDetails] = questionHooks.details;
+    const [ questionList, setQuestionList ] = questionHooks?.questionList ?? [];
+    const [ showQuestion, setShowQuestion ] = questionHooks?.showQuestion ?? [];
+    const [askQuestion, setAskQuestion] = questionHooks?.askQuestion ?? [];
+    const [details, setDetails] = questionHooks?.details ?? [];
 
     const { register, handleSubmit, formState:{ errors } } = useForm<Question>({ resolver:zodResolver(questionSchema) });   
 
@@ -62,6 +63,7 @@ export default function AskQuestion({ questionHooks, functions }:AskQuestionProp
     }
 
     return (
+        dimensions &&
         <div className="w-full flex flex-col gap-3 items-center justify-center" >
             <div className="w-[80%] flex flex-col gap-3 items-center justify-center mt-4" >
                 <h3 className="text-2xl text-wrap font-light" style={{color:colors.valero()}} >

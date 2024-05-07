@@ -31,7 +31,7 @@ export type ControlVariables = {
 
 /** Contém informações sobre os planos de serviço para todos os serviços fornecidos */
 export type ControlPlan = {
-    /** Contém informações sobre os planos de serviço para serviço de **upload e leitura de PDFs** */
+    /** **Nova Coleção** Contém informações sobre os planos de serviço para serviço de **upload e leitura de PDFs** */
     readPdf:{
         /** Contém informações sobre os plano de serviço **gratuito** para o serviço de **upload e leitura de PDFs** */
         free:ControlPlanReadPdfPlans,
@@ -40,11 +40,13 @@ export type ControlPlan = {
         /** Contém informações sobre os plano de serviço **enterprise (empresarial)** para o serviço de **upload e leitura de PDFs** */
         enterprise:ControlPlanReadPdfPlans,
     },
-}
+};
 
 
 /** Contém informações sobre os planos **free, standar e enterprise** para serviço de **upload e leitura de PDFs** */
 export type ControlPlanReadPdfPlans = {
+    /** nome customizável do plano */
+    customName:'Básico' | 'Empreendedor' | 'Prêmium',
     /** Informações sobre as perguntas por mês que o usuário tem permissão de fazer */
     questionsPerMonth:{
         /** Número de perguntas por mês que o usuário tem permissão de fazer */
@@ -57,7 +59,9 @@ export type ControlPlanReadPdfPlans = {
         /** Número de uploads de PDFs por mês que o usuário tem permissão de fazer */
         amount:number | 'unlimited',
         /** Preço de cata upload de PDFs que o usuário tem permissão de fazer */
-        price:number,
+        chunkOfWords:number,
+        /** Preço de cata upload de PDFs que o usuário tem permissão de fazer */
+        pricePerChunkOfWords:number,
     },
     /** Número total de documentos que o usuário tem permissão de possuir.
      * 

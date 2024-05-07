@@ -16,11 +16,11 @@ interface QuizQuestionProps {
 export default function QuizFinish({ quiz, quizTry }: QuizQuestionProps) {    
 
     const globalState = useGlobalProvider();
-    const [, setResetedState] = globalState.resetedState;
-    const { height, width } = globalState.dimensions
+    const [, setResetedState] = globalState.resetedState ?? [];
+    const { width, height } = globalState.dimensions ?? {};
     const globalUser = globalState.globalUser;
-    const { db, storage } = globalState.firebase;
-    const [publicError, setPublicError] = globalState.publicError;
+    const { db, storage } = globalState.firebase ?? {};
+    const [publicError, setPublicError] = globalState.publicError ?? [];
 
     function millisecondsToTime(ms:number, notMillis?:boolean) {
         let seconds = Math.floor((ms / 1000) % 60);
@@ -97,6 +97,7 @@ export default function QuizFinish({ quiz, quizTry }: QuizQuestionProps) {
     }
 
     return (
+        width &&
         <div className="w-full h-full flex flex-col items-start justify-center" >
             
             <div className="w-full flex items-center justify-between pr-5">
@@ -128,7 +129,7 @@ export default function QuizFinish({ quiz, quizTry }: QuizQuestionProps) {
             </div>
             <Separator className="my-2 mt-3" style={{color:colors.valero(), backgroundColor:colors.valero()}} />
             
-            <div className="w-full flex gap-8 mt-4" >
+            <div className={twMerge("w-full flex gap-8 mt-4", width < 500 && 'flex-col items-center justify-center')} >
                 <div className="flex flex-col gap-1 mt-3" >
                     <span className="text-lg font-semibold" style={{color:colors.valero()}} >
                         Tempo: {millisecondsToTime(Object.values(newTry?.data.questions ?? {}).reduce((acc, item) => item.timeAnswering + acc, 0), true)}
@@ -171,7 +172,7 @@ export default function QuizFinish({ quiz, quizTry }: QuizQuestionProps) {
                         Ver Relatório
                     </PopoverTrigger>
                     <PopoverContent className="w-auto h-auto p-[4px]" >
-                        <ScrollComponent className="w-[600px] h-[400px] border-none outline-none px-3" >
+                        <ScrollComponent className={twMerge("w-[600px] h-[400px] border-none outline-none px-3", width < 500 && 'w-[300px] h-[350px]')} >
                             {quizTry?.performanceObservation.split('\n').map(item => (
                                 <>
                                     <span>
@@ -188,7 +189,7 @@ export default function QuizFinish({ quiz, quizTry }: QuizQuestionProps) {
                         Ver Feedback
                     </PopoverTrigger>
                     <PopoverContent className="w-auto h-auto p-[4px]" >
-                        <ScrollComponent className="w-[600px] h-[400px] border-none outline-none px-3" >
+                        <ScrollComponent className={twMerge("w-[600px] h-[400px] border-none outline-none px-3" , width < 500 && 'w-[300px] h-[350px]')} >
                             {quizTry?.tip.split('\n').map(item => (
                                 <>
                                     <span>

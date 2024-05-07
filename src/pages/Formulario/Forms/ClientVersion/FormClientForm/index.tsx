@@ -55,29 +55,36 @@ function ErrorSpan({ text }:{text?:string}) {
 
 export type FormsDataCustom = Omit<FromSchema, 'documents'> & {documents:{name:string, type:string, size:number, base64:string}[], id:string};
 function localStorageAddForm(data:FormsDataCustom) {
-    const storedData = localStorage.getItem('forms');
-    const storedArray = storedData ? JSON.parse(storedData) : [];
-    const dataToStore = JSON.stringify([...storedArray, data]);
-    localStorage.setItem('forms', dataToStore);    
+    if (typeof window !== 'undefined') {
+        const storedData = localStorage.getItem('forms');
+        const storedArray = storedData ? JSON.parse(storedData) : [];
+        const dataToStore = JSON.stringify([...storedArray, data]);
+        localStorage.setItem('forms', dataToStore);    
+    }
 };
 export function localStorageGetForms() {
-    const storedData = localStorage.getItem('forms');
-    const storedArray = storedData ? JSON.parse(storedData) : [];
-    return storedArray as FormsDataCustom[];
+    if (typeof window !== 'undefined') {
+        const storedData = localStorage.getItem('forms');
+        const storedArray = storedData ? JSON.parse(storedData) : [];
+        return storedArray as FormsDataCustom[];
+    }
 };
 export function localStorageRemoveForms(id:string) {
-    const storedData = localStorage.getItem('forms');
-    const storedArray = (storedData ? JSON.parse(storedData) : []) as FormsDataCustom[];
-    const filteredArray = storedArray.filter(item => item.id !== id);
-    localStorage.setItem('forms', JSON.stringify(filteredArray));
-    return filteredArray;
+    if (typeof window !== 'undefined') {
+        const storedData = localStorage.getItem('forms');
+        const storedArray = (storedData ? JSON.parse(storedData) : []) as FormsDataCustom[];
+        const filteredArray = storedArray.filter(item => item.id !== id);
+        localStorage.setItem('forms', JSON.stringify(filteredArray));
+        return filteredArray;
+    }
 };
 
 
 export default function FormClientForm({ handleSubmit:handleSubmitSuccess }: {handleSubmit:() => void}) {
 
     const globalState = useGlobalProvider();
-    const [, setPublicError] = globalState.publicError;
+    const [, setPublicError] = globalState.publicError ?? [];
+    const dimensions = globalState.dimensions;
 
     const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<FromSchema>({ resolver:zodResolver(fromSchema) });
 
@@ -122,7 +129,8 @@ export default function FormClientForm({ handleSubmit:handleSubmitSuccess }: {ha
         }
     }
 
-    return (        
+    return (     
+        dimensions &&   
         <form onSubmit={handleSubmit(checkData)} className="flex items-start justify-center flex-col gap-2 w-full" >
             <Input placeholder="Nome" className="text-lg" {...register('name')}  />
             {errors.name && <ErrorSpan text={errors.name.message} />}

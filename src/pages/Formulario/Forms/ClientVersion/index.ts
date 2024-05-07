@@ -1,4 +1,6 @@
 import FormClientWrapper from "./FormClientWrapper";
 
 
-export const ClientVersion = FormClientWrapper;
+const ClientVersion = FormClientWrapper;
+
+export default ClientVersion;

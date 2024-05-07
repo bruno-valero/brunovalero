@@ -9,9 +9,9 @@ export default function usePdfList() {
 
 
     const globalState = useGlobalProvider();
-    const [, setResetedState] = globalState.resetedState;
+    const [, setResetedState] = globalState.resetedState ?? [];
     const globalUser = globalState.globalUser;
-    const { db } = globalState.firebase;
+    const { db } = globalState.firebase ?? {};
 
     const [pdfList, setPdfList] = useState<Pdf[]>([]);
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
@@ -50,7 +50,7 @@ export default function usePdfList() {
     },[]);
 
     const genres = useMemo(() => {
-        const gen = pdfList.map(item => item.metadata.genres);
+        const gen = (pdfList ?? []).map(item => item.metadata.genres);
         const uniqueGenres =  gen.reduce((acc, item) => [...acc, ...item], []).reduce((acc:Record<string, any>, item) => {
             acc[item] = '';
             return acc;
@@ -63,7 +63,7 @@ export default function usePdfList() {
     const filteredList = useMemo(() => {
         // alert(selectedGenres)
         console.log(selectedGenres);
-        const list = pdfList.filter(item => selectedGenres.length > 0 ? (item.metadata.genres.filter(g => selectedGenres.includes(g)).length > 0) : true);
+        const list = (pdfList ?? []).filter(item => selectedGenres.length > 0 ? (item.metadata.genres.filter(g => selectedGenres.includes(g)).length > 0) : true);
         console.log(list)
         return list
     }, [pdfList, selectedGenres])

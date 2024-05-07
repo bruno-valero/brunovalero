@@ -13,7 +13,10 @@ import { Auth, getAuth } from 'firebase/auth';
 import { Database, getDatabase } from 'firebase/database';
 import { Firestore, getFirestore } from 'firebase/firestore';
 import { FirebaseStorage, getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
+import sharp from 'sharp';
 import StripeBackend from "../../stripe/backend/StripeBackend";
+import PlansRestrictions from "../PlansRestrictions";
+import UserActions from "../UserActions";
 import UserManagement from "../UserManagement";
 import UserFinancialData from "../UserManagement/UserFinancialData";
 import AiFeatures from "./AiFeatures";
@@ -51,6 +54,8 @@ export default class UploadPdfProcess {
     stripeBackend:StripeBackend;
     userManagement:UserManagement;
     financialData:UserFinancialData;
+    userActions:UserActions;
+    plansRestrictions:PlansRestrictions;
 
     constructor() {
         this.vectorStore = new VectorStoreProcess();  
@@ -64,6 +69,8 @@ export default class UploadPdfProcess {
         this.stripeBackend = new StripeBackend(isProduction ? 'production' : 'test');
         this.userManagement = new UserManagement();
         this.financialData = new UserFinancialData();
+        this.userActions = new UserActions();
+        this.plansRestrictions = new PlansRestrictions();
     };
 
     
@@ -89,7 +96,7 @@ export default class UploadPdfProcess {
         const price = pricePdfLoader + genrePrice + descriptionPrice + imagePrice + quiz.price;
         
         const fileName = `${docId}`;
-        const { blob:imageBlob, path, url } = await this.uploadImageToStorage({ userId, fileName, imageURL, uploadContent:'cover' });
+        const { blob:imageBlob, path, url, sizes } = await this.uploadImageToStorage({ userId, fileName, imageURL, uploadContent:'cover', width:'1024', height:'1792' });
         
         metadata.genres = realGenres;
 
@@ -99,7 +106,7 @@ export default class UploadPdfProcess {
             description,
             public:true,
             price,
-            imageCover:[{url, active:true, storagePath:path}],
+            imageCover:[{url, active:true, storagePath:path, sizes}],
             metadata,
             dateOfCreation:String(new Date().getTime()),
         };
@@ -108,11 +115,15 @@ export default class UploadPdfProcess {
     };
 
     async partialUpload({ pdfUrl, docId, user, autoBuy, minCredits }:{ pdfUrl:string, docId:string, user:Partial<UsersUser>, autoBuy?:boolean, minCredits?:number }) {
-        const userId = user.uid!
-
+        const userId = user.uid!;        
+        
         console.log('checando privilégios...')
         const { isFree } = await this.checkPrivileges.check({ currentAction:'pdfUpload', userId });
         if (!isFree) {
+
+            const hasPermission = await this.plansRestrictions.hasPermission({ uid:userId, action:'pdfUploads', service:'readPdf', docId });
+            if (!hasPermission) throw new Error("Sem permissão para realizar esta ação");
+
             await this.financialData.checkMinCredits({ uid:userId, autoBuy, minCredits });
         }
         
@@ -159,6 +170,7 @@ export default class UploadPdfProcess {
             console.log('atualizando o banco de dados...')
             await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).set(newDoc);
         };
+        await this.userActions.addUserAction(userId, 'readPdf', 'pdfUploads', docId);
 
     };
 
@@ -183,17 +195,25 @@ export default class UploadPdfProcess {
      */
     async askQuestion({ question, docId, user, autoBuy, minCredits }:{ question:string, docId:string, user:Omit<UsersUser, 'control'>, autoBuy?:boolean, minCredits?:number }) {
         
-        const docSnap = await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).get();
-        const doc = (docSnap.exists ? docSnap.data() : null) as Pdf | null;
-        if (!doc) throw new Error("documento inválido");
         
         const uid = user.uid
         console.log('checando privilégios...')
         const { isFree } = await this.checkPrivileges.check({ currentAction:'questions', userId:uid });
         console.log(`A pergnta ${isFree ? 'não será cobrada :)' : 'será cobrada!'}`)
-        if (!isFree) {      
+        
+        if (!isFree) {  
+
+            const hasPermission = await this.plansRestrictions.hasPermission({ uid:user.uid, action:'questions', service:'readPdf', docId });
+            if (!hasPermission) throw new Error("Sem permissão para realizar esta ação");
+            console.log(`Permissao: ${hasPermission}`) ;
+
             await this.financialData.checkMinCredits({ uid, autoBuy, minCredits });           
         };
+
+        const docSnap = await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).get();
+        const doc = (docSnap.exists ? docSnap.data() : null) as Pdf | null;
+        if (!doc) throw new Error("documento inválido");
+        
 
         const { response:resp, price } = await this.vectorStore.search(question, docId);
         const textResponse = encodeURIComponent(resp.text as string);       
@@ -221,17 +241,21 @@ export default class UploadPdfProcess {
         console.log(`${JSON.stringify(update, null, 2)}`);
         console.log(`price: ${price})}`);
         await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).collection('questions').doc(newQuestion.id).set(update);
-
+        await this.userActions.addUserAction(uid, 'readPdf', 'questions', newQuestion.id)
         return update;
     }
 
     
 
-    protected async uploadImageToStorage({ userId, fileName, imageURL, uploadContent }:{ userId:string, fileName:string, imageURL:string, uploadContent:'cover' }) {
+    protected async uploadImageToStorage({ userId, fileName, imageURL, uploadContent, width, height }:{ userId:string, fileName:string, imageURL:string, uploadContent:'cover', width:'1024' | '1792', height:'1024' | '1792' }) {
         const { storage } = this.firebase;
 
+        const imageId = new Date().getTime()
         const pathTypes = {
-            cover:`services/readPdf/covers/${userId}/${fileName}`,            
+            cover:`services/readPdf/covers/${userId}/${fileName}/${imageId}`,
+            min:`services/readPdf/covers/${userId}/${fileName}/${imageId}-min`,
+            sm:`services/readPdf/covers/${userId}/${fileName}/${imageId}-sm`,
+            md:`services/readPdf/covers/${userId}/${fileName}/${imageId}-md`
         };
         const path = pathTypes[uploadContent];
 
@@ -239,8 +263,62 @@ export default class UploadPdfProcess {
 
         const file = ref(storage!, path);
         await uploadBytes(file, blob);
-        const url = await getDownloadURL(file);
-        return { blob, url, path:pathTypes[uploadContent] };
+        const url = await getDownloadURL(file);        
+
+        async function resizeImage(inputFilePath:Buffer, width:number, height:number) {
+            return await sharp(inputFilePath)
+                .resize({ width, height })
+                .toBuffer();
+        };
+
+        
+
+        const md = {
+            width:Math.ceil(Number(width) * .5),
+            height:Math.ceil(Number(height) * .5),
+        }
+        const sm = {
+            width:Math.ceil(Number(width) * .3),
+            height:Math.ceil(Number(height) * .3),
+        }
+        const min = {
+            width:Math.ceil(Number(width) * .1),
+            height:Math.ceil(Number(height) * .1),
+        }
+
+        const buffer = Buffer.from(await blob.arrayBuffer());
+        const minBlob = new Blob([await resizeImage(buffer, min.width, min.height)], { type:'image/png' });
+        const smBlob = new Blob([await resizeImage(buffer, sm.width, sm.height)], { type:'image/png' });
+        const mdBlob = new Blob([await resizeImage(buffer, md.width, md.height)], { type:'image/png' });
+                
+        const minRef = ref(storage!, pathTypes.min);
+        const smRef = ref(storage!, pathTypes.sm);
+        const mdRef = ref(storage!, pathTypes.md);
+
+        await uploadBytes(minRef, minBlob);
+        await uploadBytes(smRef, smBlob);
+        await uploadBytes(mdRef, mdBlob);
+
+        const minUrl = await getDownloadURL(minRef);
+        const smUrl = await getDownloadURL(smRef);
+        const mdUrl = await getDownloadURL(mdRef);
+
+        const sizes = {
+            min:{
+                url:minUrl,
+                storagePath:pathTypes.min,
+            },
+            sm:{
+                url:smUrl,
+                storagePath:pathTypes.sm,
+            },
+            md:{
+                url:mdUrl,
+                storagePath:pathTypes.md,
+            },
+        };
+
+        return { blob, url, path:pathTypes[uploadContent], sizes };
     };    
 
     protected async uploadToVectorStore({ docId, blob }:{ docId:string, blob:Blob }) {

@@ -8,9 +8,9 @@ export default function useQuizList({ pdfId }:{ pdfId?:string }) {
 
 
     const globalState = useGlobalProvider();
-    const [, setResetedState] = globalState.resetedState;
+    const [, setResetedState] = globalState.resetedState ?? [];
     const globalUser = globalState.globalUser;
-    const { db } = globalState.firebase;
+    const { db } = globalState.firebase ?? {};
 
     const [quizList, setShowQuizList ] = useState<QuizPdf[]>([]);
 

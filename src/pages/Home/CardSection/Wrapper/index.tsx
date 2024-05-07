@@ -4,7 +4,7 @@ interface WrapperProps {
     childrenLength?:number;
 };
 
-export default function Wrapper({children, childrenLength}:WrapperProps) {
+export default function CardSectionWrapper({children, childrenLength}:WrapperProps) {
 
   const minHeight = !childrenLength ? '80vh' : `${Math.ceil((childrenLength / 3) * 50)}vh`;
 

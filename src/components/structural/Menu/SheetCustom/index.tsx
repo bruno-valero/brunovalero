@@ -28,6 +28,7 @@ export function SheetCustom({ children }:SheetCustomProps) {
   const globalState = useGlobalProvider();
   const [, setResetedState] = globalState.resetedState;
   const globalUser = globalState.globalUser;
+  const { width } = globalState.dimensions ?? {};
   
 
   const components: { title: string; href?: string; action?:() => void; description: string }[] = [
@@ -54,12 +55,12 @@ export function SheetCustom({ children }:SheetCustomProps) {
       <Sheet key={side} >
         <div className='absolute right-0 top-0 w-full flex justify-around items-center shadow-md h-[80px] px-2 z-50' >
           <SheetTrigger asChild>
-            <Button variant="ghost" ><GiHamburgerMenu size={35} /></Button>
+            <Button variant="ghost" ><GiHamburgerMenu size={width < 500 ? 28 : 35} /></Button>
           </SheetTrigger>
           <button className=' h-[100%] flex items-center justify-center' onClick={() => router.push('/')} >
             <div className='flex items-center justify-center gap-2 h-[75%] px-3 rounded-full' >
-              <img src={brand.src} alt="Bruno Valero" className='h-[95%] object-cover rounded-full' />
-              <span className='text-3xl font-semibold text-white' style={{color:colors.valero()}} >
+              <img src={brand.src} alt="Bruno Valero" className={twMerge('h-[95%] object-cover rounded-full', width < 500 && 'h-[60%]')} />
+              <span className={twMerge('text-3xl font-semibold text-white', width < 500 && 'text-base')} style={{color:colors.valero()}} >
                 Bruno Valero
               </span>
             </div>

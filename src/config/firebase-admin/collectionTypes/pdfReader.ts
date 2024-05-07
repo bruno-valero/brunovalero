@@ -48,10 +48,31 @@ export type Pdf = {
     imageCover:{
         /** URL da imagem de fundo. */
         url:string, 
+        /** Caminho da imagem de fundo no firebase storage. */
+        storagePath:string,
         /** Indica se esta capa foi escolhida para estar ativa pelo usuário (quando uma capa é ativada, as outras devem ser desativada, de forma que apenas uma permaneça ativa). */
         active:boolean, 
-        /** Caminho da imagem de fundo no firebase storage. */
-        storagePath:string        
+        /** outros tamanhos da imagem. */
+        sizes:{
+            min:{
+                /** URL da imagem de fundo. */
+                url:string, 
+                /** Caminho da imagem de fundo no firebase storage. */
+                storagePath:string,
+            },
+            sm:{
+                /** URL da imagem de fundo. */
+                url:string, 
+                /** Caminho da imagem de fundo no firebase storage. */
+                storagePath:string,
+            },
+            md:{
+                /** URL da imagem de fundo. */
+                url:string, 
+                /** Caminho da imagem de fundo no firebase storage. */
+                storagePath:string,
+            },
+        }
     }[],
     /** **Nova coleção no documento** Um objeto, onde cada chave é uma Pergunta que pode ser gerada após o processo de upload e leituda de um pdf atravéz do serviço "readPdf". */
     questions:Record<string, QuestionPdf>,

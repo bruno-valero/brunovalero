@@ -1,6 +1,7 @@
 import { Separator } from "@/components/ui/separator";
 import { QuizPdfTry } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
 import colors from "@/src/constants/colors";
+import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import { SetState } from "@/utils/common.types";
 import { useEffect, useState } from "react";
 import { BsArrowLeft, BsArrowRight } from "react-icons/bs";
@@ -25,7 +26,15 @@ interface QuizQuestionProps {
 
 export default function QuizQuestion({ finishQuiz, currQuestion, tries, setTries, updateTries, updateTryTime, updateTryAnswer, questions }: QuizQuestionProps) {
 
-    const [index, setIndex] = currQuestion;
+    const globalState = useGlobalProvider();
+    const [, setResetedState] = globalState.resetedState ?? [];
+    const { height, width } = globalState.dimensions ?? {}
+    const globalUser = globalState.globalUser;
+    const { db, storage } = globalState.firebase ?? {};
+    const [publicError, setPublicError] = globalState.publicError ?? [];
+    const dimensions = globalState.dimensions;
+
+    const [index, setIndex] = currQuestion ?? [];
     const [update, setUpdate] = useState(0)
 
     useEffect(() => {
@@ -40,8 +49,8 @@ export default function QuizQuestion({ finishQuiz, currQuestion, tries, setTries
     useEffect(() => {
         const time = setInterval(() => {
             const questionId = questions[index].id;
-            setTries(prev => ({...prev, [questionId]:{...(prev[questionId] ?? {}), questions:{...prev[questionId]?.questions, [questionId]: {...(prev[questionId]?.questions[questionId] ?? {}), timeAnswering:(prev?.[questionId]?.questions?.[questionId]?.timeAnswering ?? 0) + 100}}}}));
-            // updateTryTime((tries[questions[index].id]?.questions?.[questions[index].id]?.timeAnswering ?? 0) + 100, questions[index].id)
+            setTries(prev => ({...prev, [questionId]:{...(prev[questionId] ?? {}), questions:{...prev[questionId]?.questions, [questionId]: {...(prev[questionId]?.questions[questionId] ?? {}), timeAnswering:(prev?.[questionId]?.questions?.[questionId]?.timeAnswering) + 100}}}}));
+            // updateTryTime((tries[questions[index].id]?.questions?.[questions[index].id]?.timeAnswering) + 100, questions[index].id)
             // setUpdate(new Date().getTime());
         }, 100);
 
@@ -49,7 +58,7 @@ export default function QuizQuestion({ finishQuiz, currQuestion, tries, setTries
     }, [index])
 
     function selectQuestion(answer: string) {
-        updateTryAnswer(answer, questions[index].id);
+        updateTryAnswer(answer, questions[index ?? 0].id);
         // alert(`answer: ${answer}`)
     }
 
@@ -68,9 +77,10 @@ export default function QuizQuestion({ finishQuiz, currQuestion, tries, setTries
         return hours ? `${h}:${m}:${s}:${mss}` : `${m}:${s}:${mss}`;
       }
 
-      const answer = tries[questions[index].id]?.questions?.[questions[index].id]?.answer
+      const answer = tries?.[questions?.[index ?? 0].id]?.questions?.[questions?.[index ?? 0].id]?.answer
 
     return (
+        dimensions &&
         <div className="w-full h-full flex flex-col items-start justify-center" >
             <div className="w-full flex items-end justify-between mb-4" >
                 <span className="w-[90%] flex items-center justify-center" >

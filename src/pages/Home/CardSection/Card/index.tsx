@@ -11,7 +11,7 @@ interface CardProps {
     path:string;
 };
 
-export default function Card({ imageSrc, title, text, path }:CardProps) {
+export default function CardSectionCard({ imageSrc, title, text, path }:CardProps) {
     
     const router = useRouter();
 

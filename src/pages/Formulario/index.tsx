@@ -2,7 +2,7 @@ import colors from "@/src/constants/colors";
 import adiministrarFormulario from '@/src/images/adiministrarFormulario.png';
 import servicoCustomizavel from '@/src/images/servicoCustomizavel.png';
 import ContactAboutForms from "./ContactAboutForms";
-import { Forms } from "./Forms";
+import FormsWrapper from "./Forms/FormsWrapper";
 
 
 interface CardFormProps {
@@ -38,7 +38,7 @@ export default function Formulario() {
                     <CardForm imageSrc={adiministrarFormulario.src} text={`Em um cenário real, a sessão administrativa só poderá ser acessada pelo contratante do serviço.`} />                    
                 </div>
             </div>
-            <Forms.FormsWrapper />
+            <FormsWrapper />
             <div className="flex justify-center items-center flex-col w-full bg-white min-h-[50vh]" >
 
                 <ContactAboutForms />
