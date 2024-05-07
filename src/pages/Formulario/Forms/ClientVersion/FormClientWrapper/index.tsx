@@ -1,5 +1,6 @@
 'use client';
 
+import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import { useState } from "react";
 import { CiCircleCheck } from "react-icons/ci";
 import FormClientForm from "../FormClientForm";
@@ -8,6 +9,10 @@ import FormClientPresentation from "../FormClientPresentation";
 
 export default function FormClientWrapper() {
 
+    const globalState = useGlobalProvider();
+    const [, setPublicError] = globalState.publicError ?? [];
+    const dimensions = globalState.dimensions;
+
     const [done, setDone] = useState(false);
 
     function handleSubmit() {
@@ -15,6 +20,7 @@ export default function FormClientWrapper() {
     };
 
     return (
+        dimensions &&
         <div className="flex items-center justify-center flex-col bg-white shadow rounded px-[50px] py-[25px] my-5" >
 
             {!done ? (

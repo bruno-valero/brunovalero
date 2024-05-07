@@ -8,12 +8,13 @@ import { useState } from "react";
 export default function ChangeImageButton({ pdf, imageWidth, imageHeight, imageCovers, item, i:index }:{ pdf: Pdf, imageWidth:number, imageHeight:number, imageCovers:Pdf['imageCover'], item:Pdf['imageCover'][0], i:number }) {
 
     const globalState = useGlobalProvider();
-    const [, setResetedState] = globalState.resetedState;
+    const [, setResetedState] = globalState.resetedState ?? [];
     const globalUser = globalState.globalUser;
-    const { db, storage } = globalState.firebase;
-    const [publicError, setPublicError] = globalState.publicError;
+    const { db, storage } = globalState.firebase ?? {};
+    const [publicError, setPublicError] = globalState.publicError ?? [];
+    const dimensions = globalState.dimensions;
 
-    const [load, setLoad] = useState(false);
+    const [load, setLoad] = useState(false) ?? [];
 
     async function changeImage() {
         setLoad(true);
@@ -32,8 +33,9 @@ export default function ChangeImageButton({ pdf, imageWidth, imageHeight, imageC
     }
 
     return (
+        dimensions &&
         <button onClick={() => changeImage()} style={{width:imageWidth * .3, height:imageHeight * .3}} >
-            <img src={item.url} alt={`Imagem ${index + 1}`} className="object-cover rounded shadow w-full h-full"  />
+            <img src={item.sizes.min.url} alt={`Imagem ${index + 1}`} className="object-cover rounded shadow w-full h-full"  />
         </button>
     );
 

@@ -16,11 +16,11 @@ export default function QuizComponent({ quiz }:{ quiz:QuizPdf | null }) {
     console.log(`quia title: ${quiz?.title}`);
 
     const globalState = useGlobalProvider();
-    const [, setResetedState] = globalState.resetedState;
-    const { height, width } = globalState.dimensions
+    const [, setResetedState] = globalState.resetedState ?? [];
+    const { height, width } = globalState.dimensions ?? {}
     const globalUser = globalState.globalUser;
-    const { db, storage } = globalState.firebase;
-    const [publicError, setPublicError] = globalState.publicError;
+    const { db, storage } = globalState.firebase ?? {};
+    const [publicError, setPublicError] = globalState.publicError ?? [];
     
 
     const [tries, setTries] = useState<Record<string, QuizPdfTry>>({});  
@@ -77,10 +77,11 @@ export default function QuizComponent({ quiz }:{ quiz:QuizPdf | null }) {
       
     
     return (
+        width &&
         <div className="w-full" style={{height:height - 80}} >
-            <img src={quiz?.imageBackground.wide.url} alt={quiz?.title} className="w-full object-fill absolute top-[-40px] z-[-1]" style={{height:height}} />
+            <img src={width < 500 ? quiz?.imageBackground.slim.url : quiz?.imageBackground.wide.url} alt={quiz?.title} className="w-full object-fill absolute top-[-40px] z-[-1]" style={{height:height}} />
             <div className="min-w-full min-h-full flex flex-col items-center justify-center" style={{backgroundColor:'rgba(0,0,0,.3)'}} >
-                <div className={twMerge("flex gap-2 flex-col items-center justify-center max-w-[768px] p-6 rounded shadow", init && 'min-w-[768px]')} style={{backgroundColor:init ? 'rgba(255,255,255,.95)' : 'rgba(255,255,255,.8)'}} >
+                <div className={twMerge("flex gap-2 flex-col items-center justify-center max-w-[768px] p-6 rounded shadow", init && !(width < 500) && 'min-w-[768px]', init && (width < 500) && 'min-w-[80%] max-h-[500px] items-start justify-start overflow-y-auto', width < 500 && 'max-w-[80%]')} style={{backgroundColor:init ? 'rgba(255,255,255,.95)' : 'rgba(255,255,255,.8)'}} >
                     {!init && !finish && <QuizPresentation quiz={quiz} init={initQuiz} />}
                     {init && !finish && <QuizQuestion finishQuiz={finishQuiz} currQuestion={[currQuestion, updateCurrQuestion]} questions={questions} tries={tries} setTries={setTries} updateTries={updateTries} updateTryTime={updateTryTime} updateTryAnswer={updateTryAnswer} />}
                     {finish && <QuizFinish tries={tries} questions={questions} quiz={quiz} />}

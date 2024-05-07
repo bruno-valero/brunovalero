@@ -9,23 +9,24 @@ import { useState } from "react";
 export default function ChangeTitleButton({ pdf, text }:{ pdf: Pdf, text?:string }) {
 
     const globalState = useGlobalProvider();
-    const [, setResetedState] = globalState.resetedState;
+    const [, setResetedState] = globalState.resetedState ?? [];
     const globalUser = globalState.globalUser;
-    const { db, storage } = globalState.firebase;
-    const [publicError, setPublicError] = globalState.publicError;
+    const { db, storage } = globalState.firebase ?? {};
+    const [publicError, setPublicError] = globalState.publicError ?? [];
+    const dimensions = globalState.dimensions;
 
-    const [load, setLoad] = useState(false);
-    const [title, setTitle] = useState(pdf.customTitle ?? pdf.metadata.title ?? '');
+    const [load, setLoad] = useState(false) ?? [];
+    const [title, setTitle] = useState(pdf?.customTitle ?? pdf?.metadata?.title ?? '') ?? [];
 
     async function changeTitle(text?:string) {
         setLoad(true);
-        alert(text);
         if (!text) return;
         await fromCollection('services', db!).getDocById('readPdf').getCollection('data').getDocById(pdf.id).update({ customTitle:text });
         setLoad(false);
     }
 
     return (
+        dimensions &&
         <>
             <input onChange={(e) => setTitle(e.target.value)} type="text" value={title} defaultValue={pdf.customTitle ?? pdf.metadata.title ?? ''} className="outline-none p-2 border-none w-full rounded" style={{backgroundColor:colors.valero(.1)}} />
             <button onClick={() => changeTitle(title)} className="p-3 text-white rounded shadow w-full mt-2" style={{backgroundColor:colors.valero()}} >

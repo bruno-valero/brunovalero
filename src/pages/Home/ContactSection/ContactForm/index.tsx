@@ -9,7 +9,7 @@ import { IoLogoWhatsapp } from "react-icons/io";
 
 
 
-export default function Form() {
+export default function ContactSectionForm() {
 
     const globalState = useGlobalProvider();
     const dimensions = globalState.dimensions;
@@ -34,6 +34,7 @@ export default function Form() {
 
 
   return (
+    dimensions && (
       <div className="flex flex-col items-center justify-center w-full" >
 
 
@@ -58,5 +59,6 @@ export default function Form() {
 
 
       </div>
+    )
   );
 }

@@ -13,6 +13,9 @@ import { getAuth } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
 import { getFirestore } from 'firebase/firestore';
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
+import sharp from 'sharp';
+import PlansRestrictions from "../PlansRestrictions";
+import UserActions from "../UserActions";
 import UserFinancialData from "../UserManagement/UserFinancialData";
 import AiFeatures from "./AiFeatures";
 import CheckPrivileges from "./CheckPrivileges";
@@ -38,6 +41,8 @@ export default class Images {
     protected aiFeatures:AiFeatures;
     checkPrivileges:CheckPrivileges;
     financialData:UserFinancialData;
+    userActions:UserActions;
+    plansRestrictions:PlansRestrictions;
 
     constructor() {
 
@@ -46,6 +51,8 @@ export default class Images {
         this.aiFeatures = new AiFeatures();
         this.checkPrivileges = new CheckPrivileges();
         this.financialData = new UserFinancialData();
+        this.userActions = new UserActions();
+        this.plansRestrictions = new PlansRestrictions();
     };
 
 
@@ -55,6 +62,9 @@ export default class Images {
         const imageId = new Date().getTime()
         const pathTypes = {
             cover:`services/readPdf/covers/${userId}/${fileName}/${imageId}`,
+            min:`services/readPdf/covers/${userId}/${fileName}/${imageId}-min`,
+            sm:`services/readPdf/covers/${userId}/${fileName}/${imageId}-sm`,
+            md:`services/readPdf/covers/${userId}/${fileName}/${imageId}-md`
         };
         const path = pathTypes[uploadContent];
 
@@ -62,8 +72,63 @@ export default class Images {
 
         const file = ref(storage!, path);
         await uploadBytes(file, blob);
-        const url = await getDownloadURL(file);
-        return { blob, url, path:pathTypes[uploadContent] };
+        const url = await getDownloadURL(file);        
+
+        async function resizeImage(inputFilePath:Buffer, width:number, height:number) {
+            return await sharp(inputFilePath)
+                .resize({ width, height })
+                .toBuffer();
+        };
+
+        
+        const width = 1024;
+        const height = 1792;
+        const md = {
+            width:Math.ceil(width * .5),
+            height:Math.ceil(height * .5),
+        }
+        const sm = {
+            width:Math.ceil(width * .3),
+            height:Math.ceil(height * .3),
+        }
+        const min = {
+            width:Math.ceil(width * .1),
+            height:Math.ceil(height * .1),
+        }
+
+        const buffer = Buffer.from(await blob.arrayBuffer());
+        const minBlob = new Blob([await resizeImage(buffer, min.width, min.height)], { type:'image/png' });
+        const smBlob = new Blob([await resizeImage(buffer, sm.width, sm.height)], { type:'image/png' });
+        const mdBlob = new Blob([await resizeImage(buffer, md.width, md.height)], { type:'image/png' });
+                
+        const minRef = ref(storage!, pathTypes.min);
+        const smRef = ref(storage!, pathTypes.sm);
+        const mdRef = ref(storage!, pathTypes.md);
+
+        await uploadBytes(minRef, minBlob);
+        await uploadBytes(smRef, smBlob);
+        await uploadBytes(mdRef, mdBlob);
+
+        const minUrl = await getDownloadURL(minRef);
+        const smUrl = await getDownloadURL(smRef);
+        const mdUrl = await getDownloadURL(mdRef);
+
+        const sizes = {
+            min:{
+                url:minUrl,
+                storagePath:pathTypes.min,
+            },
+            sm:{
+                url:smUrl,
+                storagePath:pathTypes.sm,
+            },
+            md:{
+                url:mdUrl,
+                storagePath:pathTypes.md,
+            },
+        };
+
+        return { blob, url, path:pathTypes[uploadContent], sizes };
     };   
 
 
@@ -73,14 +138,19 @@ export default class Images {
 
         const { imageURL, inputContent, price } = await this.aiFeatures.generateImage(content.content, size);
         
+        
         return {imageURL, inputContent:content, descriptionSummary:summary, price:price + summary.price};
 
     };   
 
-    async addNewImage({ docId, userId, autoBuy, minCredits }:{ docId:string, userId:string, autoBuy?:boolean, minCredits?:number }) {
+    async addNewImage({ docId, userId, autoBuy, minCredits }:{ docId:string, userId:string, autoBuy?:boolean, minCredits?:number }) {        
 
         const { isFree } = await this.checkPrivileges.check({ currentAction:'coverGenerationForPrivateDocs', userId });
         if (!isFree) {
+
+            const hasPermission = await this.plansRestrictions.hasPermission({ uid:userId, action:'coverGeneration', service:'readPdf', docId });
+            if (!hasPermission) throw new Error("Sem permissão para realizar esta ação");
+
             await this.financialData.checkMinCredits({ uid:userId, autoBuy, minCredits });
         }
 
@@ -114,6 +184,8 @@ export default class Images {
             await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).update({ imageCover });
         };
         
+        await this.userActions.addUserAction(userId, 'readPdf', 'coverGeneration', path);
+
         return { newImage, imageCover};
     };
 

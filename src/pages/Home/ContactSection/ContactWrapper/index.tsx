@@ -8,13 +8,14 @@ interface WrapperProps {
     children:React.ReactNode;
 };
 
-export default function Wrapper({children}:WrapperProps) {
+export default function ContactSectionWrapper({children}:WrapperProps) {
 
     const globalState = useGlobalProvider();
     const dimensions = globalState.dimensions;
 
 
   return (
+    dimensions && (
       <div className="flex relative overflow-hidden items-start justify-center w-full max-sm:min-h-[150vh] min-h-[100vh]" style={{backgroundColor:'white', minHeight:dimensions.width > 1000 && (dimensions.width / dimensions.height) < 1.77 ? '180vh': '100vh'}} >
         <div className="absolute inset-x-0 top-[-90px] z-0">
             <WaveDivision color={colors.valero()} screenWidth={dimensions.width} />
@@ -23,5 +24,6 @@ export default function Wrapper({children}:WrapperProps) {
             {children}
         </div>
       </div>
+    )
   );
 }

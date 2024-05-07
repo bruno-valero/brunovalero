@@ -59,7 +59,7 @@ export default function CardSetup({ stripe, clientSecret, addCard, setAddCard, b
         )}
         {!clientSecret && (
             <div className='flex items-center justify-center h-[80%]' >
-            <ClipLoader color={colors.kobi()} size={150} className='self-center inline-block' speedMultiplier={.3} />
+            <ClipLoader color={colors.valero()} size={150} className='self-center inline-block' speedMultiplier={.3} />
             </div>
         )}
     </div>

@@ -134,7 +134,7 @@ export default class UserFinancialData {
         fd = await this.getFinancialData({ uid });
 
         const checkAutoby = async (fd:UsersFinancialData, autoBuy:boolean) => {
-            if (autoBuy) {
+            if (autoBuy && minCredits) {
                 await this.buyCredits({ uid, amount:minCredits });
                 return fd;
             }

@@ -1,5 +1,6 @@
 import { Pdf, QuestionPdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
 import colors from "@/src/constants/colors";
+import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import { UseState } from "@/utils/common.types";
 import { useState } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
@@ -19,12 +20,20 @@ interface ShowQuestionContentProps {
 
 export default function ShowQuestionContent({ questionHooks }:ShowQuestionContentProps) {
 
+    const globalState = useGlobalProvider();
+    const [, setResetedState] = globalState.resetedState ?? [];
+    const globalUser = globalState.globalUser;
+    const { db, storage } = globalState.firebase ?? {};
+    const [publicError, setPublicError] = globalState.publicError ?? [];
+    const dimensions = globalState.dimensions;
+
     const [showChunk, setShowChunk] = useState(0);
 
-    const [ questionList, setQuestionList ] = questionHooks.questionList;
-    const [ showQuestion, setShowQuestion ] = questionHooks.showQuestion;
-    const [askQuestion, setAskQuestion] = questionHooks.askQuestion;
-    const [details, setDetails] = questionHooks.details;
+    const [ questionList, setQuestionList ] = questionHooks?.questionList ?? [];
+    const [ showQuestion, setShowQuestion ] = questionHooks?.showQuestion ?? [];
+    const [askQuestion, setAskQuestion] = questionHooks?.askQuestion ?? [];
+    const [details, setDetails] = questionHooks?.details ?? [];
+    
 
     function changeChunk({ front, back }:{front?:boolean, back?:boolean}) {
         const max = (showQuestion?.response.chunksRelated.length ?? 0) - 1;        
@@ -54,6 +63,7 @@ export default function ShowQuestionContent({ questionHooks }:ShowQuestionConten
 
 
     return (
+        dimensions &&
         <div className="w-full flex flex-col items-center justify-center" >
             <h2 className="text-lg font-bold" style={{color:colors.valero()}} >
                 {showQuestion?.question}

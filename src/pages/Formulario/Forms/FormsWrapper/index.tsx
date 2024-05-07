@@ -3,9 +3,9 @@
 import colors from "@/src/constants/colors";
 import { useState } from "react";
 import FormAdmWrapper from "../AdmVersion/FormAdmWrapper";
-import { ClientVersion } from "../ClientVersion";
+import ClientVersion from "../ClientVersion";
 
-function TabsButton({active, onClick, text}:{active:boolean, onClick:(() => void), text:string}) {
+const TabsButton = ({active, onClick, text}:{active:boolean, onClick:(() => void), text:string}) => {
 
     return (
         <button onClick={onClick} className="p-3 rounded" style={{backgroundColor:active ? colors.valero() : colors.valero(.4)}} >

@@ -1,6 +1,7 @@
 import { isProduction } from "@/envs";
-import { CollectionTypes, TransactionWithCreditsNature, TransactionWithCreditsPiRelated, TransactionWithCreditsService, TransactionWithCreditsType, TransactionWithMoneyType } from "@/src/config/firebase-admin/collectionTypes/collectionTypes";
+import { CollectionTypes } from "@/src/config/firebase-admin/collectionTypes/collectionTypes";
 import { Pdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
+import { TransactionWithCreditsNature, TransactionWithCreditsPiRelated, TransactionWithCreditsService, TransactionWithCreditsType, TransactionWithMoneyType } from "@/src/config/firebase-admin/collectionTypes/transactions";
 import { UsersUser } from "@/src/config/firebase-admin/collectionTypes/users";
 import { admin_firestore } from "@/src/config/firebase-admin/config";
 import tsToMask from "@/utils/functions/dateTime/tsToMask";
