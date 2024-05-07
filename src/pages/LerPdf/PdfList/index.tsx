@@ -4,7 +4,7 @@ import usePdfList from "@/src/hooks/usePdfList";
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import { useCallback, useMemo, useRef, useState } from "react";
 
-import { Pdf, QuestionPdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
+import { Pdf, QuestionPdf, QuizPdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
 import { twMerge } from "tailwind-merge";
 import PdfCard from "./PdfCard";
 
@@ -18,6 +18,7 @@ import DetaisMenu from "./DetaisMenu";
 import ListMenu from "./ListMenu";
 import QuestionSection from "./QuestionSection";
 import QuestionsMenu from "./QuestionsMenu";
+import QuizMenu from "./QuizMenu";
 import QuizSection from "./QuizSection";
 
 export type PdfFunctions = {
@@ -33,6 +34,7 @@ export type PdfFunctions = {
 
 export type PdfHooks = {
     genres:string[],
+    quizList:UseState<QuizPdf[]>,
     selectedGenres:UseState<string[]>,
     showQuestions:UseState<boolean>,
     questionList:UseState<QuestionPdf[]>,
@@ -53,23 +55,24 @@ export default function PdfList() {
     const wrapperRef = useRef<HTMLDivElement>(null);
 
     const globalState = useGlobalProvider();
-    const [, setResetedState] = globalState.resetedState;
+    const [, setResetedState] = globalState.resetedState ?? [];
     const globalUser = globalState.globalUser;
-    const { db, storage } = globalState.firebase;
-    const [publicError, setPublicError] = globalState.publicError;
+    const { db, storage } = globalState.firebase ?? {};
+    const [publicError, setPublicError] = globalState.publicError ?? [];
+    const dimensions = globalState.dimensions;
 
-    const {pdfList:[pdfList, ], genres, filteredList, selectedGenres:[selectedGenres, setSelectedGenres]} = usePdfList();
+    const {pdfList:[pdfList, ], genres, filteredList, selectedGenres:[selectedGenres, setSelectedGenres]} = usePdfList() ?? {};
     const [details, setDetails] = useState<Pdf | null>(null);
     
-    const { previleges, privilegesData } = useUserPrivileges();
+    const { previleges, privilegesData } = useUserPrivileges() ?? {};
     const questionListHook = useQuestionsList({ pdfId:details?.id })
     const quizListHook = useQuizList({ pdfId:details?.id })
     const [quizList, setQuizList] = quizListHook.quizList;
     const [showQuestions, setShowQuestions] = useState(false);
-    const [ questionList, setQuestionList ] = questionListHook.pdfQuestions;
-    const [showQuestion, setShowQuestion ] = questionListHook.showQuestion;
-    const [askQuestion, setAskQuestion] = questionListHook.askQuestion;
-    const [showQuestionList, setShowQuestionList] = questionListHook.showQuestionList;
+    const [ questionList, setQuestionList ] = questionListHook?.pdfQuestions ?? [];
+    const [showQuestion, setShowQuestion ] = questionListHook?.showQuestion ?? [];
+    const [askQuestion, setAskQuestion] = questionListHook?.askQuestion ?? [];
+    const [showQuestionList, setShowQuestionList] = questionListHook?.showQuestionList ?? [];
     const [showQuiz, setShowQuiz] = useState(false);
     // const [showQuiz, setShowQuiz] = useState<QuizPdf | null>(null);
     const [search, setSearch] = useState('');
@@ -98,6 +101,7 @@ export default function PdfList() {
 
         setShowQuestions(show);
         setShowQuestionList(show);
+        setShowQuiz(false);
     }, [setDetails]);
 
     const goToPdfList = useCallback(() => {
@@ -108,6 +112,7 @@ export default function PdfList() {
         setShowQuestionList(false);
         setShowQuestions(false);
         setDetails(null);
+        setShowQuiz(false);
     }, [setShowQuestion, setAskQuestion, setShowQuestionList, setShowQuestions, setDetails]);
     
     const goToQuestionList = useCallback(() => {
@@ -115,6 +120,7 @@ export default function PdfList() {
 
         setShowQuestion(null);
         setAskQuestion(false);
+        setShowQuiz(false);
         setShowQuestionList(true);
     }, [setShowQuestion, setAskQuestion, setShowQuestionList]);
 
@@ -124,6 +130,7 @@ export default function PdfList() {
         setShowQuestion(null);
         setShowQuestions(true);
         setAskQuestion(true);
+        setShowQuiz(false);
         setShowQuestionList(false);
     }, [setShowQuestion, setAskQuestion, setShowQuestionList]);
     
@@ -131,6 +138,7 @@ export default function PdfList() {
             resetScroll()
 
             setDetails(pdf);
+            setShowQuiz(false);
             setShowQuestions(false);
             setShowQuestionList(false);
     }, [setDetails, setShowQuestions, setShowQuestionList, wrapperRef.current?.getBoundingClientRect().top]);
@@ -141,9 +149,12 @@ export default function PdfList() {
         setShowQuestion(showQuestion);
         setShowQuestionList(false);
         setAskQuestion(false);
+        setShowQuiz(false);
     }, [setShowQuestion, setShowQuestionList, setAskQuestion]); 
 
     const gotToQuiz = useCallback(() => {
+        resetScroll()
+        
         setShowQuestion(null);
         setAskQuestion(false);
         setShowQuestionList(false);
@@ -172,18 +183,20 @@ export default function PdfList() {
 
     const pdfListMemo = useMemo(() => {
         
-        return filteredList.map(item => (
+        return filteredList?.map(item => (
         <PdfCard key={item.id} pdf={item} choosePdf={choosePdf} questionHooks={questionHooks} />
         ))
     }, [filteredList])
 
     return (
+        dimensions &&
         <div className="w-full min-h-screen bg-gray-100 flex flex-col items-center justify-start gap-4 py-7" >
 
             <div ref={wrapperRef} className="bg-white rounded shadow max-sm:w-[90%] w-[768px] flex items-center justify-around py-4" >
                 {details && !showQuestions && !showQuiz && <DetaisMenu choosePdf={choosePdf} functions={functions} />}
                 {details && showQuestions && !showQuiz && <QuestionsMenu questionHooks={questionHooks} functions={functions} />}
                 {!details && !showQuestions && !showQuiz && <ListMenu getPdfRef={getPdfRef} questionHooks={questionHooks} />}
+                {showQuiz && details && !showQuestions && <QuizMenu functions={functions} questionHooks={questionHooks} />}
             </div>
             <div className={twMerge("bg-white rounded shadow max-sm:w-[90%] w-[768px] min-h-screen flex flex-row flex-wrap items-stretch justify-start gap-4 p-4", details && 'items-start justify-center')} >
                 {details && !showQuestions && !showQuiz && <DetailsSection questionHooks={questionHooks} functions={functions} />}                

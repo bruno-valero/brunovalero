@@ -17,6 +17,8 @@ import { getAuth } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from "firebase/storage";
+import PlansRestrictions from "../PlansRestrictions";
+import UserActions from "../UserActions";
 import UserFinancialData from "../UserManagement/UserFinancialData";
 import CheckPrivileges from "./CheckPrivileges";
 
@@ -39,13 +41,18 @@ export default class Quiz {
         storage: FirebaseStorage;
     }
     checkPrivileges:CheckPrivileges;
-    financialData:UserFinancialData
+    financialData:UserFinancialData;
+    userActions:UserActions;
+    plansRestrictions:PlansRestrictions;
+
     constructor() {
         this.vectorStore = new VectorStoreProcess();
         this.aiFeatures = new AiFeatures();
         this.checkPrivileges = new CheckPrivileges();
-        this.financialData = new UserFinancialData()
-        this.firebase = firebaseInit({ envs, initializeApp, getAuth, getDatabase, getFirestore, getStorage, getApps })
+        this.financialData = new UserFinancialData();
+        this.firebase = firebaseInit({ envs, initializeApp, getAuth, getDatabase, getFirestore, getStorage, getApps });
+        this.userActions = new UserActions();
+        this.plansRestrictions = new PlansRestrictions();
     };
 
     protected async summaryDescription(text:string) {
@@ -186,10 +193,9 @@ export default class Quiz {
          }
     };        
 
-    async generateQuiz({ quizFocus, docId, isPublic, userId }:{ quizFocus:string, docId:string, isPublic:boolean, userId:string }) {
-        const { price:questionsPrice, data, vectorSearchResponse } = await this.generateQuestions({ quizFocus, docId });
-
+    async generateQuiz({ quizFocus, docId, isPublic, userId }:{ quizFocus:string, docId:string, isPublic:boolean, userId:string }) {                
         
+        const { price:questionsPrice, data, vectorSearchResponse } = await this.generateQuestions({ quizFocus, docId });        
         const {description, price:priceDescription} = await this.generateDescription({ vectorSearchResponse });
 
         const { price:imagesPrice, ...images } = await this.generateImages({ description })
@@ -239,15 +245,20 @@ export default class Quiz {
 
         console.log(`quiz: ${JSON.stringify(quiz, null, 2)}`);
         const serialized = JSON.parse(JSON.stringify(quiz)) as QuizPdf;
+        await this.userActions.addUserAction(userId, 'readPdf', 'quizGeneration', quizId);
         return serialized;
 
     };
 
     async addQuiz({ quizFocus, docId, isPublic, userId, autoBuy, minCredits }:{ quizFocus:string, docId:string, isPublic:boolean, userId:string, autoBuy?:boolean, minCredits?:number }) {
         const { isFree } = await this.checkPrivileges.check({ currentAction:'quizGeneration', userId });
-        console.log(`A pergnta ${isFree ? 'não será cobrada :)' : 'será cobrada!'}`)
-        if (!isFree) {      
-            await this.financialData.checkMinCredits({ uid:userId, autoBuy, minCredits });           
+        console.log(`A pergnta ${isFree ? 'não será cobrada :)' : 'será cobrada!'}`);
+        if (!isFree) {
+
+            const hasPermission = await this.plansRestrictions.hasPermission({ uid:userId, action:'quizGeneration', service:'readPdf', docId });
+            if (!hasPermission) throw new Error("Sem permissão para realizar esta ação");
+            
+            await this.financialData.checkMinCredits({ uid:userId, autoBuy, minCredits });
         };
         const quiz = await this.generateQuiz({ quizFocus, docId, isPublic, userId });
         await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).collection('quiz').doc(quiz.id).set(quiz);

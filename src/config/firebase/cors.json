@@ -1,6 +1,6 @@
 [
     {
-      "origin": ["localhost", "brunovalero.com", "brunovalero.com.br"],
+      "origin": ["http://localhost:3000", "https://brunovalero.com", "https://brunovalero.com.br"],
       "method": ["GET"],
       "maxAgeSeconds": 3600
     }

@@ -22,11 +22,11 @@ export default function QuizFinish({ quiz, tries, questions }: QuizQuestionProps
     const router = useRouter();
 
     const globalState = useGlobalProvider();
-    const [, setResetedState] = globalState.resetedState;
-    const { height, width } = globalState.dimensions
+    const [, setResetedState] = globalState.resetedState ?? [];
+    const dimensions = globalState.dimensions
     const globalUser = globalState.globalUser;
-    const { db, storage } = globalState.firebase;
-    const [publicError, setPublicError] = globalState.publicError;
+    const { db, storage } = globalState.firebase ?? {};
+    const [publicError, setPublicError] = globalState.publicError ?? [];
 
     function millisecondsToTime(ms:number, notMillis?:boolean) {
         let seconds = Math.floor((ms / 1000) % 60);
@@ -107,6 +107,7 @@ export default function QuizFinish({ quiz, tries, questions }: QuizQuestionProps
     };
 
     return (
+        dimensions &&
         <div className="w-full h-full flex flex-col items-start justify-center" >            
             <h2 className="text-lg font-semibold" style={{color:colors.valero()}} >
                 {quiz?.title}

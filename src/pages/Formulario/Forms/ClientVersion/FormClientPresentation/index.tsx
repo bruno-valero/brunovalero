@@ -2,6 +2,9 @@ import logoDoCliente from '@/src/images/logoDoCliente.png';
 
 export default function FormClientPresentation() {
 
+    // const globalState = useGlobalProvider();
+    // const [, setPublicError] = globalState.publicError ?? [];
+    // const dimensions = globalState.dimensions;
 
 
     return (        

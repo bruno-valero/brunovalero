@@ -1,12 +1,21 @@
 import { QuizPdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
 import colors from "@/src/constants/colors";
+import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import { BsArrowRight } from "react-icons/bs";
 
 
 
 export default function QuizPresentation({ quiz, init }: { quiz:QuizPdf | null, init:() => any }) {
     
+    const globalState = useGlobalProvider();
+    const [, setResetedState] = globalState.resetedState ?? [];
+    const { height, width } = globalState.dimensions ?? {}
+    const globalUser = globalState.globalUser;
+    const { db, storage } = globalState.firebase ?? {};
+    const [publicError, setPublicError] = globalState.publicError ?? [];
+
     return (
+        width &&
         <>
             <span className=" text-7xl font-black" style={{color:colors.valero()}} >
                 Quiz

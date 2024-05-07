@@ -17,10 +17,10 @@ export type PrivilegesData = {
 export default function useUserPrivileges() {
 
     const globalState = useGlobalProvider();
-    const [, setResetedState] = globalState.resetedState;
+    const [, setResetedState] = globalState.resetedState ?? [];
     const globalUser = globalState.globalUser;
-    const { db, storage } = globalState.firebase;
-    const [publicError, setPublicError] = globalState.publicError;
+    const { db, storage } = globalState.firebase ?? {};
+    const [publicError, setPublicError] = globalState.publicError ?? [];
 
     const [previleges, setPrevileges ] = useState<UsersControl['PrivilegesFreeServices'] | null>(null);
     
@@ -61,7 +61,7 @@ export default function useUserPrivileges() {
             Object.values(snaps).map(item => item());
         };
 
-    },[globalUser.data?.uid]);
+    },[globalUser?.data?.uid]);
 
     return {
         previleges:[previleges, setPrevileges ] as UseState<UsersControl['PrivilegesFreeServices'] | null>,

@@ -10,8 +10,12 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
+import { QuizPdfTry } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
+import fromCollection from "@/src/config/firebase/firestore";
 import Post from "@/src/modules/Request/Post";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { where } from "firebase/firestore";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
   
@@ -25,21 +29,26 @@ type From = z.infer<typeof formSchema>
 export default function QuizSection({ functions, questionHooks }:{ functions:PdfFunctions, questionHooks:PdfHooks }) {
 
     const globalState = useGlobalProvider();
-    const [, setResetedState] = globalState.resetedState;
+    const [, setResetedState] = globalState.resetedState ?? [];
     const globalUser = globalState.globalUser;
-    const { db, storage } = globalState.firebase;
-    const [publicError, setPublicError] = globalState.publicError;
+    const { db, storage } = globalState.firebase ?? {};
+    const [publicError, setPublicError] = globalState.publicError ?? [];
+    const dimensions = globalState.dimensions;
+
+    const [tries, setTries] = useState<Record<string, QuizPdfTry[]>>({});
 
     const { register, formState:{errors}, handleSubmit } = useForm<From>({ resolver:zodResolver(formSchema) });
 
 
-    const [ questionList, setQuestionList ] = questionHooks.questionList;
-    const [ showQuestion, setShowQuestion ] = questionHooks.showQuestion;
-    const [ showQuestions, setShowQuestions ] = questionHooks.showQuestions;
-    const [askQuestion, setAskQuestion] = questionHooks.askQuestion;
-    const [details, setDetails] = questionHooks.details;
-    const [showQuestionList, setShowQuestionList] = questionHooks.showQuestionList;
-    const [search, setSearch] = questionHooks.search;
+    const [ questionList, setQuestionList ] = questionHooks?.questionList ?? [];
+    const [ showQuestion, setShowQuestion ] = questionHooks?.showQuestion ?? [];
+    const [ showQuestions, setShowQuestions ] = questionHooks?.showQuestions ?? [];
+    const [askQuestion, setAskQuestion] = questionHooks?.askQuestion ?? [];
+    const [details, setDetails] = questionHooks?.details ?? [];
+    const [showQuestionList, setShowQuestionList] = questionHooks?.showQuestionList ?? [];
+    const [search, setSearch] = questionHooks?.search ?? [];
+    const [quizList, setQuizList] = questionHooks?.quizList ?? [];
+
 
     const phrases = [
         'Aumente seu conhecimento ao consolidar o que aprendeu ao ler o livro, reforçando conceitos e informações importantes.',
@@ -63,9 +72,24 @@ export default function QuizSection({ functions, questionHooks }:{ functions:Pdf
         const quiz = await resp?.json();
 
         console.log(`Quiz: ${quiz}`);
+    };
+
+    async function getTries( docId:string, quizId:string ) {
+        const resp = await fromCollection('services', db!).getDocById('readPdf').getCollection('data').getDocById(docId).getCollection('quiz').getDocById(quizId).getCollection('tries').docs([where('userId', '==', globalUser.data?.uid)])
+        const data = resp.map(item => item.data) as QuizPdfTry[];
+        setTries(prev => ({...prev, [quizId]:data}));
+        return data;
+    }
+
+    function openUrl(url:string) {
+        const a = document.createElement('a');
+        a.setAttribute('href', url);
+        a.setAttribute('target', '_black');
+        a.click();
     }
 
     return (
+        dimensions &&
         <div className="flex flex-col gap-3 items-center justify-center w-full p-4" >
             <h2 className="" style={{color:colors.valero()}} >
                 <span className="text-2xl font-normal" >Quizzes de </span>
@@ -93,9 +117,9 @@ export default function QuizSection({ functions, questionHooks }:{ functions:Pdf
                     })}
                 </ul>
                 
-                <Separator className="my-2" color={colors.valero()} />
-                <Popover>
-                    <PopoverTrigger className="shadow rounded p-3 flex gap-3 items-center justify-center">
+                
+                <Popover >
+                    <PopoverTrigger className="shadow rounded p-3 flex gap-3 items-center justify-center mt-5">
                         <IoMdAdd size={24} />
                         <span>Novo Quiz</span>                                
                     </PopoverTrigger>
@@ -110,10 +134,38 @@ export default function QuizSection({ functions, questionHooks }:{ functions:Pdf
                     </PopoverContent>
                 </Popover>
 
-                {/* <button className="shadow rounded p-3 flex gap-3 items-center justify-center" >
-                    <IoMdAdd size={24} />
-                    <span>Novo Quiz</span>                    
-                </button> */}
+                <Separator className="my-2" color={colors.valero()} />
+
+                <div className="flex flex-wrap items-start justify-start w-full" >
+                    {quizList.map(item => (
+                        <Popover>
+                            <PopoverTrigger className="w-[250px] rounded-md shadow p-1" >
+                                <img src={item.imageBackground.wide.url} alt={item.title} className="w-full object-cover rounded" />
+                                <h2 className="font-semibold text-sm p-2" >
+                                    {item.title}
+                                </h2> 
+                            </PopoverTrigger>
+                            <PopoverContent>
+                                {/* window.open(`${window.location.href}/quiz/${item.docId}-${item.id}`) */}
+                                <button onClick={() => openUrl(`${window.location.href}/quiz/${item.docId}-${item.id}`)} className="rounded shadow my-1 p-2 w-full text-white" style={{backgroundColor:colors.valero()}} >
+                                    Iniciar Quiz
+                                </button>
+                                <button disabled={!!tries[item.id]} onClick={() => getTries(item.docId, item.id)} className="w-full flex items-center justify-center p-2" >
+                                    {!tries[item.id] ? `Carregar Tentativas` : `Tentativas`}
+                                </button>
+                                <Separator className="my-2" color={colors.valero()} />
+                                <div className="flex flex-col gap-2" >
+                                    {tries[item.id]?.map((t, i) => (
+                                        <button onClick={() => openUrl(`${window.location.href}/quiz/${item.docId}-${item.id}/${t.id}`)} className="p-2 rounded shadow w-full" >
+                                            Tentativa {i + 1} - acertos: {t.score * 100}%
+                                        </button>
+                                    ))}
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+                    ))}
+                </div>
+                
             </div>
 
         </div>
