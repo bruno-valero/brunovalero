@@ -11,6 +11,7 @@ import PdfCard from "./PdfCard";
 import { UsersControlPrivileges } from "@/src/config/firebase-admin/collectionTypes/users/control";
 import useQuestionsList from "@/src/hooks/useQuestionsList";
 import useQuizList from "@/src/hooks/useQuizList";
+import useUserFinancialData from "@/src/hooks/useUserFinancialData";
 import useUserPrivileges, { PrivilegesData } from "@/src/hooks/useUserPrivileges";
 import { UseState } from "@/utils/common.types";
 import DetailsSection from "./DetailsSection";
@@ -64,6 +65,7 @@ export default function PdfList() {
     const {pdfList:[pdfList, ], genres, filteredList, selectedGenres:[selectedGenres, setSelectedGenres]} = usePdfList() ?? {};
     const [details, setDetails] = useState<Pdf | null>(null);
     
+    const { financialData:[ financialData ] } = useUserFinancialData() ?? {};
     const { previleges, privilegesData } = useUserPrivileges() ?? {};
     const questionListHook = useQuestionsList({ pdfId:details?.id })
     const quizListHook = useQuizList({ pdfId:details?.id })
@@ -191,7 +193,19 @@ export default function PdfList() {
     return (
         dimensions &&
         <div className="w-full min-h-screen bg-gray-100 flex flex-col items-center justify-start gap-4 py-7" >
-
+            {(financialData?.paymentMethods ?? 0) === 0 && (
+                <div className="max-sm:w-[90%] w-[768px] flex flex-col gap-1 items-center justify-center bg-red-500 p-4 rounded shadow" >
+                    <span className="text-white" >
+                        Atenção! Você ainda não cadastrou nenhum cartão de crédito.
+                    </span>
+                    <span className="text-white" >
+                        Após se esgotarem os recursos gratuitos, não será possível usar os serviços.
+                    </span>
+                    <button className="bg-gray-100 p-2 rounded shadow text-base font-normal mt-2" >
+                        Clique aqui para cadastra agora.
+                    </button>
+                </div>
+            )}
             <div ref={wrapperRef} className="bg-white rounded shadow max-sm:w-[90%] w-[768px] flex items-center justify-around py-4" >
                 {details && !showQuestions && !showQuiz && <DetaisMenu choosePdf={choosePdf} functions={functions} />}
                 {details && showQuestions && !showQuiz && <QuestionsMenu questionHooks={questionHooks} functions={functions} />}

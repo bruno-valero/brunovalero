@@ -87,8 +87,8 @@ export default class Quiz {
 
     };
 
-    protected async generateQuestions({ quizFocus, docId }:{ quizFocus:string, docId:string }) {
-        const { response, price:priceVectorSearch } = await this.vectorStore.search(quizFocus, docId, 8);
+    protected async generateQuestions({ quizFocus, docId, vectorIndex }:{ quizFocus:string, docId:string, vectorIndex:string }) {
+        const { response, price:priceVectorSearch } = await this.vectorStore.search(quizFocus, docId, vectorIndex, 8);
         console.log(`Vector Store Response::: ${response.sourceDocuments.map(item => item.pageContent).join('\n\n')}`)
         const {content:questions, price:priceQuestions} = await this.aiFeatures.gpt3(`
         Com base no trecho abaixo, gere 30 questoes sobre "${quizFocus}". 
@@ -193,9 +193,9 @@ export default class Quiz {
          }
     };        
 
-    async generateQuiz({ quizFocus, docId, isPublic, userId }:{ quizFocus:string, docId:string, isPublic:boolean, userId:string }) {                
+    async generateQuiz({ quizFocus, docId, isPublic, userId, vectorIndex }:{ quizFocus:string, docId:string, isPublic:boolean, userId:string, vectorIndex:string }) {                
         
-        const { price:questionsPrice, data, vectorSearchResponse } = await this.generateQuestions({ quizFocus, docId });        
+        const { price:questionsPrice, data, vectorSearchResponse } = await this.generateQuestions({ quizFocus, docId, vectorIndex });        
         const {description, price:priceDescription} = await this.generateDescription({ vectorSearchResponse });
 
         const { price:imagesPrice, ...images } = await this.generateImages({ description })
@@ -250,7 +250,7 @@ export default class Quiz {
 
     };
 
-    async addQuiz({ quizFocus, docId, isPublic, userId, autoBuy, minCredits }:{ quizFocus:string, docId:string, isPublic:boolean, userId:string, autoBuy?:boolean, minCredits?:number }) {
+    async addQuiz({ quizFocus, docId, isPublic, userId, autoBuy, minCredits, vectorIndex }:{ quizFocus:string, docId:string, isPublic:boolean, userId:string, autoBuy?:boolean, minCredits?:number, vectorIndex:string }) {
         const { isFree } = await this.checkPrivileges.check({ currentAction:'quizGeneration', userId });
         console.log(`A pergnta ${isFree ? 'não será cobrada :)' : 'será cobrada!'}`);
         if (!isFree) {
@@ -260,7 +260,7 @@ export default class Quiz {
             
             await this.financialData.checkMinCredits({ uid:userId, autoBuy, minCredits });
         };
-        const quiz = await this.generateQuiz({ quizFocus, docId, isPublic, userId });
+        const quiz = await this.generateQuiz({ quizFocus, docId, isPublic, userId, vectorIndex });
         await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).collection('quiz').doc(quiz.id).set(quiz);
 
         const price = quiz.price;

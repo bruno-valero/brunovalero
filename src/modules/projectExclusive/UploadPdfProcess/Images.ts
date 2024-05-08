@@ -143,7 +143,7 @@ export default class Images {
 
     };   
 
-    async addNewImage({ docId, userId, autoBuy, minCredits }:{ docId:string, userId:string, autoBuy?:boolean, minCredits?:number }) {        
+    async addNewImage({ docId, userId, autoBuy, minCredits, vectorIndex }:{ docId:string, userId:string, autoBuy?:boolean, minCredits?:number, vectorIndex:string }) {        
 
         const { isFree } = await this.checkPrivileges.check({ currentAction:'coverGenerationForPrivateDocs', userId });
         if (!isFree) {
@@ -154,7 +154,7 @@ export default class Images {
             await this.financialData.checkMinCredits({ uid:userId, autoBuy, minCredits });
         }
 
-        const { textResponse:description, price:descriptionPrice } = await this.description.generateDescription(docId);
+        const { textResponse:description, price:descriptionPrice } = await this.description.generateDescription(docId, vectorIndex);
         const { imageURL, inputContent, descriptionSummary, price:imagePrice } = await this.generateImageFromDescription(description, 'slim');
 
         const { blob:imageBlob, path, url } = await this.uploadImageToStorage({ userId, fileName:docId, imageURL, uploadContent:'cover' });

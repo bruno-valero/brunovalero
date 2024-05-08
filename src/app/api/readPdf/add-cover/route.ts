@@ -1,5 +1,6 @@
 import { UsersUser } from "@/src/config/firebase-admin/collectionTypes/users";
 import { admin_firestore } from "@/src/config/firebase-admin/config";
+import VectorStoreProcess from "@/src/modules/VectorStoreProcess";
 import UploadPdfProcess from "@/src/modules/projectExclusive/UploadPdfProcess";
 import Images from "@/src/modules/projectExclusive/UploadPdfProcess/Images";
 import { NextResponse } from "next/server";
@@ -19,7 +20,15 @@ export async function POST(req:Request) {
         const user = (userSnap.exists ? userSnap.data() : null) as Omit<UsersUser, "control">;
         if (!user) throw new Error("Usuário não encontrado");   
         console.log('Iniciando a requisição para esponder a pergnta...');
-        const images = (new Images()).addNewImage({ docId, userId:user.uid, autoBuy, minCredits:5 })
+
+        const resp = await admin_firestore.collection('control').doc('vectorStore').get();
+        const vectorStore = resp.exists ? resp.data() : null;
+        if(!vectorStore) throw new Error("Vector Store não encontrada");
+        const items = Object.entries(vectorStore).filter(item => !!item[1]);
+        const v = new VectorStoreProcess();
+        const vectorIndex = await v.checkNamespacesAmount(items[0][0]);
+        const images = (new Images()).addNewImage({ docId, userId:user.uid, autoBuy, minCredits:5, vectorIndex });
+
         return NextResponse.json({data:images});
     } catch (e:any) {
         console.log('Houver um erro:', e.message);
