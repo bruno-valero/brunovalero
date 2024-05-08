@@ -56,6 +56,11 @@ export default function DetailsSection({ questionHooks, functions }:DetailsSecti
        }
     }
 
+    function isPC() {
+        return !navigator.userAgent.match(/(Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone)/i);
+    }
+    
+
 
     return (
         <>
@@ -74,10 +79,12 @@ export default function DetailsSection({ questionHooks, functions }:DetailsSecti
                         ))}
                     </span>
 
-                    <div className="flex gap-4 my-3" >                        
-                        <button onClick={() => downloadPdf(details.pdfUrl, `services/readPdf/documents/${globalUser.data?.uid}/${details.id}`)} className="rounded shadow p-3 px-5 hover:bg-gray-100" >
-                            Baixar PDF
-                        </button>
+                    <div className="flex gap-4 my-3" >   
+                        {isPC() && (
+                            <button onClick={() => downloadPdf(details.pdfUrl, `services/readPdf/documents/${globalUser.data?.uid}/${details.id}`)} className="rounded shadow p-3 px-5 hover:bg-gray-100" >
+                                Baixar PDF
+                            </button>
+                        )}                     
                         <button onClick={() => window.open(details.pdfUrl)} className="rounded shadow p-3 px-5 hover:bg-gray-100" >
                             Abrir PDF
                         </button>

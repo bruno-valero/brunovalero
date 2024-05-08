@@ -62,6 +62,11 @@ export default async function LerPdfComponent() {
     // console.log(`mdUrl`, mdUrl);
     // console.log(`mdPath`, `${path}-md`, '\n');
     
+    // const v = new VectorStoreProcess();
+
+    // const { amount, ids } = await v.checkNamespacesAmount();
+    // console.log(`amount: ${amount}`);
+    // console.log(`ids: ${ids}`);
 
     return (
         <div id="Formularios" className="w-full max-h-screen flex flex-col items-start justify-start overflow-x-hidden overflow-y-auto">      

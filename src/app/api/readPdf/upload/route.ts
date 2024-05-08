@@ -1,4 +1,5 @@
 import { admin_firestore } from "@/src/config/firebase-admin/config";
+import VectorStoreProcess from "@/src/modules/VectorStoreProcess";
 import UploadPdfProcess from "@/src/modules/projectExclusive/UploadPdfProcess";
 import { NextResponse } from "next/server";
 
@@ -19,7 +20,11 @@ export async function POST(req:Request) {
         const user = userSnap.exists ? userSnap.data() : null;
         if (!user) throw new Error("Usuário não encontrado");        
         console.log('lendo o conteúdo');
-        await readPdf.partialUpload({ pdfUrl, docId, user });
+
+        const v = new VectorStoreProcess();
+        const vectorIndex = await v.checkNamespacesAmount(`semantic-search`);
+        await readPdf.partialUpload({ pdfUrl, docId, user, vectorIndex });
+        
         console.log('Processo finalizado com sucesso!');
         return NextResponse.json({data:true});
     } catch (e:any) {

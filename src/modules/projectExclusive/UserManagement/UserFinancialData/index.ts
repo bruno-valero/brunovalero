@@ -3,13 +3,18 @@ import { UsersUser } from "@/src/config/firebase-admin/collectionTypes/users";
 import { UsersFinancialData } from "@/src/config/firebase-admin/collectionTypes/users/control";
 import { admin_firestore } from "@/src/config/firebase-admin/config";
 import StripeBackend from "@/src/modules/stripe/backend/StripeBackend";
+import Stripe from "stripe";
+import UserManagement from "..";
 import Payment from "../../UploadPdfProcess/Payment";
+import UserPrivileges from "../UserPrivileges";
 
 export default class UserFinancialData {
 
     payment:Payment;
     stripe:StripeBackend;
-    stripeId:'stripeId' | 'stripeIdDev'
+    stripeId:'stripeId' | 'stripeIdDev';
+    userPrivileges:UserPrivileges;
+    userManagement:UserManagement
 
     constructor() {
 
@@ -17,8 +22,9 @@ export default class UserFinancialData {
         this.payment = new Payment();
         this.stripeId = stripeId;
         this.stripe = new StripeBackend(isProduction ? 'production' : 'test');
-
-    };
+        this.userPrivileges = new UserPrivileges();
+        this.userManagement = new UserManagement();
+    };  
 
 
     /**
@@ -30,7 +36,7 @@ export default class UserFinancialData {
      * @returns Retorna os dados financeiros que foram criados
      */
     async create(uid:string) {        
-        
+        // this.stripe.stripe.customers.
         const financialData:UsersFinancialData = {
             activePlan:{
                 readPdf:'free',
@@ -221,6 +227,63 @@ export default class UserFinancialData {
         await admin_firestore.collection('users').doc(uid).collection('control').doc('financialData').update({ paymentMethods:pmAmount })
 
         return user;
+    };
+
+
+    async subscribeToPlan({ user, plan }:{ user:Omit<UsersUser, 'control'>, plan:Stripe.Price }) {
+        const customer = await this.userManagement.getStripeId({ uid:user.uid, userData:user });
+        const subs = await this.stripe.stripe.subscriptions.search({query: `customer:'${customer}'`})
+        await Promise.all(subs.data.map(async(item) => {
+            await this.stripe.stripe.subscriptions.cancel(item.id);
+        }))
+
+        const sub = await this.stripe.stripe.subscriptions.create({
+            customer,
+            items:[{price:plan.id, quantity: 1}],   
+            metadata:{
+                plan:plan.nickname,
+            },                                
+        });
+
+        const retSub = await this.stripe.stripe.subscriptions.retrieve(sub.id);
+        
+        if (retSub.status === 'active') {
+            await this.updateUserActivePlanFirebase(user.uid, plan.nickname as any);
+            return retSub;
+        };
+
+        return null;
+    };
+
+    async updateUserActivePlanFirebase(uid:string, plan:'free' | 'standard' | 'enterprise') {
+        await admin_firestore.collection('users').doc(uid).collection('control').doc('financialData').update({ activePlan:plan });
+        if (plan === 'free') {
+            await this.userPrivileges.freePlanMonthlyPrivilege(uid)
+        } else if (plan === 'standard') {
+            await this.userPrivileges.standardPlanMonthlyPrivilege(uid)
+        } else if (plan === 'enterprise') {
+            await this.userPrivileges.enterprisePlanMonthlyPrivilege(uid)
+        }
+        return true;
     }
+
+    async scheduleUpdateUserPlan({ user }:{ user:Omit<UsersUser, 'control'> }) {
+        const customer = await this.userManagement.getStripeId({ uid:user.uid, userData:user });
+
+        const subs = await this.stripe.stripe.subscriptions.search({query: `customer:'${customer}'`});
+        if (subs.data.length === 0) {
+            await this.updateUserActivePlanFirebase(user.uid, 'free');
+            return;
+        }
+        const plan = subs.data[0].metadata.plan as 'free' | 'standard' | 'enterprise';
+        if (plan === 'standard') {
+            await this.updateUserActivePlanFirebase(user.uid, 'standard');
+        } else if (plan === 'enterprise') {
+            await this.updateUserActivePlanFirebase(user.uid, 'enterprise');
+        } else if (plan === 'free') {
+            await this.updateUserActivePlanFirebase(user.uid, 'free');
+        }
+    }
+
 
 };

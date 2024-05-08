@@ -36,6 +36,7 @@ export default function QuizSection({ functions, questionHooks }:{ functions:Pdf
     const dimensions = globalState.dimensions;
 
     const [tries, setTries] = useState<Record<string, QuizPdfTry[]>>({});
+    const [loadQuizCreation, setLoadQuizCreation] = useState(false);
 
     const { register, formState:{errors}, handleSubmit } = useForm<From>({ resolver:zodResolver(formSchema) });
 
@@ -48,6 +49,7 @@ export default function QuizSection({ functions, questionHooks }:{ functions:Pdf
     const [showQuestionList, setShowQuestionList] = questionHooks?.showQuestionList ?? [];
     const [search, setSearch] = questionHooks?.search ?? [];
     const [quizList, setQuizList] = questionHooks?.quizList ?? [];
+    const privilegesData = questionHooks?.privilegesData ?? [];
 
 
     const phrases = [
@@ -64,14 +66,16 @@ export default function QuizSection({ functions, questionHooks }:{ functions:Pdf
     const indexes:number[] = [];
 
     async function createQuiz(data:From) {
+        setLoadQuizCreation(true);
         console.log(data);
         const path = `/api/readPdf/add-quiz`;
         const post = new Post(path);
         post.addData({ docId:details?.id, uid:globalUser.data?.uid, autoBuy:false, quizFocus:data.quizFocus });
         const resp = await post.send();
         const quiz = await resp?.json();
-
+        alert(JSON.stringify(quiz, null, 2))
         console.log(`Quiz: ${quiz}`);
+        setLoadQuizCreation(false);
     };
 
     async function getTries( docId:string, quizId:string ) {
@@ -125,10 +129,19 @@ export default function QuizSection({ functions, questionHooks }:{ functions:Pdf
                     </PopoverTrigger>
                     <PopoverContent className="w-[90%]" >
                         <form onSubmit={handleSubmit(createQuiz)} className="flex flex-col gap-3 items-center justify-center p-5" >
+                            <span className="text-sm font-semibold text-green-700" >
+                                {
+                                    (globalUser.data?.uid === details?.userId) 
+                                        ? 
+                                            (privilegesData.quizGenerationPrivateDocs ? `Você possiu ${privilegesData.quizGenerationPrivateDocs} gerações de quiz gratuitas` : `Gere um novo quiz por apenas R$2,00`) 
+                                        : 
+                                            (privilegesData.quizGenerationPublicDocs ? `Você possiu ${privilegesData.quizGenerationPublicDocs} gerações de quiz gratuitas` : `Gere um novo quiz por apenas R$2,00`)
+                                }
+                            </span>
                             <textarea {...register('quizFocus')} placeholder="Digite o tema do novo Quiz..." className="w-full outline-none rounded p-3 text-lg focus:border-[2px]" style={{borderBottomWidth:2, borderColor:colors.valero(.7), color:colors.valero()}} />
                             {errors.quizFocus && <span className="text-sm text-wrap text-red-700 font-semibold mb-2" >{errors.quizFocus.message}</span>}
-                            <button type="submit" className="text-white text-base font-normal p-2 rounded w-full" style={{backgroundColor:colors.valero()}} >
-                                Criar Quiz
+                            <button type="submit" disabled={loadQuizCreation} className="text-white text-base font-normal p-2 rounded w-full" style={{backgroundColor:colors.valero()}} >
+                                {loadQuizCreation ? `Aguarde...` :`Criar Quiz`}
                             </button>
                         </form>                   
                     </PopoverContent>
@@ -141,6 +154,7 @@ export default function QuizSection({ functions, questionHooks }:{ functions:Pdf
                         <Popover>
                             <PopoverTrigger className="w-[250px] rounded-md shadow p-1" >
                                 <img src={item.imageBackground.wide.url} alt={item.title} className="w-full object-cover rounded" />
+                                <span className="font-semibold text-sm p-2" >{Object.values(item.questions).length} questões</span>
                                 <h2 className="font-semibold text-sm p-2" >
                                     {item.title}
                                 </h2> 

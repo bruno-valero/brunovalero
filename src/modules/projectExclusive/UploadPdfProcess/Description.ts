@@ -17,8 +17,8 @@ export default class Description {
      * @param docId 
      * @returns O texto da resposa encodificada com o método "encodeURIComponent" e o preço da requisição
      */
-    async generateDescription(docId:string) {
-        const { response:resp, price } = await this.vectorStore.search('qual é o objetivo do conteúdo?', docId);
+    async generateDescription(docId:string, vectorIndex:string) {
+        const { response:resp, price } = await this.vectorStore.search('qual é o objetivo do conteúdo?', docId, vectorIndex);
         const textResponse = encodeURIComponent(resp.text as string);
 
         return { textResponse, price };

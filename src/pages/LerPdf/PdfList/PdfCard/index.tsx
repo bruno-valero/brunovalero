@@ -6,6 +6,7 @@ import Post from "@/src/modules/Request/Post";
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import cutTextMask from "@/utils/functions/masks/cutTextMask";
 import { useRef } from "react";
+import { twMerge } from "tailwind-merge";
 import { PdfHooks } from "..";
 import AddImageButton from "./AddImageButton";
 import ChangeImageButton from "./ChangeImageButton";
@@ -55,8 +56,8 @@ export default function PdfCard({ pdf, choosePdf, questionHooks }:{ pdf:Pdf, cho
                             <div className="text-sm font-normal mb-2" >
                                 {privilegesData.coverGenerationForPrivateDocs ? `Você possui ${privilegesData.coverGenerationForPrivateDocs} gerações de imagem da capa gratuitas.` : `Gere uma nova imagem representando o conteúdo por apenas R$${0.80.toFixed(2)}`}
                             </div>
-                            <div className="text-sm font-semibold mb-2" >
-                                {pdf.customTitle ?? pdf.metadata.title}
+                            <div className={twMerge("text-sm font-semibold mb-2")} >
+                                {pdf.customTitle ?? pdf.metadata.title} pop
                             </div>
                             <div className="w-full flex gap-2 items-start justify-start overflow-x-auto" >
                                     <AddImageButton {...{ pdf, imageWidth, imageHeight }} />
@@ -68,9 +69,9 @@ export default function PdfCard({ pdf, choosePdf, questionHooks }:{ pdf:Pdf, cho
                     </Popover>                
                     <div className="w-full flex flex-col gap-1 items-start justify-center" >
                         <Popover onOpenChange={(open) => open && inputNameRef.current?.focus()} >
-                            <PopoverTrigger>                            
+                            <PopoverTrigger className={twMerge("")} >                            
                                 <h2 className="font-bold text-sm" >
-                                    {cutTextMask(pdf.customTitle || pdf.metadata.title || 'Sem Nome', 25)}
+                                    {cutTextMask(pdf.customTitle || pdf.metadata.title || 'Sem Nome', dimensions.width < 500 ? 15 : 25)}
                                 </h2>                    
                             </PopoverTrigger>
                             <PopoverContent>

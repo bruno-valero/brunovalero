@@ -61,7 +61,7 @@ export default function useUserPrivileges() {
             Object.values(snaps).map(item => item());
         };
 
-    },[globalUser?.data?.uid]);
+    },[]);
 
     return {
         previleges:[previleges, setPrevileges ] as UseState<UsersControl['PrivilegesFreeServices'] | null>,
