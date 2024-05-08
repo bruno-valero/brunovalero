@@ -23,68 +23,32 @@ export default class PlansRestrictions {
 
     async createreadPdfFreePlan() {
 
+        const stripePrice = await this.userFinancialData.stripe.stripe.prices.create({
+            unit_amount:0,
+            recurring:{
+                interval:'month',                
+            },
+            currency:'brl',      
+            nickname:'free',
+            metadata:{
+                name:'free'
+            },
+        })
+
         const data:ControlPlanReadPdfPlans = {
+            stripePrice,
             customName:'Básico',
-            questionsPerMonth:{
-                amount:50,
-                price:0.06
-            },
-            pdfUploadsPerMonth:{
-                amount:5,
-                chunkOfWords:100_000,
-                pricePerChunkOfWords:0.29,
-            },
-            coverPerDoc:{
-                amount:0,
-                price:0.8,
-            },
-            docsPeruser:25,
-            multiDocsQuestions:{
-                upToThreeDocs:{
-                    amount:0,
-                    price:0.12,
-                },
-                moreThanThreeDocs:{
-                    amount:0,
-                    price:0.18,
-                },
-            },
-            quizPerDoc:{
-                publicDoc:{
-                    amount:1,
-                    generations:{
-                        amount:5,
-                        price:2,
-                    },                
-                },
-                privateDoc:{
-                    amount:0,
-                    generations:{
-                        amount:0,
-                        price:2,
-                    }
-                }
-            }
-        }
-
-        await this.create('readPdf', 'free', data)
-    }
-
-    async createreadPdfStandardPlan() {
-
-        const data:ControlPlanReadPdfPlans = {
-            customName:'Empreendedor',
             questionsPerMonth:{
                 amount:'unlimited',
                 price:0.06
             },
             pdfUploadsPerMonth:{
-                amount:10,
+                amount:'unlimited',
                 chunkOfWords:100_000,
                 pricePerChunkOfWords:0.29,
             },
             coverPerDoc:{
-                amount:2,
+                amount:'unlimited',
                 price:0.8,
             },
             docsPeruser:50,
@@ -100,29 +64,42 @@ export default class PlansRestrictions {
             },
             quizPerDoc:{
                 publicDoc:{
-                    amount:1,
+                    amount:'unlimited',
                     generations:{
-                        amount:5,
+                        amount:'unlimited',
                         price:2,
                     },                
                 },
                 privateDoc:{
-                    amount:1,
+                    amount:'unlimited',
                     generations:{
-                        amount:5,
+                        amount:'unlimited',
                         price:2,
                     }
                 }
             }
-        };
+        }        
 
-        await this.create('readPdf', 'standard', data)
+        await this.create('readPdf', 'free', data)
     }
 
-    async createreadPdfEntreprisePlan() {
+    async createreadPdfStandardPlan() {
+
+        const stripePrice = await this.userFinancialData.stripe.stripe.prices.create({
+            unit_amount:2000,
+            recurring:{
+                interval:'month',                
+            },
+            currency:'brl',   
+            nickname:'standard',
+            metadata:{
+                name:'standard'
+            },         
+        })
 
         const data:ControlPlanReadPdfPlans = {
-            customName:'Prêmium',
+            customName:'Empreendedor',
+            stripePrice,
             questionsPerMonth:{
                 amount:'unlimited',
                 price:0.06
@@ -133,7 +110,69 @@ export default class PlansRestrictions {
                 pricePerChunkOfWords:0.29,
             },
             coverPerDoc:{
-                amount:2,
+                amount:'unlimited',
+                price:0.8,
+            },
+            docsPeruser:'unlimited',
+            multiDocsQuestions:{
+                upToThreeDocs:{
+                    amount:0,
+                    price:0.12,
+                },
+                moreThanThreeDocs:{
+                    amount:0,
+                    price:0.18,
+                },
+            },
+            quizPerDoc:{
+                publicDoc:{
+                    amount:1,
+                    generations:{
+                        amount:'unlimited',
+                        price:2,
+                    },                
+                },
+                privateDoc:{
+                    amount:1,
+                    generations:{
+                        amount:'unlimited',
+                        price:2,
+                    }
+                }
+            }
+        };
+
+        await this.create('readPdf', 'standard', data)
+    }
+
+    async createreadPdfEnterprisePlan() {
+
+        const stripePrice = await this.userFinancialData.stripe.stripe.prices.create({
+            unit_amount:5000,
+            recurring:{
+                interval:'month',                
+            },
+            currency:'brl', 
+            nickname:'enterprise',
+            metadata:{
+                name:'enterprise',
+            },            
+        })
+
+        const data:ControlPlanReadPdfPlans = {
+            customName:'Prêmium',
+            stripePrice,
+            questionsPerMonth:{
+                amount:'unlimited',
+                price:0.06
+            },
+            pdfUploadsPerMonth:{
+                amount:'unlimited',
+                chunkOfWords:100_000,
+                pricePerChunkOfWords:0.29,
+            },
+            coverPerDoc:{
+                amount:'unlimited',
                 price:0.8,
             },
             docsPeruser:'unlimited',
@@ -151,14 +190,14 @@ export default class PlansRestrictions {
                 publicDoc:{
                     amount:'unlimited',
                     generations:{
-                        amount:5,
+                        amount:'unlimited',
                         price:2,
                     },                
                 },
                 privateDoc:{
                     amount:'unlimited',
                     generations:{
-                        amount:5,
+                        amount:'unlimited',
                         price:2,
                     }
                 }

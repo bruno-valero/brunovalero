@@ -6,6 +6,8 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 import { PineconeStore } from "@langchain/pinecone";
 import { Pinecone } from "@pinecone-database/pinecone";
 
+import { Control } from "@/src/config/firebase-admin/collectionTypes/control";
+import { admin_firestore } from "@/src/config/firebase-admin/config";
 import { PromptTemplate } from '@langchain/core/prompts';
 import { ChatOpenAI } from "@langchain/openai";
 import { RetrievalQAChain } from 'langchain/chains';
@@ -204,11 +206,11 @@ export default class VectorStoreProcess {
      * @param docId namespace
      * @returns resposta do GPT
      */
-    async search(question:string, docId:string, chunksAmount?:number) {
+    async search(question:string, docId:string, vectorIndex:string, chunksAmount?:number) {
         
         console.log(`iniciando...`);       
         const pinecone = new Pinecone();
-        const pineconeIndex = pinecone.Index('semantic-search');
+        const pineconeIndex = pinecone.Index(vectorIndex);
 
         const embeddings = new OpenAIEmbeddings({openAIApiKey:envs.OPENAI_API_KEY});
         const vectorStore = await PineconeStore.fromExistingIndex(
@@ -221,6 +223,71 @@ export default class VectorStoreProcess {
         const response = await this.askGpt(question, vectorStore, chunksAmount);        
         return response;
 
+    };
+
+    async getNamespacesAmount(index:string) {
+        const pinecone = new Pinecone();
+        const pineconeIndex = pinecone.Index(index);
+        const stats = await pineconeIndex.describeIndexStats()
+        const namespaces = stats.namespaces;
+        const ids = Object.keys(namespaces ?? {})
+        const amount = Object.values(namespaces ?? {}).length;
+        
+        return { amount, ids };
+    }
+
+    async checkNamespacesAmount(index:string) {
+        const { amount, ids } = await this.getNamespacesAmount(index);      
+        if (amount > 9990)   {
+            const resp = await admin_firestore.collection('control').doc('vectorStore').get();
+            const vectorStore = (resp.exists ? resp.data() : null) as Control['vectorStore'] | null;
+            if(!vectorStore) throw new Error("Vector Store não encontrada");
+
+            const newVectorStoreIndexes = Object.entries(vectorStore.indexes).reduce((acc:Control['vectorStore']['indexes'], item) => {
+                acc[item[0]] = false;
+                return acc;
+            }, {} as Control['vectorStore']['indexes']);
+
+            vectorStore.indexes = newVectorStoreIndexes;
+
+            const pinecone = new Pinecone();
+            const indexId = `${index}-${new Date().getTime()}`
+            await pinecone.createIndex({
+                dimension:1536,
+                name:indexId,
+                spec:{
+                    serverless:{
+                        region:'us-east-1',
+                        cloud:'aws',
+                    },
+                },
+                waitUntilReady:true,
+            });
+            vectorStore.indexes[indexId] = true;
+            await admin_firestore.collection('control').doc('vectorStore').update(vectorStore);
+            return indexId
+        };
+        
+        return index;
+    };
+
+    async createPod() {
+        const pinecone = new Pinecone();
+        const indexName = 'search-by-pod';
+        await pinecone.createIndex({
+            dimension:1536,
+            name:indexName,
+            spec:{
+                pod:{
+                    environment:'us-east1-gcp',                    
+                    podType:'p1.x1',
+                    pods:1,
+                }                
+            },
+            waitUntilReady:true,
+        });
+
+        return indexName;
     };
 
 

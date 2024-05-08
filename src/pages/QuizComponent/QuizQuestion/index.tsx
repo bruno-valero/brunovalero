@@ -44,18 +44,20 @@ export default function QuizQuestion({ finishQuiz, currQuestion, tries, setTries
             rightOption:questions[index].answer,
             timeAnswering:0,
         }, questions[index].id)
-    }, [])
+    }, [index])
 
     useEffect(() => {
+        const questionId = questions[index].id;
+        // alert(JSON.stringify(questions[index], null, 2))
         const time = setInterval(() => {
-            const questionId = questions[index].id;
+            console.log(`questionId: ${questionId}`)
             setTries(prev => ({...prev, [questionId]:{...(prev[questionId] ?? {}), questions:{...prev[questionId]?.questions, [questionId]: {...(prev[questionId]?.questions[questionId] ?? {}), timeAnswering:(prev?.[questionId]?.questions?.[questionId]?.timeAnswering) + 100}}}}));
             // updateTryTime((tries[questions[index].id]?.questions?.[questions[index].id]?.timeAnswering) + 100, questions[index].id)
             // setUpdate(new Date().getTime());
         }, 100);
 
         return () => clearInterval(time);
-    }, [index])
+    }, [index, setTries])
 
     function selectQuestion(answer: string) {
         updateTryAnswer(answer, questions[index ?? 0].id);

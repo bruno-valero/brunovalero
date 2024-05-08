@@ -26,7 +26,7 @@ export default function SubmitSetupButton({  }:SubmitSetupButtonProps) {
 
     if (!stripe || !elements) return;
     setLoading(true);
-    const { error } = await stripe.confirmSetup({elements, confirmParams:{return_url:`${window.location.origin}/perfil/cartoes`}})
+    const { error } = await stripe.confirmSetup({elements, confirmParams:{return_url:`${window.location.href}`}});
     if (error) {
       alert(error.message);
     }

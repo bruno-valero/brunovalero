@@ -74,25 +74,25 @@ export default class UploadPdfProcess {
     };
 
     
-    async completeUpload({ pdfUrl, docId, userId }:{ pdfUrl:string, docId:string, userId?:string }) {        
+    async completeUpload({ pdfUrl, docId, userId, vectorIndex }:{ pdfUrl:string, docId:string, userId?:string, vectorIndex:string }) {        
         userId = userId ?? 'public';
         const blob = await (await fetch(pdfUrl)).blob();
         const { data, metadata, price:pricePdfLoader } = await this.uploadToVectorStore({ docId, blob });
         let realGenres:string[]
         let realGenresPrice = 0;
-        const { genres, price:genrePrice } = await this.generateGenres(docId);
+        const { genres, price:genrePrice } = await this.generateGenres(docId, vectorIndex);
         realGenres = genres;
         const allGenres = (new PdfGenres()).genres.map(item => item.genre)
         if (realGenres.some(item => !allGenres.includes(item as any))) {
-            const { genres:regenerated, price:regeneratedPrice } = await this.regenerateGenres(docId, userId) 
+            const { genres:regenerated, price:regeneratedPrice } = await this.regenerateGenres(docId, vectorIndex) 
             realGenresPrice = regeneratedPrice;
             realGenres = regenerated;
         }
-        const { textResponse:description, price:descriptionPrice } = await this.description.generateDescription(docId);
+        const { textResponse:description, price:descriptionPrice } = await this.description.generateDescription(docId, vectorIndex);
         const { imageURL, inputContent, descriptionSummary, price:imagePrice } = await this.generateImageFromDescription(description, 'slim');
 
         
-        const quiz = await this.quiz.generateQuiz({docId, isPublic:true, quizFocus:`Qual o objetivo desse conteúdo`, userId});        
+        const quiz = await this.quiz.generateQuiz({docId, isPublic:true, quizFocus:`Qual o objetivo desse conteúdo`, userId, vectorIndex});        
         const price = pricePdfLoader + genrePrice + descriptionPrice + imagePrice + quiz.price;
         
         const fileName = `${docId}`;
@@ -114,7 +114,7 @@ export default class UploadPdfProcess {
         await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).collection('quiz').doc(quiz.id).set(quiz);        
     };
 
-    async partialUpload({ pdfUrl, docId, user, autoBuy, minCredits }:{ pdfUrl:string, docId:string, user:Partial<UsersUser>, autoBuy?:boolean, minCredits?:number }) {
+    async partialUpload({ pdfUrl, docId, user, autoBuy, minCredits, vectorIndex }:{ pdfUrl:string, docId:string, user:Partial<UsersUser>, autoBuy?:boolean, minCredits?:number, vectorIndex:string }) {
         const userId = user.uid!;        
         
         console.log('checando privilégios...')
@@ -131,16 +131,16 @@ export default class UploadPdfProcess {
         const { data, metadata } = await this.uploadToVectorStore({ docId, blob });
         let realGenres:string[]
         let realGenresPrice = 0;
-        const { genres, price:genrePrice } = await this.generateGenres(docId);
+        const { genres, price:genrePrice } = await this.generateGenres(docId, vectorIndex);
         realGenres = genres;
         const allGenres = (new PdfGenres()).genres.map(item => item.genre)
         if (realGenres.some(item => !allGenres.includes(item as any))) {
-            const { genres:regenerated, price:regeneratedPrice } = await this.regenerateGenres(docId, user.uid!) 
+            const { genres:regenerated, price:regeneratedPrice } = await this.regenerateGenres(docId, vectorIndex) 
             realGenresPrice = regeneratedPrice;
             realGenres = regenerated;
         }
         console.log('gerando descrição...')
-        const { textResponse:description, price:descriptionPrice } = await this.description.generateDescription(docId);
+        const { textResponse:description, price:descriptionPrice } = await this.description.generateDescription(docId, vectorIndex);
         
         const price = genrePrice + descriptionPrice + realGenresPrice;
         
@@ -148,6 +148,7 @@ export default class UploadPdfProcess {
 
         const newDoc:Pdf = {
             id:docId,
+            vectorIndex,
             pdfUrl,
             userId,
             description,
@@ -193,7 +194,7 @@ export default class UploadPdfProcess {
      * @param minCredits **number [opicional] -** Determinará qual o valor mínimo que o usuário deve ter reservado
      * @returns
      */
-    async askQuestion({ question, docId, user, autoBuy, minCredits }:{ question:string, docId:string, user:Omit<UsersUser, 'control'>, autoBuy?:boolean, minCredits?:number }) {
+    async askQuestion({ question, docId, vectorIndex, user, autoBuy, minCredits }:{ question:string, docId:string, vectorIndex: string, user:Omit<UsersUser, 'control'>, autoBuy?:boolean, minCredits?:number }) {
         
         
         const uid = user.uid
@@ -215,7 +216,7 @@ export default class UploadPdfProcess {
         if (!doc) throw new Error("documento inválido");
         
 
-        const { response:resp, price } = await this.vectorStore.search(question, docId);
+        const { response:resp, price } = await this.vectorStore.search(question, docId, vectorIndex);
         const textResponse = encodeURIComponent(resp.text as string);       
         const chunksRelated = resp.sourceDocuments;
 
@@ -326,8 +327,8 @@ export default class UploadPdfProcess {
         return { data, metadata, price };
     };
 
-    protected async generateGenres(docId:string) {
-        const { response:resp, price } = await this.vectorStore.search('se o conteúdo for um livro, qual gênero seria adequado para classificá-lo?', docId);
+    protected async generateGenres(docId:string, vectorIndex:string) {
+        const { response:resp, price } = await this.vectorStore.search('se o conteúdo for um livro, qual gênero seria adequado para classificá-lo?', docId, vectorIndex);
         const textResponse = resp.text; 
         
         const allGenres = (new PdfGenres()).genres.map(item => item.genre).join(', ');
@@ -346,9 +347,9 @@ export default class UploadPdfProcess {
         return { genres, price:priceGenre + price };
     };      
     
-    async regenerateGenres(docId: string, uid:string) {
+    async regenerateGenres(docId: string, vectorIndex:string) {
 
-        const { genres, price } = await this.generateGenres(docId);
+        const { genres, price } = await this.generateGenres(docId, vectorIndex);
 
         console.log(`genres: ${genres}`)
 

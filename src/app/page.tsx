@@ -1,7 +1,4 @@
-import forms from '@/src/images/forms.png';
-import landingPage from '@/src/images/landingPage.png';
 import lerPDFs from '@/src/images/lerPDFs.png';
-import sistemasPersonalizados from '@/src/images/sistemasPersonalizados.png';
 import CardSectionCard from '../pages/Home/CardSection/Card';
 import CardSectionWrapper from '../pages/Home/CardSection/Wrapper';
 import ContactSectionForm from '../pages/Home/ContactSection/ContactForm';
@@ -19,19 +16,19 @@ export default function Home() {
         </div> */}
         
         <CardSectionWrapper >
-          <CardSectionCard 
+          {/* <CardSectionCard 
           imageSrc={forms.src}
           title='Formulários'
           text={`Entenda seus clientes ou gerencie seus funcionárions com os Formulários Personalizados.`}
           path={'/formulario'}
-          />        
+          />         */}
           <CardSectionCard 
           imageSrc={lerPDFs.src}
           title='Leitura de PDFs'
           text={`Mais produtividade com leitura automática de PDFs, resumo do documento e perguntas sobre o conteúdo`}
           path={'/ler-pdf'}
           />        
-          <CardSectionCard 
+          {/* <CardSectionCard 
           imageSrc={landingPage.src}
           title='Landing Page'
           text={`Apresente seus produtos, adquira clientes, fortaleça sua marca e aumente as vendas com a Landing Page`}
@@ -42,7 +39,7 @@ export default function Home() {
           title='Sistemas Personalizados'
           text={`Otimize os processos de sua empresa com um Sistema Personalizado para a sua necessidade.`}
           path={'/sistema-personalizado'}
-          />                     
+          />                      */}
         </CardSectionWrapper>  
 
         <ContactSectionWrapper >

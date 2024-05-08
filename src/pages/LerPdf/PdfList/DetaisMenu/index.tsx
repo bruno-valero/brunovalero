@@ -31,7 +31,7 @@ export default function DetaisMenu({choosePdf, functions}:{choosePdf:(pdf:Pdf | 
 
             <button onClick={() => choosePdf(null)} className={twMerge("bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center gap-2", width < 500 && 'p-2 text-sm')}  >                                                                                                                
                 <FaThList style={{color:colors.valero(.8)}} size={width < 500 ? 18 : 25} />
-                <span  className='' style={{color:colors.valero(.8)}} >Lista de PDFs</span>
+                <span  className='' style={{color:colors.valero(.8)}} >PDFs</span>
             </button>                         
 
         </>

@@ -17,7 +17,8 @@ export default class AiFeatures {
         const model = new ChatOpenAI({
             openAIApiKey:envs.OPENAI_API_KEY,
             model:'gpt-3.5-turbo',
-            temperature:.3,            
+            temperature:.3,    
+            maxTokens:-1,
         });  
         this.openaiChat = model;
 
@@ -78,7 +79,7 @@ export default class AiFeatures {
                 model: "gpt-3.5-turbo-0125",
                 response_format: { type: "json_object" },
                 temperature:.3,
-                max_tokens:16000,
+                // max_tokens:16000,
               });
               resp = completion.choices[0].message.content
               console.log(`resp: ${resp}`);
