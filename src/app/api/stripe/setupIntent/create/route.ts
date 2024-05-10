@@ -10,7 +10,7 @@ export async function POST(req:Request) {
         const { customer, metadata } = await req.json() as { customer: string; metadata: Record<string, string>; };
         const stripeBackend = new StripeBackend(isProduction ? 'production' : 'test');
         const response = await stripeBackend.createSetupIntent({ customer, metadata })
-        return NextResponse.json({data:response});
+        return NextResponse.json({data:response.client_secret});
     } catch (e:any) {
         return NextResponse.json({error:`Houver um erro: ${e.message}`});
     }

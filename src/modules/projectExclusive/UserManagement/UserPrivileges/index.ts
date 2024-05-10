@@ -28,6 +28,7 @@ export default class UserPrivileges {
         const dateNow = new Date().getTime()
         const privileges:UsersControlPrivileges = {            
             id:String(dateNow),
+            level:0,
             privilegeTitle:`Primeiro Login`,
             privilegeDescription,
             isMonthly:false,
@@ -70,10 +71,11 @@ export default class UserPrivileges {
         Enriqueça sua experiência de aprendizado com a geração de um quiz personalizado sobre o conteúdo do seu documento. Com 30 perguntas direcionadas para qualquer tema ou assunto presente no documento PDF enviado, você receberá um feedback detalhado ao final, considerando tanto seus acertos quanto erros.
 
         Continue explorando e aproveitando ao máximo o que a plataforma tem a oferecer!
-        `.trim().replaceAll(/ /g, ''));
+        `.trim().replaceAll(/  /g, ''));
         const dateNow = new Date().getTime()
         const privileges:UsersControlPrivileges = {
             id:String(dateNow),
+            level:0,
             privilegeTitle:`Primeiro Login`,
             privilegeDescription,
             isMonthly:false,
@@ -101,17 +103,18 @@ export default class UserPrivileges {
 
     async freePlanMonthlyPrivilege(uid:string) {
 
-        const privilegeDescription = encodeURIComponent(`
+        const privilegeDescription = `
         Suas perguntas gratuitas foram renovadas!
         Seu upload e PDF gratuito foi renovado!
 
         Muito obrigado por permanecer na plataforma.
 
         
-        `.trim().replaceAll(/ /g, ''));
+        `.trim().replaceAll(/  /g, '');
         const dateNow = new Date().getTime()
         const privileges:UsersControlPrivileges = {
             id:'plan-privileges',
+            level:0,
             privilegeTitle:`Acessos Gratuitos Renovados`,
             privilegeDescription,
             isMonthly:true,
@@ -128,9 +131,30 @@ export default class UserPrivileges {
                     },    
                 },
             }
-        }
-        const user = '' as unknown as UsersUser
-        user.control.PrivilegesFreeServices
+        };
+
+        // const sumAll = (data:Record<string, any>) => {
+        //     const sum:number = Object.values(data).reduce((acc:number, item) => {
+        //         if (typeof item === 'number') return acc + item;
+        //         if (item instanceof Array) return acc;
+        //         if (typeof item === 'object') return sumAll(item);
+        //         return acc;
+        //     }, 0)
+
+        //     return sum;
+        // };
+
+        // const resp = await admin_firestore
+        // .collection('users').doc(uid)
+        // .collection('control').doc('PrivilegesFreeServices').get();
+
+        // const priv = resp?.data() as Record<string, UsersControlPrivileges> | null;
+        // const lvl = priv?.[privileges.id]?.level ?? 0;
+        // if ((sumAll(priv?.[privileges.id]?.privilegeData?.readPdf ?? {}) > sumAll(privileges.privilegeData?.readPdf)) && (lvl > privileges?.level)) return;
+        // const ts = Number(priv?.[privileges.id]?.lastUpdate) ?? 0;
+        // const dateMonth = tsToMask({ts, format:['day', 'month', 'year'], seps:['-', '-']});
+        // if (lvl > privileges.level && (dateMonth === privileges.lastMonthUpdate)) return;
+
         await admin_firestore
             .collection('users').doc(uid)
             .collection('control').doc('PrivilegesFreeServices')
@@ -138,18 +162,19 @@ export default class UserPrivileges {
     };
 
     async standardPlanMonthlyPrivilege(uid:string) {
-
-        const privilegeDescription = encodeURIComponent(`
+        
+        const privilegeDescription = `
         Suas perguntas gratuitas foram renovadas!
         Seu upload e PDF gratuito foi renovado!
 
         Muito obrigado por permanecer na plataforma.
 
         
-        `.trim().replaceAll(/ /g, ''));
+        `.trim().replaceAll(/  /g, '');
         const dateNow = new Date().getTime()
         const privileges:UsersControlPrivileges = {
             id:'plan-privileges',
+            level:1,
             privilegeTitle:`Acessos Gratuitos Renovados`,
             privilegeDescription,
             isMonthly:true,
@@ -169,8 +194,8 @@ export default class UserPrivileges {
                 },
             }
         }
-        const user = '' as unknown as UsersUser
-        user.control.PrivilegesFreeServices
+        
+        
         await admin_firestore
             .collection('users').doc(uid)
             .collection('control').doc('PrivilegesFreeServices')
@@ -179,17 +204,18 @@ export default class UserPrivileges {
 
     async enterprisePlanMonthlyPrivilege(uid:string) {
 
-        const privilegeDescription = encodeURIComponent(`
+        const privilegeDescription = `
         Suas perguntas gratuitas foram renovadas!
         Seu upload e PDF gratuito foi renovado!
 
         Muito obrigado por permanecer na plataforma.
 
         
-        `.trim().replaceAll(/ /g, ''));
+        `.trim().replaceAll(/  /g, '');
         const dateNow = new Date().getTime()
         const privileges:UsersControlPrivileges = {
             id:'plan-privileges',
+            level:2,
             privilegeTitle:`Acessos Gratuitos Renovados`,
             privilegeDescription,
             isMonthly:true,
@@ -209,8 +235,7 @@ export default class UserPrivileges {
                 },
             }
         }
-        const user = '' as unknown as UsersUser
-        user.control.PrivilegesFreeServices
+        
         await admin_firestore
             .collection('users').doc(uid)
             .collection('control').doc('PrivilegesFreeServices')

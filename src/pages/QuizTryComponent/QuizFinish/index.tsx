@@ -196,7 +196,7 @@ export default function QuizFinish({ quiz, quizTry }: QuizQuestionProps) {
                                         {item}
                                     </span><br />
                                 </>
-                            ))}                        
+                            ))}
                         </ScrollComponent>
                     </PopoverContent>
                 </Popover>                                

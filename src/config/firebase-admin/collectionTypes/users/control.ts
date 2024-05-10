@@ -46,6 +46,8 @@ export type UsersControlPrivileges = {
     id:string,
     /** Título do privilégio */
     privilegeTitle:string,
+    /** Nível do privilégio (deve ser numérico), quanto maior for o nível, indica superioridade de atributos */
+    level:number,
     /** Descrição do privilégio */
     privilegeDescription:string,
     /** timestamp da última atualização deste privilégio */
