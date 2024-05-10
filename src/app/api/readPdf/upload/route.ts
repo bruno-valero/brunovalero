@@ -1,3 +1,4 @@
+import { CollectionTypes } from "@/src/config/firebase-admin/collectionTypes/collectionTypes";
 import { admin_firestore } from "@/src/config/firebase-admin/config";
 import VectorStoreProcess from "@/src/modules/VectorStoreProcess";
 import UploadPdfProcess from "@/src/modules/projectExclusive/UploadPdfProcess";
@@ -21,10 +22,15 @@ export async function POST(req:Request) {
         if (!user) throw new Error("Usuário não encontrado");        
         console.log('lendo o conteúdo');
 
+
+        const resp = await admin_firestore.collection('control').doc('vectorStore').get();
+        const vectorStore = resp.exists ? resp.data() : null;
+        if(!vectorStore) throw new Error("Vector Store não encontrada");
+        const items = Object.entries(vectorStore).filter(item => !!item[1]);
         const v = new VectorStoreProcess();
-        const vectorIndex = await v.checkNamespacesAmount(`semantic-search`);
+        const vectorIndex = await v.checkNamespacesAmount(items[0][0]);
         await readPdf.partialUpload({ pdfUrl, docId, user, vectorIndex });
-        
+
         console.log('Processo finalizado com sucesso!');
         return NextResponse.json({data:true});
     } catch (e:any) {

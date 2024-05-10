@@ -1,11 +1,12 @@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
 import colors from "@/src/constants/colors";
 import Post from "@/src/modules/Request/Post";
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { ChangeEvent, RefObject } from "react";
-import { FaFilter, FaThList } from "react-icons/fa";
-import { IoGrid } from "react-icons/io5";
+import { FaFilter } from "react-icons/fa";
+import { MdPriceChange } from "react-icons/md";
 import { TiPlus } from "react-icons/ti";
 import { twMerge } from "tailwind-merge";
 import { PdfHooks } from "..";
@@ -20,7 +21,7 @@ export default function ListMenu({ getPdfRef, questionHooks }:{ getPdfRef:RefObj
     const [publicError, setPublicError] = globalState.publicError ?? [1,2];
     const dimensions = globalState.dimensions;
 
-    const { genres, selectedGenres:[selectedGenres, setSelectedGenres], privilegesData } = questionHooks ?? { genres:0, selectedGenres:[1,2] };
+    const { genres, selectedGenres:[selectedGenres, setSelectedGenres], privilegesData, financialData } = questionHooks ?? { genres:0, selectedGenres:[1,2] };
 
 
     async function uploadToStorage(pdf:File) {
@@ -84,7 +85,7 @@ export default function ListMenu({ getPdfRef, questionHooks }:{ getPdfRef:RefObj
         dimensions && (
             <>
                 <Popover>
-                    <PopoverTrigger className={twMerge("bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center", dimensions.width < 500 && 'p-2')} >
+                    <PopoverTrigger className={twMerge("bg-gray-100 shadow p-3 text-white font-bold rounded flex gap-2 items-center justify-center", dimensions.width < 500 && 'p-2')} >
                         <FaFilter color={colors.valero(.8)} size={dimensions.width < 500 ? 15 : 25} />
                         <span  className='' style={{color:colors.valero(.8)}} >Filtro</span>
                     </PopoverTrigger>
@@ -105,7 +106,8 @@ export default function ListMenu({ getPdfRef, questionHooks }:{ getPdfRef:RefObj
                         </ul>
                     </PopoverContent>
                 </Popover>
-                <div className="bg-gray-100 rounded shadow gap-2 flex items-center justify-center"  >
+                
+                {/* <div className="bg-gray-100 rounded shadow gap-2 flex items-center justify-center"  >
 
                     <button className={twMerge("py-3 pr-3 pl-2 text-white font-bold rounded flex items-center justify-center", dimensions.width < 500 && 'pr-1')} style={{}} >
                         <IoGrid size={dimensions.width < 500 ? 15 : 25} className="text-black" style={{color:colors.valero(.8)}} />
@@ -113,7 +115,68 @@ export default function ListMenu({ getPdfRef, questionHooks }:{ getPdfRef:RefObj
                     <button className={twMerge("py-3 pl-3 pr-2 text-white font-bold rounded flex items-center justify-center", dimensions.width < 500 && 'pl-1')} >
                         <FaThList size={dimensions.width < 500 ? 15 : 25} className="text-black" style={{color:colors.valero(.3)}} />
                     </button>
-                </div>
+                </div> */}
+
+                <Popover>
+                    <PopoverTrigger className={twMerge("bg-gray-100 shadow p-3 text-white font-bold rounded flex gap-2 items-center justify-center", dimensions.width < 500 && 'p-2')} >
+                        <MdPriceChange color={colors.valero(.8)} size={dimensions.width < 500 ? 15 : 25} />
+                        <span className='' style={{color:colors.valero(.8)}} >Plano {financialData?.activePlan.readPdf === 'free' ? 'Básico' : (financialData?.activePlan.readPdf == 'standard' ? 'Empreendedor' : 'Prêmium')}</span>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[400px]" >
+                        <div>
+                            <span className="text-base font-semibold" >
+                                Todos os Mêses há <span className="text-green-700" >Benefícios gratuitos.</span>
+                            </span>
+                        </div>
+                        <Separator className="mb-4 mt-2 bg-gray-700" />
+                        <div className="flex flex-col" >
+                            {!!privilegesData.pdfUpload && (
+                                <>
+                                    <span>                                
+                                        <><span className="font-semibold" >{privilegesData.pdfUpload}</span> <span className="font-semibold" >Uploads de PDFs gratuitos.</span></>
+                                    </span>
+                                    <Separator className="my-2" />
+                                </>
+                            )}
+                            {!!privilegesData.questions && (
+                                <>
+                                    <span>
+                                        <><span className="font-semibold" >{privilegesData.questions}</span> <span className="font-semibold" >Perguntas gratuitas.</span></>
+                                    </span>
+                                    <Separator className="my-2" />
+                                </>
+                            )}
+                            {!!privilegesData.coverGenerationForPrivateDocs && (
+                                <>
+                                    <span>
+                                        <><span className="font-semibold" >{privilegesData.coverGenerationForPrivateDocs}</span> <span className="font-semibold" >Gerações de Capas (privadas) gratuitas.</span></>
+                                    </span>
+                                    <Separator className="my-2" />
+                                </>
+                            )}
+                            {!!privilegesData.quizGenerationPrivateDocs && (
+                                <>
+                                    <span>
+                                        <><span className="font-semibold" >{privilegesData.quizGenerationPrivateDocs}</span> <span className="font-semibold" >Gerações de Quizzes (privados) gratuitos.</span></>
+                                    </span>
+                                    <Separator className="my-2" />
+                                </>
+                            )}
+                            {!!privilegesData.quizGenerationPublicDocs && (
+                                <>
+                                    <span>
+                                        <><span className="font-semibold" >{privilegesData.quizGenerationPublicDocs}</span> <span className="font-semibold" >Gerações de Quizzes (públicos) gratuitos.</span></>
+                                    </span>
+                                    <Separator className="my-2" />
+                                </>
+                            )}
+                            <button className="bg-green-600 text-white font-semibold text-lg py-2 px-5 rounded shadow my-3" >
+                                Veja os Planos
+                            </button>
+                        </div>
+                    </PopoverContent>
+                </Popover>
+
                 <Popover>
                     <PopoverTrigger className={twMerge("p-3 text-white font-bold rounded shadow flex items-center justify-center gap-2", dimensions.width < 500 && 'p-2')} style={{backgroundColor:colors.valero()}} >
                         <TiPlus color="white" size={dimensions.width < 500 ? 15 : 25} />

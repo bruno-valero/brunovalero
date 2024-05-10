@@ -8,12 +8,19 @@ import { Pdf, QuestionPdf, QuizPdf } from "@/src/config/firebase-admin/collectio
 import { twMerge } from "tailwind-merge";
 import PdfCard from "./PdfCard";
 
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollComponent } from "@/src/components/structural/ScrollComponent";
 import { UsersControlPrivileges } from "@/src/config/firebase-admin/collectionTypes/users/control";
+import { UsersFinancialData } from "@/src/config/firebase/firebaseFunctions/functions/src/config/firebase-admin/collectionTypes/users/control";
 import useQuestionsList from "@/src/hooks/useQuestionsList";
 import useQuizList from "@/src/hooks/useQuizList";
 import useUserFinancialData from "@/src/hooks/useUserFinancialData";
 import useUserPrivileges, { PrivilegesData } from "@/src/hooks/useUserPrivileges";
+import Post from "@/src/modules/Request/Post";
+import StripeFrontEnd from "@/src/modules/stripe/frontend/StripeFrontEnd";
+import CardSetup from "@/src/modules/stripe/frontend/StripeFrontEnd/tsx/CardSetup";
 import { UseState } from "@/utils/common.types";
+import { CiCreditCard1 } from "react-icons/ci";
 import DetailsSection from "./DetailsSection";
 import DetaisMenu from "./DetaisMenu";
 import ListMenu from "./ListMenu";
@@ -34,6 +41,7 @@ export type PdfFunctions = {
 }
 
 export type PdfHooks = {
+    financialData: UsersFinancialData | null,
     genres:string[],
     quizList:UseState<QuizPdf[]>,
     selectedGenres:UseState<string[]>,
@@ -59,12 +67,16 @@ export default function PdfList() {
     const [, setResetedState] = globalState.resetedState ?? [];
     const globalUser = globalState.globalUser;
     const { db, storage } = globalState.firebase ?? {};
+    const { envs } = globalState.fromServer ?? {};
     const [publicError, setPublicError] = globalState.publicError ?? [];
     const dimensions = globalState.dimensions;
 
     const {pdfList:[pdfList, ], genres, filteredList, selectedGenres:[selectedGenres, setSelectedGenres]} = usePdfList() ?? {};
     const [details, setDetails] = useState<Pdf | null>(null);
     
+    const stripe = new StripeFrontEnd(envs);
+    const stripeJs = stripe.useLoadStripe();
+    const { clientSecret, requestSetupIntent } = stripe.useSetupIntent();
     const { financialData:[ financialData ] } = useUserFinancialData() ?? {};
     const { previleges, privilegesData } = useUserPrivileges() ?? {};
     const questionListHook = useQuestionsList({ pdfId:details?.id })
@@ -81,6 +93,7 @@ export default function PdfList() {
     const [searchPdf, setSearchPdf] = useState('');
 
     const questionHooks = {
+        financialData,
         genres,
         selectedGenres:[selectedGenres, setSelectedGenres],
         showQuestions:[showQuestions, setShowQuestions],
@@ -182,13 +195,27 @@ export default function PdfList() {
         choosePdf
     }
 
+    async function cardRegister() {
+
+        const post = new Post('/api/stripe/getStripeId');
+        post.addData({ userData:globalUser.data });
+        const resp = await post.send();
+        const cus = (await resp?.json()) as { data:string } | undefined;
+        if (!cus?.data) throw new Error("Usuário inválido");
+        const customer = cus.data;
+        const metadata = {
+            uid:globalUser.data?.uid ?? '',
+        }
+        await requestSetupIntent({ customer, metadata });
+    }
+
 
     const pdfListMemo = useMemo(() => {
         
         return filteredList?.map(item => (
         <PdfCard key={item.id} pdf={item} choosePdf={choosePdf} questionHooks={questionHooks} />
         ))
-    }, [filteredList])
+    }, [filteredList, questionHooks]);
 
     return (
         dimensions &&
@@ -201,9 +228,24 @@ export default function PdfList() {
                     <span className="text-white" >
                         Após se esgotarem os recursos gratuitos, não será possível usar os serviços.
                     </span>
-                    <button className="bg-gray-100 p-2 rounded shadow text-base font-normal mt-2" >
-                        Clique aqui para cadastra agora.
-                    </button>
+                    <Popover>
+                        <PopoverTrigger>
+                            <div onClick={async () => cardRegister()} className="bg-gray-100 p-2 px-4 rounded shadow text-base font-normal mt-4 flex flex-row gap-2 items-center justify-center" >
+                                <CiCreditCard1 size={25} />
+                                <span>
+                                    Cadastrar agora.
+                                </span>
+                            </div>                            
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[400px] flex flex-col items-center justify-center" >
+                            <ScrollComponent className="flex flex-col items-center justify-center w-full max-h-[500px] p-4" >
+                                {clientSecret && (
+                                    <CardSetup {...{clientSecret, stripe:stripeJs }} />
+                                )}
+                            </ScrollComponent>
+                        </PopoverContent>
+                    </Popover>
+
                 </div>
             )}
             <div ref={wrapperRef} className="bg-white rounded shadow max-sm:w-[90%] w-[768px] flex items-center justify-around py-4" >

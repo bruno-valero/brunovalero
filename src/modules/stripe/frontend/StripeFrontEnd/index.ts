@@ -1,6 +1,7 @@
-import envs from "@/envs";
+import { Envs, isProduction } from "@/envs";
 import Post from "@/src/classes/Request/Post";
-import { useState } from "react";
+import { Stripe as StripeJs, loadStripe } from '@stripe/stripe-js';
+import { useCallback, useEffect, useState } from "react";
 import Stripe from "stripe";
 import CardSetup from "./tsx/CardSetup";
 
@@ -8,8 +9,11 @@ import CardSetup from "./tsx/CardSetup";
 export default class StripeFrontEnd {
 
     stripe:Stripe;
+    envs: Envs
 
-    constructor(type:'production' | 'test') {
+    constructor(envs: Envs) {
+        const type = envs.isProduction ? 'production' : 'test'
+        this.envs = envs;        
         const { stripe } = this.connectStripe(type);
         this.stripe = stripe;
     };
@@ -17,7 +21,7 @@ export default class StripeFrontEnd {
 
     protected connectStripe(type:'production' | 'test') {
 
-        const secretKey = type === 'production' ? envs.STRIPE_PRODUCTION_SECRET_KEY! : envs.STRIPE_SECRET_KEY!;
+        const secretKey = type === 'production' ? this.envs.STRIPE_PRODUCTION_SECRET_KEY! : this.envs.STRIPE_SECRET_KEY!;
         const stripe = new Stripe(secretKey, {
           apiVersion: '2023-10-16',
         });
@@ -99,19 +103,32 @@ export default class StripeFrontEnd {
         };
     };    
 
+    useLoadStripe() {
+        const [stripe, setStripe] = useState<StripeJs | null>(null);
+        useEffect(() => {
+            const load = async() => {
+                const apiKey = isProduction ? this.envs.STRIPE_PRODUCTION_PUBLIC_KEY! : this.envs.STRIPE_PUBLIC_KEY!
+                const str = await loadStripe(apiKey);                
+                setStripe(str);
+            }
+            load()
+        }, [])
 
-    useSetupIntent() {
+        return stripe;
+    }
+
+    useSetupIntent() {        
         const [clientSecret, setClientSecret] = useState<string | null>(null);
       
-        const requestSetupIntent = async ({ customer, metadata }:{customer:string, metadata:Record<string, string>}) => {
-          const { error, data:clientSecret } = await this.createSetupIntent({ customer, metadata });
+        const requestSetupIntent = useCallback(async ({ customer, metadata }:{customer:string, metadata:Record<string, string>}) => {
+          const { error, data:cs } = await this.createSetupIntent({ customer, metadata });
           if (error) throw new Error(error);
-          if (clientSecret) {
-            setClientSecret(clientSecret);
+          if (cs) {
+            setClientSecret(cs);
           } else {
             throw new Error('A operação não pode ser realizada');
           };
-        };
+        }, [setClientSecret]);
       
         return { requestSetupIntent, clientSecret, setClientSecret };      
     };

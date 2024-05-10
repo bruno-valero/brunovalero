@@ -37,7 +37,8 @@ export default function PdfCard({ pdf, choosePdf, questionHooks }:{ pdf:Pdf, cho
         console.log(data);
     }
 
-    const { privilegesData } = questionHooks ?? {}
+    const { privilegesData } = questionHooks ?? { genres:0, selectedGenres:[1,2] };
+    // alert(JSON.stringify(privilegesData, null, 2))
     return (
         dimensions && (
             <div className="flex flex-col items-center justify-between gap-3 rounded shadow p-3 text-wrap max-w-[230px] flex-1 hover:scale-[1.05] transition-all duration-300" style={{maxWidth:imageWidth + 12, maxHeight:imageHeight + (imageHeight * .5)}} >
@@ -53,7 +54,7 @@ export default function PdfCard({ pdf, choosePdf, questionHooks }:{ pdf:Pdf, cho
                         <PopoverContent>
                             <span className="text-lg font-bold" style={{color:colors.valero()}} >Opções de Imagem</span>
                             <Separator className="mb-2" />
-                            <div className="text-sm font-normal mb-2" >
+                            <div className="text-sm font-semibold mb-2 text-green-700" >
                                 {privilegesData.coverGenerationForPrivateDocs ? `Você possui ${privilegesData.coverGenerationForPrivateDocs} gerações de imagem da capa gratuitas.` : `Gere uma nova imagem representando o conteúdo por apenas R$${0.80.toFixed(2)}`}
                             </div>
                             <div className={twMerge("text-sm font-semibold mb-2")} >
