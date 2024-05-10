@@ -1,5 +1,9 @@
 import envs from "@/envs";
 import Stripe from "stripe";
+import { customerHandler } from "./webhooksHandler/customerHandler";
+import { invoiceHandler } from "./webhooksHandler/invoiceHandler";
+import { paymentMethodHandler } from "./webhooksHandler/paymentMethodHandler";
+import { setupIntentHandler } from "./webhooksHandler/setupIntentHandler";
 
 
 export default class StripeBackend {
@@ -22,14 +26,43 @@ export default class StripeBackend {
         return { stripe };
     };
 
+    async authenticateWebhook(request:Request, endpointSecret:string) {
+        try {
+          const text = await request.text();
+          // console.log('text', text);
+          const signature = request.headers.get('stripe-signature');
+          const event = this.stripe.webhooks.constructEvent( text, signature!, endpointSecret);
+          return event;
+        } catch (err:any) {
+          console.log(`⚠️  Webhook signature verification failed.`, err.message);
+          return null;
+        }
+      
+    };
+
+    async handleWebhooks(event: Stripe.Event) {
+
+        // const pi = await paymentIntentHandler(event);
+        const pm = await paymentMethodHandler(event);
+        const ivc = await invoiceHandler(event);
+        const si = await setupIntentHandler(event);
+        const cus = await customerHandler(event);
+        
+        if (pm || ivc || si || cus) {
+            // Evento não encontrado
+        }
+
+    }
+
     async createSetupIntent({customer, metadata, moreParams}:{customer:string, metadata:Record<string, string>, moreParams?:Partial<Stripe.SetupIntentCreateParams>}) {
         if (!customer) throw new Error('Id do customer não enviado');
         if (!metadata) throw new Error('metadata não enviado');
         const si = await this.stripe.setupIntents.create({
             ...moreParams,
             customer,
-            metadata,
+            metadata,            
         });
+        
         return si;
     };
 
@@ -75,11 +108,12 @@ export default class StripeBackend {
             price = queryResult;
         };
 
-        // cria a Subscrição
+        
         function calcCancelAt(installments:number) {
             const date = new Date();
             return Math.floor(date.setMonth(date.getMonth() + installments) / 1000);
         }
+        // cria a Subscrição
         const subscription =  await this.stripe.subscriptions.create({
             ...moreParams,
             customer,

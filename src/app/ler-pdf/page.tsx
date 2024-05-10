@@ -1,4 +1,6 @@
 // import {  } from 'firebase-admin'
+import PlansRestrictions from "@/src/modules/projectExclusive/PlansRestrictions";
+import UserFinancialData from "@/src/modules/projectExclusive/UserManagement/UserFinancialData";
 import LerPdf from "@/src/pages/LerPdf";
 
 
@@ -67,6 +69,12 @@ export default async function LerPdfComponent() {
     // const { amount, ids } = await v.checkNamespacesAmount();
     // console.log(`amount: ${amount}`);
     // console.log(`ids: ${ids}`);
+    const uf = new UserFinancialData();
+    const plans = new PlansRestrictions();
+    // await plans.createreadPdfFreePlan()
+    console.log('iniciando subscrição...');
+    await uf.subscribeToStandardPlan('W4cd8j5ZsUUI4akQ77csf0GORIv1');
+    console.log('subscrição iniciada!');
 
     return (
         <div id="Formularios" className="w-full max-h-screen flex flex-col items-start justify-start overflow-x-hidden overflow-y-auto">      

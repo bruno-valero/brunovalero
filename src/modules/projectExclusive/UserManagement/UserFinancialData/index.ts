@@ -2,6 +2,7 @@ import { isProduction } from "@/envs";
 import { UsersUser } from "@/src/config/firebase-admin/collectionTypes/users";
 import { UsersFinancialData } from "@/src/config/firebase-admin/collectionTypes/users/control";
 import { admin_firestore } from "@/src/config/firebase-admin/config";
+import { ControlPlanReadPdfPlans } from "@/src/config/firebase/firebaseFunctions/functions/src/config/firebase-admin/collectionTypes/control";
 import StripeBackend from "@/src/modules/stripe/backend/StripeBackend";
 import Stripe from "stripe";
 import UserManagement from "..";
@@ -55,6 +56,8 @@ export default class UserFinancialData {
             .collection('control').doc('financialData')
             .set(financialData, {merge:true});
         
+        await this.subscribeToFreePlan(uid);
+        
         return financialData;
     };
 
@@ -73,27 +76,44 @@ export default class UserFinancialData {
         const user = userSnap.exists ? userSnap.data() as UsersUser : null;
         if (!user) throw new Error("Usuário inválido");
         
-        const customer = user[isProduction ? 'stripeId' : 'stripeIdDev']
-        const pi = await stripe.createPaymentIntent({ 
+        const customer = await this.userManagement.getStripeId({ uid, userData:user });
+        const pI = await stripe.createPaymentIntent({
             amount:Math.ceil(amount * 100), 
             currency:'brl', 
             customer, 
             moreParams:{confirm:true},
             metadata:{
-                uid:user.uid,                
+                uid, 
+                amount:String(amount),               
             }
-     })
-        const financialData:Partial<UsersFinancialData> = {
-            credits:0,
-        };
-        await admin_firestore
-            .collection('users').doc(uid)
-            .collection('control').doc('PrivilegesFreeServices')
-            .update(financialData);
-        
-        await this.payment.createMoneyTransaction({ pi:pi.id, uid, type:"payment" });
-        await this.payment.createCreditTransaction({ amount, service:'none', type:'none', uid, nature:'aquisition', piRelated:pi.id })
+        })
+
+        const pi = await stripe.stripe.paymentIntents.retrieve(pI.id);
+        await this.updatePointsAmount(pi, amount);
     };
+
+    async updatePointsAmount(pi: Stripe.PaymentIntent, amount:number) {
+        const uid = pi.metadata.uid;        
+        if (pi.status === 'succeeded' && (pi.metadata.pointsUpdated !== 'true')) {
+            await this.stripe.stripe.paymentIntents.update(pi.id, { metadata:{ ...pi.metadata, pointsUpdated:'true' } });
+
+            const resp = await admin_firestore.collection('users').doc(uid).collection('control').doc('PrivilegesFreeServices').get();
+            const fd = resp.data() as UsersFinancialData;
+            const credits = fd.credits;
+    
+            const financialData:Partial<UsersFinancialData> = {
+                credits: credits + amount,
+            };
+    
+            await admin_firestore
+                .collection('users').doc(uid)
+                .collection('control').doc('PrivilegesFreeServices')
+                .update(financialData);
+            
+            await this.payment.createMoneyTransaction({ pi:pi.id, uid, type:"payment" });
+            await this.payment.createCreditTransaction({ amount, service:'none', type:'none', uid, nature:'aquisition', piRelated:pi.id })            
+        }
+    }
 
 
     /**
@@ -226,37 +246,91 @@ export default class UserFinancialData {
         const pmAmount = paymentMethods.data.length;
         await admin_firestore.collection('users').doc(uid).collection('control').doc('financialData').update({ paymentMethods:pmAmount })
 
+        if (pmAmount === 1) {            
+            console.log(`Tornando como default paymente method.....`)
+            await this.stripe.stripe.customers.update(stripeId, {
+                invoice_settings:{
+                    default_payment_method:paymentMethods.data[0].id,
+                }
+            });            
+            console.log(`Default paymente method setado com sucesso! ${paymentMethods.data[0].id}`)
+        }
+
         return user;
     };
 
 
     async subscribeToPlan({ user, plan }:{ user:Omit<UsersUser, 'control'>, plan:Stripe.Price }) {
         const customer = await this.userManagement.getStripeId({ uid:user.uid, userData:user });
-        const subs = await this.stripe.stripe.subscriptions.search({query: `customer:'${customer}'`})
+        const subs = await this.stripe.stripe.subscriptions.search({query: `metadata["stripeId"]:"${customer}" AND metadata["service"]:"readPdf"`})
+        console.log(`${subs.data.length} subs encontradas.`)
         await Promise.all(subs.data.map(async(item) => {
-            await this.stripe.stripe.subscriptions.cancel(item.id);
-        }))
+            const sub = await this.stripe.stripe.subscriptions.retrieve(item.id);
+            if (sub.status === 'active') {
+                console.log(`desativando >> ${item.id}`)
+                await this.stripe.stripe.subscriptions.update(item.id, { metadata:{ ...item.metadata, canceledToCreateOther:'true' } })
+                await this.stripe.stripe.subscriptions.cancel(item.id);
+            }
+        }));
+
+        // if (0 < 1) return;
 
         const sub = await this.stripe.stripe.subscriptions.create({
             customer,
-            items:[{price:plan.id, quantity: 1}],   
+            items:[{price:plan.id, quantity: 1}],
             metadata:{
+                stripeId:customer,
                 plan:plan.nickname,
+                uid:user.uid,
+                service:plan.metadata.service
             },                                
         });
 
         const retSub = await this.stripe.stripe.subscriptions.retrieve(sub.id);
         
         if (retSub.status === 'active') {
-            await this.updateUserActivePlanFirebase(user.uid, plan.nickname as any);
+            await this.updateUserActivePdfPlanFirebase(user.uid, plan.nickname as any);
             return retSub;
         };
 
         return null;
     };
 
-    async updateUserActivePlanFirebase(uid:string, plan:'free' | 'standard' | 'enterprise') {
-        await admin_firestore.collection('users').doc(uid).collection('control').doc('financialData').update({ activePlan:plan });
+    async subscribeToFreePlan(uid:string) {
+        const resp = await admin_firestore.collection('users').doc(uid).get();
+        const user = resp.data() as Omit<UsersUser, 'control'>
+
+        const plansResp = await admin_firestore.collection('control').doc('plans').collection('readPdf').doc('free').get();
+        const freePlan = plansResp.data() as ControlPlanReadPdfPlans;
+
+        await this.subscribeToPlan({ user, plan:freePlan.stripePrice });
+    }
+
+    async subscribeToStandardPlan(uid:string) {
+        const resp = await admin_firestore.collection('users').doc(uid).get();
+        const user = resp.data() as Omit<UsersUser, 'control'>
+
+        const plansResp = await admin_firestore.collection('control').doc('plans').collection('readPdf').doc('standard').get();
+        const freePlan = plansResp.data() as ControlPlanReadPdfPlans;
+
+        await this.subscribeToPlan({ user, plan:freePlan.stripePrice });
+    }
+
+    async subscribeToEnterprisePlan(uid:string) {
+        const resp = await admin_firestore.collection('users').doc(uid).get();
+        const user = resp.data() as Omit<UsersUser, 'control'>
+
+        const plansResp = await admin_firestore.collection('control').doc('plans').collection('readPdf').doc('enterprise').get();
+        const freePlan = plansResp.data() as ControlPlanReadPdfPlans;
+
+        await this.subscribeToPlan({ user, plan:freePlan.stripePrice });
+    }
+
+    async updateUserActivePdfPlanFirebase(uid:string, plan:'free' | 'standard' | 'enterprise') {
+        const fd = await this.getFinancialData({ uid });
+        if (!fd) throw new Error("Financial Data não encontrada");
+        
+        await admin_firestore.collection('users').doc(uid).collection('control').doc('financialData').update({ activePlan:{ ...fd.activePlan, readPdf:plan } });
         if (plan === 'free') {
             await this.userPrivileges.freePlanMonthlyPrivilege(uid)
         } else if (plan === 'standard') {
@@ -272,16 +346,16 @@ export default class UserFinancialData {
 
         const subs = await this.stripe.stripe.subscriptions.search({query: `customer:'${customer}'`});
         if (subs.data.length === 0) {
-            await this.updateUserActivePlanFirebase(user.uid, 'free');
+            await this.updateUserActivePdfPlanFirebase(user.uid, 'free');
             return;
         }
         const plan = subs.data[0].metadata.plan as 'free' | 'standard' | 'enterprise';
         if (plan === 'standard') {
-            await this.updateUserActivePlanFirebase(user.uid, 'standard');
+            await this.updateUserActivePdfPlanFirebase(user.uid, 'standard');
         } else if (plan === 'enterprise') {
-            await this.updateUserActivePlanFirebase(user.uid, 'enterprise');
+            await this.updateUserActivePdfPlanFirebase(user.uid, 'enterprise');
         } else if (plan === 'free') {
-            await this.updateUserActivePlanFirebase(user.uid, 'free');
+            await this.updateUserActivePdfPlanFirebase(user.uid, 'free');
         }
     }
 

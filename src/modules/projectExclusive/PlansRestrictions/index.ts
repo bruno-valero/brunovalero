@@ -31,8 +31,15 @@ export default class PlansRestrictions {
             currency:'brl',      
             nickname:'free',
             metadata:{
-                name:'free'
+                name:'free',
+                service:'readPdf',
             },
+            product_data:{
+                name:'free',
+                metadata:{
+                    service:'readPdf',
+                }           
+            }
         })
 
         const data:ControlPlanReadPdfPlans = {
@@ -93,8 +100,15 @@ export default class PlansRestrictions {
             currency:'brl',   
             nickname:'standard',
             metadata:{
-                name:'standard'
+                name:'standard',
+                service:'readPdf',
             },         
+            product_data:{
+                name:'standard',
+                metadata:{
+                    service:'readPdf',
+                }                
+            }
         })
 
         const data:ControlPlanReadPdfPlans = {
@@ -156,7 +170,14 @@ export default class PlansRestrictions {
             nickname:'enterprise',
             metadata:{
                 name:'enterprise',
-            },            
+                service:'readPdf',
+            },      
+            product_data:{
+                name:'enterprise',  
+                metadata:{
+                    service:'readPdf',
+                }               
+            }      
         })
 
         const data:ControlPlanReadPdfPlans = {

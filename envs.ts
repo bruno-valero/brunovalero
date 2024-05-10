@@ -1,4 +1,7 @@
+export const isProduction = false;
+
 const envs:Envs = { 
+  isProduction,
   // ------------------------------------------------------------------------------ 
   // FIREBASE 
   FIREBASE_API_KEY: process.env.FIREBASE_API_KEY, 
@@ -30,12 +33,16 @@ const envs:Envs = {
   // PRODUCTION 
   STRIPE_PRODUCTION_PUBLIC_KEY: process.env.STRIPE_PRODUCTION_PUBLIC_KEY, 
   STRIPE_PRODUCTION_SECRET_KEY: process.env.STRIPE_PRODUCTION_SECRET_KEY, 
+  // ----------- 
+  // WEBHOOKS 
+  WEBHOOK_KEY:process.env.STRIPE_WEBHOOK_KEY,
 }; 
  
-export const isProduction = false;
+
 export default envs; 
  
 export type Envs = { 
+  isProduction:boolean,
   // ------------------------------------------------------------------------------ 
   // FIREBASE 
   FIREBASE_API_KEY: string | undefined, 
@@ -67,4 +74,7 @@ export type Envs = {
   // PRODUCTION 
   STRIPE_PRODUCTION_PUBLIC_KEY: string | undefined, 
   STRIPE_PRODUCTION_SECRET_KEY: string | undefined, 
+  // ----------- 
+  // WEBHOOKS 
+  WEBHOOK_KEY:string | undefined,
 }; 
