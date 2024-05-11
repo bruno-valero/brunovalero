@@ -311,7 +311,8 @@ export default class VectorStoreProcess {
         const openAiChat = new ChatOpenAI({
             openAIApiKey:envs.OPENAI_API_KEY,
             modelName:'gpt-3.5-turbo',
-            temperature:.3,            
+            temperature:.3,     
+            maxTokens:-1,       
         });
 
         const template = `

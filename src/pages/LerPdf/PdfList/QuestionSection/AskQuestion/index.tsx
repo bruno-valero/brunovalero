@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { IoSendSharp } from "react-icons/io5";
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useState } from "react";
 import { RxDotFilled } from "react-icons/rx";
 import z from "zod";
 import { PdfFunctions } from "../..";
@@ -46,12 +47,15 @@ export default function AskQuestion({ questionHooks, functions }:AskQuestionProp
 
     const { register, handleSubmit, formState:{ errors } } = useForm<Question>({ resolver:zodResolver(questionSchema) });   
 
+    const [load, setLoad] = useState(false);
+
     async function sendQuestion({ question }:Question) {
         const log = functions.isLogged();
         if (!log) return;
         const hasInsufficientCredits = functions.hasInsufficientCredits({ privilege:'questions' });
         if (hasInsufficientCredits) return;
 
+        setLoad(true);
         console.log(question)
         const apiPath = `/api/readPdf/send-question`;
         const post = new Post(apiPath);
@@ -60,10 +64,12 @@ export default function AskQuestion({ questionHooks, functions }:AskQuestionProp
         const { error, data } = await resp?.json();
         if (error || !data) {
             alert(`Houve um erro: ${error ?? 'Os dados não vieram'}`);
+            setLoad(false);
             return;
         }
         console.log(`resposta: ${data}`);
         // setShowQuestion(data as QuestionPdf);
+        setLoad(false);
         functions.gotToQuestion(data as QuestionPdf, details)
     }
 
@@ -102,9 +108,12 @@ export default function AskQuestion({ questionHooks, functions }:AskQuestionProp
                         {errors.question.message}
                     </span>
                     )}
-                    <button type="submit" className="flex gap-3 items-center justify-center text-xl w-full p-4" style={{color:colors.valero()}} >
-                        Enviar
-                        <IoSendSharp color={colors.valero()} size={22} />
+                    <button type="submit" disabled={load} className="flex gap-3 items-center justify-center text-xl w-full p-4" style={{color:colors.valero()}} >
+                       {load ? (`Enviando...`) : ( 
+                       <>
+                            Enviar
+                            <IoSendSharp color={colors.valero()} size={22} />
+                        </>)}
                     </button>
                 </form>
             </div>

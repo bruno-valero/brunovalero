@@ -33,6 +33,7 @@ import QuizSection from "./QuizSection";
 
 
 export type PdfFunctions = {
+    hasPaymentMethods: () => boolean,
     insChangingPublic: ({ pdf, title, message }: {
         pdf: Pdf;
         title: string;
@@ -230,7 +231,7 @@ export default function PdfList() {
         // setShowQuestions(show);
         // setShowQuestionList(show);
         // setShowQuiz(false);
-    }, [setDetails]);
+    }, [resetScroll]);
 
     const goToPdfList = useCallback(() => {
         resetScroll()
@@ -242,7 +243,7 @@ export default function PdfList() {
         // setShowQuestions(false);
         // setDetails(null);
         // setShowQuiz(false);
-    }, [setShowQuestion, setAskQuestion, setShowQuestionList, setShowQuestions, setDetails]);
+    }, [resetScroll]);
     
     const goToQuestionList = useCallback((details: Pdf | null) => {
         resetScroll()
@@ -252,7 +253,7 @@ export default function PdfList() {
         // setAskQuestion(false);
         // setShowQuiz(false);
         // setShowQuestionList(true);
-    }, [setShowQuestion, setAskQuestion, setShowQuestionList]);
+    }, [resetScroll]);
 
     const goToAskQuestion = useCallback((details: Pdf | null) => {
         resetScroll()
@@ -263,7 +264,7 @@ export default function PdfList() {
         // setAskQuestion(true);
         // setShowQuiz(false);
         // setShowQuestionList(false);
-    }, [setShowQuestion, setAskQuestion, setShowQuestionList]);
+    }, [resetScroll]);
     
     const choosePdf = useCallback((pdf:Pdf | null) => {
             resetScroll()
@@ -273,7 +274,7 @@ export default function PdfList() {
             // setShowQuiz(false);
             // setShowQuestions(false);
             // setShowQuestionList(false);
-    }, [setDetails, setShowQuestions, setShowQuestionList, wrapperRef.current?.getBoundingClientRect().top]);
+    }, [resetScroll]);
 
     const gotToQuestion = useCallback((showQuestion:QuestionPdf | null, details: Pdf | null) => {
         resetScroll()
@@ -283,7 +284,7 @@ export default function PdfList() {
         // setShowQuestionList(false);
         // setAskQuestion(false);
         // setShowQuiz(false);
-    }, [setShowQuestion, setShowQuestionList, setAskQuestion]); 
+    }, [resetScroll]); 
 
     const gotToQuiz = useCallback((details: Pdf | null) => {
         resetScroll()
@@ -294,7 +295,7 @@ export default function PdfList() {
         // setShowQuestionList(false);
         // setShowQuestions(false);
         // setShowQuiz(true);
-    }, [setShowQuestion, setShowQuestionList, setAskQuestion]); 
+    }, [resetScroll]); 
 
 
     const insChangingPublic = useCallback(({pdf, title, message}:{pdf:Pdf, title:string, message:string}) => {
@@ -318,10 +319,20 @@ export default function PdfList() {
         return false;
     }, [setAlertBuyPoints, financialData]);
 
+    const hasPaymentMethods = useCallback(() => {
+        const paymentMethods = (financialData?.paymentMethods ?? 0);
+        if(paymentMethods > 0) return true;
+        setPublicError({ title:`Método de pagamento`, message:`Para realizar esta ação é necessário possuir um cartão de crédito cadastrado.` });
+        return false;
+
+        
+    }, [setPublicError, financialData]);
+
      
       
 
     const functions:PdfFunctions = {
+        hasPaymentMethods,
         insChangingPublic,
         hasInsufficientCredits,
         gotToQuiz,

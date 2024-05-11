@@ -49,12 +49,14 @@ export default class Payment {
      * @param uid **string -** ID único de usuário fornecido pelo Firebase Auth
      * @param type **string -**  Tipo da transação 
      */
-    async createMoneyTransaction({ pi, uid, type }:{pi:string, uid:string, type:TransactionWithMoneyType}) {
+    async createMoneyTransaction({ pi, invoiceId, uid, type }:{pi?:string, invoiceId?:string, uid:string, type:TransactionWithMoneyType}) {
         const ts = new Date().getTime();
-        const monthId = tsToMask({ts, format:['day', 'month', 'year'], seps:['-', '-']})
+        const monthId = tsToMask({ts, format:['month', 'year'], seps:['-']})
+        const id = type === 'subscription' ? invoiceId : pi;
+        if (!id) return;
         const newTransaction:CollectionTypes['transactions'][0]['money'][''] = {
-            [pi]:{
-                stripeId:pi,
+            [id]:{
+                stripeId:id,
                 type:type,                        
             }
         }
@@ -72,7 +74,7 @@ export default class Payment {
      */
     async createCreditTransaction({ amount, service, type, uid, nature, piRelated }:{amount:number, service:TransactionWithCreditsService, type:TransactionWithCreditsType, uid:string, nature:TransactionWithCreditsNature, piRelated:TransactionWithCreditsPiRelated}) {
         const ts = new Date().getTime();
-        const monthId = tsToMask({ts, format:['day', 'month', 'year'], seps:['-', '-']})
+        const monthId = tsToMask({ts, format:['month', 'year'], seps:['-']})
         const id = String(ts);
         const newTransaction:CollectionTypes['transactions'][0]['credits'][''] = {
             [id]:{
@@ -84,8 +86,8 @@ export default class Payment {
                 piRelated
             }
         }
-        // const oi = '' as unknown as CollectionTypes['transactions'][0]['money']['']        
-        await admin_firestore.collection('transactions').doc(uid).collection('money').doc(monthId).set(newTransaction, {merge:true});
+        // const oi = '' as unknown as CollectionTypes['transactions'][0]['credits']
+        await admin_firestore.collection('transactions').doc(uid).collection('credits').doc(monthId).set(newTransaction, {merge:true});
     };
 
 };
