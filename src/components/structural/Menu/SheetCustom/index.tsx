@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { usePathname, useRouter } from 'next/navigation';
-import { ReactNode, useRef } from 'react';
+import { ReactNode, useMemo, useRef } from 'react';
 import { GiHamburgerMenu } from 'react-icons/gi';
 import { twMerge } from 'tailwind-merge';
 import { NavigationMenuCustom } from '../NavigationMenuCustom/index';
@@ -13,6 +13,7 @@ import brand from '@/src/images/brand.png';
 import Social from '@/src/modules/Social';
 import { useGlobalProvider } from '@/src/providers/GlobalProvider';
 import { Alert } from '../../Alert';
+import { AlertBuyPoints } from '../../AlertBuyPoints';
 
 const side = 'left';
 
@@ -29,6 +30,8 @@ export function SheetCustom({ children }:SheetCustomProps) {
   const [, setResetedState] = globalState.resetedState;
   const globalUser = globalState.globalUser;
   const { width } = globalState.dimensions ?? {};
+  const financialData = globalState.financialData;
+
   
 
   const components: { title: string; href?: string; action?:() => void; description: string }[] = [
@@ -48,7 +51,22 @@ export function SheetCustom({ children }:SheetCustomProps) {
         
         Gostaria de saber mais sobre os seus serviços.`}),
     },    
-  ]
+  ];
+
+  const comps = useMemo(() => {
+    if (typeof financialData?.credits !== 'undefined') {
+      const comp = [...components];
+      comp.splice(1, 0, {
+        title: `Créditos: R$${financialData?.credits ?? 0},00`,
+        // href: "/carteirinha",
+        description:"Utilize os Créditos para acessar recursos pagos.",
+          action:async() => globalUser.data ? await globalUser.userAuth.logout() : await globalUser.createWithLogin(),
+      },)
+      return comp;
+    } else {
+      return components;
+    }
+  }, [financialData, components])
 
   return (
     <div ref={wrapperRef} className="grid grid-cols-2 gap-2 h-[100vh] w-[100vw] relative overflow-hidden">
@@ -65,12 +83,13 @@ export function SheetCustom({ children }:SheetCustomProps) {
               </span>
             </div>
           </button>
-          <NavigationMenuCustom {...{components}} />
+          <NavigationMenuCustom {...{components:comps}} />
             {/* <Button variant='default' onClick={() => {}} >Teste</Button> */}
         </div>
 
         <div className='absolute z-0 top-[80px] w-[100vw] overflow-x-hidden overflow-y-auto flex min-h-screen' style={{height:((wrapperRef.current?.offsetHeight ?? 0) - 80)}} >
           <Alert />
+          <AlertBuyPoints />
           {children}
         </div>
 

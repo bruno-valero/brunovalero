@@ -161,10 +161,11 @@ export default class UploadPdfProcess {
             dateOfCreation:String(new Date().getTime()),
         };
 
+        const defaultPrice = Math.ceil(Number(newDoc.metadata.totalWords) / 100_000) * 0.29
         
         if (!isFree) {
             console.log('cobrando pagamento...')
-            await this.financialData.spendCredits({ uid:userId, amount:price, autoBuy, minCredits });
+            await this.financialData.spendCredits({ uid:userId, amount:defaultPrice, autoBuy, minCredits });
             console.log('atualizando o banco de dados...')
             await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).set(newDoc);
         } else {
@@ -221,7 +222,7 @@ export default class UploadPdfProcess {
         const chunksRelated = resp.sourceDocuments;
 
         if (!isFree) {
-            await this.financialData.spendCredits({ uid, amount:price, autoBuy, minCredits });
+            await this.financialData.spendCredits({ uid, amount:0.05, autoBuy, minCredits });
         }
 
         // const oi:ReadPdf = '';

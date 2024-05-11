@@ -66,6 +66,12 @@ export default function QuizSection({ functions, questionHooks }:{ functions:Pdf
     const indexes:number[] = [];
 
     async function createQuiz(data:From) {
+        const log = functions.isLogged();
+        if (!log) return;
+        const privilege = globalUser?.data?.uid === details?.id ? `quizGenerationPrivateDocs` : `quizGenerationPublicDocs`
+        const hasInsufficientCredits = functions.hasInsufficientCredits({ privilege });
+        if (hasInsufficientCredits) return;
+
         setLoadQuizCreation(true);
         console.log(data);
         const path = `/api/readPdf/add-quiz`;
@@ -161,7 +167,7 @@ export default function QuizSection({ functions, questionHooks }:{ functions:Pdf
                             </PopoverTrigger>
                             <PopoverContent>
                                 {/* window.open(`${window.location.href}/quiz/${item.docId}-${item.id}`) */}
-                                <button onClick={() => openUrl(`${window.location.href}/quiz/${item.docId}-${item.id}`)} className="rounded shadow my-1 p-2 w-full text-white" style={{backgroundColor:colors.valero()}} >
+                                <button onClick={() => openUrl(`${window.location.href.split('?')[0]}/quiz/${item.docId}-${item.id}`)} className="rounded shadow my-1 p-2 w-full text-white" style={{backgroundColor:colors.valero()}} >
                                     Iniciar Quiz
                                 </button>
                                 <button disabled={!!tries[item.id]} onClick={() => getTries(item.docId, item.id)} className="w-full flex items-center justify-center p-2" >

@@ -1,4 +1,4 @@
-import { CollectionTypes } from "@/src/config/firebase-admin/collectionTypes/collectionTypes";
+import { Control } from "@/src/config/firebase-admin/collectionTypes/control";
 import { admin_firestore } from "@/src/config/firebase-admin/config";
 import VectorStoreProcess from "@/src/modules/VectorStoreProcess";
 import UploadPdfProcess from "@/src/modules/projectExclusive/UploadPdfProcess";
@@ -24,9 +24,9 @@ export async function POST(req:Request) {
 
 
         const resp = await admin_firestore.collection('control').doc('vectorStore').get();
-        const vectorStore = resp.exists ? resp.data() : null;
+        const vectorStore = (resp.exists ? resp.data() : null) as Control['vectorStore'] | null;
         if(!vectorStore) throw new Error("Vector Store não encontrada");
-        const items = Object.entries(vectorStore).filter(item => !!item[1]);
+        const items = Object.entries(vectorStore.indexes).filter(item => !!item[1]);
         const v = new VectorStoreProcess();
         const vectorIndex = await v.checkNamespacesAmount(items[0][0]);
         await readPdf.partialUpload({ pdfUrl, docId, user, vectorIndex });

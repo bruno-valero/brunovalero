@@ -86,8 +86,9 @@ export default function ShowQuestionContent({ questionHooks }:ShowQuestionConten
                 Techo retirado da página {getChunkPage(showChunk)}, da linha {getChunkLines(showChunk)?.[0]} à {getChunkLines(showChunk)?.[1]}
             </span>
             <span className="mt-3" >(Trecho {showChunk + 1}/{showQuestion?.response.chunksRelated.length})</span>
-            <button onClick={() => window.open(details?.pdfUrl)} className="flex gap-2 items-center justify-center shadow rounded hover:bg-gray-300 p-2 my-3" >
+            <button onClick={() => window.open(details?.pdfUrl)} className="flex gap-2 items-center justify-center shadow rounded hover:bg-gray-300 p-2 my-3 font-semibold" >
                 <GiOpenBook color={colors.valero()} size={30} className="hover:text-white"  />
+                Abrir Pdf
             </button>
             <p className="text-base font-normal mt-2" style={{color:colors.valero()}} >
                 {showPageContent(showChunk)}

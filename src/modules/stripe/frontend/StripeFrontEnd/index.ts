@@ -12,7 +12,7 @@ export default class StripeFrontEnd {
     envs: Envs
 
     constructor(envs: Envs) {
-        const type = envs.isProduction ? 'production' : 'test'
+        const type = envs?.isProduction ? 'production' : 'test'
         this.envs = envs;        
         const { stripe } = this.connectStripe(type);
         this.stripe = stripe;
@@ -21,7 +21,7 @@ export default class StripeFrontEnd {
 
     protected connectStripe(type:'production' | 'test') {
 
-        const secretKey = type === 'production' ? this.envs.STRIPE_PRODUCTION_SECRET_KEY! : this.envs.STRIPE_SECRET_KEY!;
+        const secretKey = type === 'production' ? this.envs?.STRIPE_PRODUCTION_SECRET_KEY! : this.envs?.STRIPE_SECRET_KEY!;
         const stripe = new Stripe(secretKey, {
           apiVersion: '2023-10-16',
         });
@@ -107,7 +107,7 @@ export default class StripeFrontEnd {
         const [stripe, setStripe] = useState<StripeJs | null>(null);
         useEffect(() => {
             const load = async() => {
-                const apiKey = isProduction ? this.envs.STRIPE_PRODUCTION_PUBLIC_KEY! : this.envs.STRIPE_PUBLIC_KEY!
+                const apiKey = isProduction ? this.envs?.STRIPE_PRODUCTION_PUBLIC_KEY! : this.envs?.STRIPE_PUBLIC_KEY!
                 const str = await loadStripe(apiKey);                
                 setStripe(str);
             }

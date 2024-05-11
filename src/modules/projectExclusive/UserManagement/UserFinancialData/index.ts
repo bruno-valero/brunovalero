@@ -1,6 +1,6 @@
 import { isProduction } from "@/envs";
 import { UsersUser } from "@/src/config/firebase-admin/collectionTypes/users";
-import { UsersFinancialData } from "@/src/config/firebase-admin/collectionTypes/users/control";
+import { UsersControl, UsersFinancialData } from "@/src/config/firebase-admin/collectionTypes/users/control";
 import { admin_firestore } from "@/src/config/firebase-admin/config";
 import { ControlPlanReadPdfPlans } from "@/src/config/firebase/firebaseFunctions/functions/src/config/firebase-admin/collectionTypes/control";
 import StripeBackend from "@/src/modules/stripe/backend/StripeBackend";
@@ -77,11 +77,16 @@ export default class UserFinancialData {
         if (!user) throw new Error("Usuário inválido");
         
         const customer = await this.userManagement.getStripeId({ uid, userData:user });
+        const cusResp = await this.stripe.stripe.customers.retrieve(customer);
+        let payment_method = '';
+        if (!cusResp.deleted) {
+            payment_method = cusResp.metadata.defaultPm;
+        }
         const pI = await stripe.createPaymentIntent({
             amount:Math.ceil(amount * 100), 
             currency:'brl', 
             customer, 
-            moreParams:{confirm:true},
+            moreParams:{confirm:true, automatic_payment_methods:{ enabled: true, allow_redirects:'never' }, payment_method},
             metadata:{
                 uid, 
                 amount:String(amount),               
@@ -97,7 +102,7 @@ export default class UserFinancialData {
         if (pi.status === 'succeeded' && (pi.metadata.pointsUpdated !== 'true')) {
             await this.stripe.stripe.paymentIntents.update(pi.id, { metadata:{ ...pi.metadata, pointsUpdated:'true' } });
 
-            const resp = await admin_firestore.collection('users').doc(uid).collection('control').doc('PrivilegesFreeServices').get();
+            const resp = await admin_firestore.collection('users').doc(uid).collection('control').doc('financialData').get();
             const fd = resp.data() as UsersFinancialData;
             const credits = fd.credits;
     
@@ -107,13 +112,13 @@ export default class UserFinancialData {
     
             await admin_firestore
                 .collection('users').doc(uid)
-                .collection('control').doc('PrivilegesFreeServices')
+                .collection('control').doc('financialData')
                 .update(financialData);
             
             await this.payment.createMoneyTransaction({ pi:pi.id, uid, type:"payment" });
             await this.payment.createCreditTransaction({ amount, service:'none', type:'none', uid, nature:'aquisition', piRelated:pi.id })            
-        }
-    }
+        };
+    };
 
 
     /**
@@ -247,24 +252,30 @@ export default class UserFinancialData {
         await admin_firestore.collection('users').doc(uid).collection('control').doc('financialData').update({ paymentMethods:pmAmount })
 
         if (pmAmount === 1) {            
-            console.log(`Tornando como default paymente method.....`)
-            await this.stripe.stripe.customers.update(stripeId, {
-                invoice_settings:{
-                    default_payment_method:paymentMethods.data[0].id,
-                }
-            });            
+            console.log(`Tornando como default payment method.....`)
+            await this.setUserDefaultPaymentMethod({ stripeId, paymentMethod:paymentMethods.data[0] });
             console.log(`Default paymente method setado com sucesso! ${paymentMethods.data[0].id}`)
         }
 
         return user;
     };
 
+    async setUserDefaultPaymentMethod({ stripeId, paymentMethod  }:{ stripeId:string, paymentMethod:Stripe.PaymentMethod }) {
+        await this.stripe.stripe.customers.update(stripeId, {
+            invoice_settings:{
+                default_payment_method:paymentMethod.id,
+            },
+            metadata: {
+                defaultPm:paymentMethod.id,
+            }
+        });   
+    }
 
     async subscribeToPlan({ user, plan }:{ user:Omit<UsersUser, 'control'>, plan:Stripe.Price }) {
         const customer = await this.userManagement.getStripeId({ uid:user.uid, userData:user });
-        const subs = await this.stripe.stripe.subscriptions.search({query: `metadata["stripeId"]:"${customer}" AND metadata["service"]:"readPdf"`})
+        const subs = await this.getUsersubscriptions({ stripeId:customer });
         console.log(`${subs.data.length} subs encontradas.`)
-        await Promise.all(subs.data.map(async(item) => {
+        await Promise.all(subs.data.map(async(item) => {            
             const sub = await this.stripe.stripe.subscriptions.retrieve(item.id);
             if (sub.status === 'active') {
                 console.log(`desativando >> ${item.id}`)
@@ -296,6 +307,163 @@ export default class UserFinancialData {
         return null;
     };
 
+    async getUsersubscriptions({ stripeId, limit }:{ stripeId:string, limit?:number }) {
+        const subs = await this.stripe.stripe.subscriptions.search({query: `metadata["stripeId"]:"${stripeId}" AND metadata["service"]:"readPdf"`, limit})
+        return subs;
+    };
+
+    protected calculateSubscriptionEnd(sub: Stripe.Subscription) {
+        // pega o timestamp do período de finalização da subscription e subtrai do timestamp da data de hoje.
+        const currPeriodEnd = new Date(sub.current_period_end * 1000).getTime();
+        const today = new Date().getTime();
+        const difference = currPeriodEnd - today;
+
+        // calcula quantos sao 3 dias em milissegundos
+        const oneDay = 1000 * 60 * 60 * 24;
+        const threeDays = oneDay * 3;
+
+        // verifica se a diferença entre a data atual e a data final da subascrição é menor do que 3 dias
+        const lessThanThreeDays = difference < threeDays;
+
+        return { currPeriodEnd, today, oneDay, threeDays, difference, lessThanThreeDays }
+    };
+
+    /**
+     * troca para subscrição free segundo a lógica abaixo.
+     * 
+     * Verifica se a diferença entre a data atual e a data final da subascrição é menor do que 3 dias.
+     * 
+     * Se a diferença for menor do que 3 dias, troca para o plano gratuito imediatamente.
+     * 
+     * Se a diferença não for menor do que 3 dias, adiciona a metadata "switchToFreeSubscription", que será verificada no webhook enviado 3 dias antes do fim da subscrição atual.
+     * Com essa metadata presente, ele irá trocar para o plano gratuito quando este webhook chegar no endpont da api "/api/stripe/webhooks"
+     * 
+     * @param stripeId  ID único do stripe
+     */
+    async switchToFreeSubscription({ stripeId }:{ stripeId:string }) {
+        const subs = await this.getUsersubscriptions({ stripeId });
+        const active = subs.data.filter(item => item.status === 'active')[0];
+        
+        const { currPeriodEnd, lessThanThreeDays, threeDays } = this.calculateSubscriptionEnd(active)
+
+        const cus = await this.stripe.stripe.customers.retrieve(stripeId);
+
+        // se a diferença for menor do que 3 dias, troca para o plano gratuito imediatamente
+        if (lessThanThreeDays) {
+            if (!cus.deleted && cus.metadata) {
+
+                delete active.metadata.switchToFreeSubscription;
+                delete active.metadata.switchToEnterpriseSubscription;
+                delete active.metadata.switchToStandardSubscription;
+                await this.stripe.stripe.subscriptions.update(active.id, { metadata:active.metadata });
+
+                await this.subscribeToFreePlan(cus.metadata.uid);
+                await this.updateUpcomingPlan({ uid:cus.metadata.uid, upcomingPlanData:null });
+                console.log('subscrição iniciada!');
+            }
+        } else if (!cus.deleted && cus.metadata) {
+            // se a diferença não for menor do que 3 dias, adiciona a metadata "switchToFreeSubscription", que será verificada no webhook enviado 3 dias antes do fim da subscrição atual.
+            // com essa metadata presente, ele irá trocar para o plano gratuito quando este webhook chegar no endpont da api
+            
+            delete active.metadata.switchToFreeSubscription;
+            delete active.metadata.switchToEnterpriseSubscription;
+            delete active.metadata.switchToStandardSubscription;
+
+            await this.stripe.stripe.subscriptions.update(active.id, { metadata:{...active.metadata, switchToFreeSubscription:'true'} })
+            
+            await this.updateUpcomingPlan({ uid:cus.metadata.uid, upcomingPlanData: {
+                plan:'free',
+                requestDate:String(new Date().getTime()),
+                takeEffectDate:String(currPeriodEnd - threeDays),
+            } });
+
+            console.log('subscrição configurada para entrar em vigor ao final do período ativo da subscrição atual.');
+        }
+
+    };
+
+    async switchToStandardSubscription({ stripeId }:{ stripeId:string }) {
+        const subs = await this.getUsersubscriptions({ stripeId });
+        const active = subs.data.filter(item => item.status === 'active')[0];
+        
+        const { currPeriodEnd, lessThanThreeDays, threeDays } = this.calculateSubscriptionEnd(active)
+
+        const cus = await this.stripe.stripe.customers.retrieve(stripeId);
+
+        // se a diferença for menor do que 3 dias, troca para o plano gratuito imediatamente
+        if (lessThanThreeDays || active.metadata.plan === 'free') {
+            if (!cus.deleted && cus.metadata) {
+
+                delete active.metadata.switchToFreeSubscription;
+                delete active.metadata.switchToEnterpriseSubscription;
+                delete active.metadata.switchToStandardSubscription;
+                await this.stripe.stripe.subscriptions.update(active.id, { metadata:active.metadata });
+
+                await this.subscribeToStandardPlan(cus.metadata.uid);
+                await this.updateUpcomingPlan({ uid:cus.metadata.uid, upcomingPlanData:null });
+                console.log('subscrição iniciada!');
+            }
+        } else if (!cus.deleted && cus.metadata) {
+            // se a diferença não for menor do que 3 dias, adiciona a metadata "switchToFreeSubscription", que será verificada no webhook enviado 3 dias antes do fim da subscrição atual.
+            // com essa metadata presente, ele irá trocar para o plano gratuito quando este webhook chegar no endpont da api
+            delete active.metadata.switchToFreeSubscription;
+            delete active.metadata.switchToEnterpriseSubscription;
+            delete active.metadata.switchToStandardSubscription;
+
+            await this.stripe.stripe.subscriptions.update(active.id, { metadata:{...active.metadata, switchToStandardSubscription:'true'} })
+            
+            await this.updateUpcomingPlan({ uid:cus.metadata.uid, upcomingPlanData: {
+                plan:'free',
+                requestDate:String(new Date().getTime()),
+                takeEffectDate:String(currPeriodEnd - threeDays),
+            } });
+            console.log('subscrição configurada para entrar em vigor ao final do período ativo da subscrição atual.');
+        }
+
+    };
+
+    async switchToEnterpriseSubscription({ stripeId }:{ stripeId:string }) {
+        const subs = await this.getUsersubscriptions({ stripeId });
+        const active = subs.data.filter(item => item.status === 'active')[0];
+        
+        const { currPeriodEnd, lessThanThreeDays, threeDays } = this.calculateSubscriptionEnd(active)
+
+        const cus = await this.stripe.stripe.customers.retrieve(stripeId);
+
+        // se a diferença for menor do que 3 dias, troca para o plano gratuito imediatamente
+        if (lessThanThreeDays || active.metadata.plan === 'free') {
+            if (!cus.deleted && cus.metadata) {
+
+                delete active.metadata.switchToFreeSubscription;
+                delete active.metadata.switchToEnterpriseSubscription;
+                delete active.metadata.switchToStandardSubscription;
+                await this.stripe.stripe.subscriptions.update(active.id, { metadata:active.metadata });
+
+                await this.subscribeToEnterprisePlan(cus.metadata.uid);
+                await this.updateUpcomingPlan({ uid:cus.metadata.uid, upcomingPlanData:null });
+                console.log('subscrição iniciada!');
+            }
+        } else if (!cus.deleted && cus.metadata) {
+            // se a diferença não for menor do que 3 dias, adiciona a metadata "switchToFreeSubscription", que será verificada no webhook enviado 3 dias antes do fim da subscrição atual.
+            // com essa metadata presente, ele irá trocar para o plano gratuito quando este webhook chegar no endpont da api
+            delete active.metadata.switchToFreeSubscription;
+            delete active.metadata.switchToEnterpriseSubscription;
+            delete active.metadata.switchToStandardSubscription;
+
+            await this.stripe.stripe.subscriptions.update(active.id, { metadata:{...active.metadata, switchToEnterpriseSubscription:'true'} })
+            
+            await this.updateUpcomingPlan({ uid:cus.metadata.uid, upcomingPlanData: {
+                plan:'free',
+                requestDate:String(new Date().getTime()),
+                takeEffectDate:String(currPeriodEnd - threeDays),
+            } });
+            console.log('subscrição configurada para entrar em vigor ao final do período ativo da subscrição atual.');
+        }
+
+    };
+
+
+
     async subscribeToFreePlan(uid:string) {
         const resp = await admin_firestore.collection('users').doc(uid).get();
         const user = resp.data() as Omit<UsersUser, 'control'>
@@ -324,6 +492,27 @@ export default class UserFinancialData {
         const freePlan = plansResp.data() as ControlPlanReadPdfPlans;
 
         await this.subscribeToPlan({ user, plan:freePlan.stripePrice });
+    }
+
+    async updateUpcomingPlan({ uid, upcomingPlanData }:{ uid:string, upcomingPlanData:NonNullable<UsersControl['financialData']['upcomingPlans']>['readPdf'] | null }) {
+        
+        type FiData = NonNullable<UsersControl['financialData']>
+        const resp = await admin_firestore.collection('users').doc(uid).collection('constrol').doc('financialData').get();
+        const fd = (resp.exists ? resp.data() : null) as FiData | null;
+        if (!upcomingPlanData) {
+            if (!fd) return;
+            delete fd.upcomingPlans;
+            await admin_firestore.collection('users').doc(uid).collection('control').doc('financialData').update(fd);
+            return;
+        }
+
+        const ucp = fd?.upcomingPlans ?? {}
+
+        const upcomingPlans:NonNullable<UsersControl['financialData']['upcomingPlans']> = {
+            ...ucp,
+            readPdf:upcomingPlanData,
+        }
+        await admin_firestore.collection('users').doc(uid).collection('control').doc('financialData').update( { upcomingPlans } );
     }
 
     async updateUserActivePdfPlanFirebase(uid:string, plan:'free' | 'standard' | 'enterprise') {

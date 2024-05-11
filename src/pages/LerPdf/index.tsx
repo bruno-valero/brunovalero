@@ -48,17 +48,18 @@ export default function LerPdf() {
                 </p>
                 <div className="flex items-stretch justify-start gap-5 max-sm:max-w-[400px] max-sm:overflow-x-auto max-sm:px-[10px]" >
                     <CardForm imageSrc={leitura.src} text="Este é um serviço voltado para contratos, leis, estudos e similares. Insira PDFs com poucas imagens." />
-                    <CardForm imageSrc={trial.src} text={`A extração de texto, resumo do conteúdo e realização de perguntas não está disponível para teste.`} />                    
+                    <CardForm imageSrc={trial.src} text={`Aproveite os recursos gratuitos para agilizar a busca de informações.`} />                    
                 </div>
             </div>
 
             <PdfList />
-
-            <div className="flex justify-center items-center flex-col w-full bg-white min-h-[50vh]" >
+            
+            <div className="flex justify-center items-center flex-col w-full min-h-[50vh]" style={{backgroundColor:colors.valero()}} >
 
                 <ContactAboutLerPdf />
 
             </div>
+            <div className="min-h-[50px] w-full" style={{backgroundColor:colors.valero()}} />
         </div>
     );
 };

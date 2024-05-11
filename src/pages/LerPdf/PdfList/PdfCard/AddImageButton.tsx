@@ -5,10 +5,11 @@ import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import { useState } from "react";
 import { FaPlus } from "react-icons/fa";
 import { GoDesktopDownload } from "react-icons/go";
+import { PdfFunctions } from "..";
 
 
 
-export default function AddImageButton({ pdf, imageWidth, imageHeight }:{ pdf: Pdf, imageWidth:number, imageHeight:number }) {
+export default function AddImageButton({ pdf, imageWidth, imageHeight, functions }:{ pdf: Pdf, imageWidth:number, imageHeight:number, functions: PdfFunctions }) {
 
     const globalState = useGlobalProvider();
     const [, setResetedState] = globalState.resetedState ?? [];
@@ -20,6 +21,15 @@ export default function AddImageButton({ pdf, imageWidth, imageHeight }:{ pdf: P
     const [load, setLoad] = useState(false);
 
     async function addCover() {
+
+        const log = functions.isLogged();
+        if (!log) return;
+        const insChangingPublic = functions.insChangingPublic({ pdf, title:`Adicionar Capas`, message:`Não é permitido adicionar capas para documentos públicos.\n\nAdicione capas nos documentos que você mesmo fez o upload.` })
+        if (insChangingPublic) return;
+        const hasInsufficientCredits = functions.hasInsufficientCredits({ privilege:'coverGenerationForPrivateDocs' });
+        if (hasInsufficientCredits) return;
+
+
         setLoad(true);
         const path = `/api/readPdf/add-cover`;
         const post = new Post(path);

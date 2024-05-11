@@ -45,7 +45,7 @@ export default function QuestionSection({ questionHooks, functions  }:QuestionSe
         setAskQuestion(false);
     }
 
-    const { choosePdf, goToQuestions } = functions ?? {};
+    const { choosePdf, goToQuestions, isLogged } = functions ?? {};
 
     const questionListMemo = useMemo(() => {
         // const replace = search.replaceAll(/[^a-zA-Z\s.,!?áàâãéèêíìîóòôõúùûçÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ]/ig, '')

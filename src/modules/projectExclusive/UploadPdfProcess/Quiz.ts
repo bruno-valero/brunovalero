@@ -264,9 +264,9 @@ export default class Quiz {
         await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).collection('quiz').doc(quiz.id).set(quiz);
 
         const price = quiz.price;
-
+        const defaultPrice = 2;
         if (!isFree) {
-            await this.financialData.spendCredits({ uid:userId, amount:price, autoBuy, minCredits });
+            await this.financialData.spendCredits({ uid:userId, amount:defaultPrice, autoBuy, minCredits });
         }
         return quiz;
     };
