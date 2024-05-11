@@ -30,10 +30,10 @@ export default function Pricing({ questionHooks, plan, moPrice, functions }:{ qu
     const planWidth = !width ? 0 : width > 500 ? width / 3.8 : width * 0.8;
 
     async function getPlan() {
-        setLoadPlanSwitch(true)
         const log = functions.isLogged();
         if (!log || !globalUser.data) return;
-
+        
+        setLoadPlanSwitch(true)
         if (plan === 'enterprise') {
             const social = new Social({});
             social.whatsapp({ 
@@ -48,6 +48,9 @@ export default function Pricing({ questionHooks, plan, moPrice, functions }:{ qu
             setLoadPlanSwitch(false);
             return;
         };
+
+        const hasPaymentMethods = functions.hasPaymentMethods();
+        if (!hasPaymentMethods) return true;
 
         const post = new Post(`/api/readPdf/switch-plan`);
 

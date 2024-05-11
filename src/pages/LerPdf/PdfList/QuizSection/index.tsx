@@ -176,7 +176,7 @@ export default function QuizSection({ functions, questionHooks }:{ functions:Pdf
                                 <Separator className="my-2" color={colors.valero()} />
                                 <div className="flex flex-col gap-2" >
                                     {tries[item.id]?.map((t, i) => (
-                                        <button onClick={() => openUrl(`${window.location.href}/quiz/${item.docId}-${item.id}/${t.id}`)} className="p-2 rounded shadow w-full" >
+                                        <button onClick={() => openUrl(`${window.location.href.split('?')[0]}/quiz/${item.docId}-${item.id}/${t.id}`)} className="p-2 rounded shadow w-full" >
                                             Tentativa {i + 1} - acertos: {t.score * 100}%
                                         </button>
                                     ))}

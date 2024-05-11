@@ -9,6 +9,8 @@ import UserManagement from "..";
 import Payment from "../../UploadPdfProcess/Payment";
 import UserPrivileges from "../UserPrivileges";
 
+import crypto from 'crypto';
+
 export default class UserFinancialData {
 
     payment:Payment;
@@ -529,6 +531,10 @@ export default class UserFinancialData {
         }
         return true;
     }
+
+    sha256(input:string) {
+        return crypto.createHash('sha256').update(input).digest('hex');
+    };
 
     async scheduleUpdateUserPlan({ user }:{ user:Omit<UsersUser, 'control'> }) {
         const customer = await this.userManagement.getStripeId({ uid:user.uid, userData:user });

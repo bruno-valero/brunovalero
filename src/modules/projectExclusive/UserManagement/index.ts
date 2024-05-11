@@ -1,8 +1,22 @@
 import { isProduction } from "@/envs";
 import { UsersUser, userSchema } from "@/src/config/firebase-admin/collectionTypes/users";
 import { admin_auth, admin_firestore } from "@/src/config/firebase-admin/config";
+import Stripe from "stripe";
 import z from "zod";
 import StripeBackend from "../../stripe/backend/StripeBackend";
+import UserFinancialData from "./UserFinancialData";
+
+
+export type PaymentMethodsResponse = {
+    id:string,
+    card:{
+        brand:string | null,
+        country:string | null,
+        exp_month:number | null,
+        exp_year:number | null,
+        last4:string | null,
+    }
+}
 
 export default class UserManagement {
 
@@ -79,5 +93,47 @@ export default class UserManagement {
         }
         return user[idType];
     };
+
+    async getPaymentMethods({ uid, userData }:{ uid: string; userData?: Omit<UsersUser, "control"> | undefined; }) {
+        const stripeId = await this.getStripeId({ uid, userData });
+        const stripeBackend = new StripeBackend(isProduction ? 'production' : 'test')
+        const pms = await stripeBackend.stripe.customers.listPaymentMethods(stripeId);
+        return { pms, stripeId }
+    }
+
+    async getPaymentMethodsToFrontEnd({ uid, userData }:{ uid: string; userData?: Omit<UsersUser, "control"> | undefined; }) {
+
+        const { pms, stripeId } = await this.getPaymentMethods({ uid, userData });
+
+        const fd = new UserFinancialData();
+        const pmsResponse = pms.data.map((item) => {
+            const data:PaymentMethodsResponse = {
+                id:fd.sha256(item.id),
+                card:{
+                    brand:item.card?.brand ?? null,
+                    country:item.card?.country ?? null,
+                    exp_month:item.card?.exp_month ?? null,
+                    exp_year:item.card?.exp_year ?? null,
+                    last4:item.card?.last4 ?? null,
+                }
+            };
+            
+            return data;
+        });
+
+        console.log(JSON.stringify(pmsResponse, null, 2))
+
+        return { frontEnd:pmsResponse, original:pms, stripeId };
+    };
+
+    filterPaymentMethodByHashedId(idHashed:string, originalPms:Stripe.Response<Stripe.ApiList<Stripe.PaymentMethod>>) {
+        
+        const fd = new UserFinancialData();
+        const pmFiltered = originalPms.data.filter(item => fd.sha256(item.id) === idHashed);
+        
+        const pm = (pmFiltered[0] ?? null) as Stripe.PaymentMethod | null;
+
+        return pm;
+    }
 
 };

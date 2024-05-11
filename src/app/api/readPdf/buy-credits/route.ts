@@ -19,9 +19,9 @@ export async function POST(req:Request) {
         const userSnap = await admin_firestore.collection('users').doc(uid).get();
         const user = (userSnap.exists ? userSnap.data() : null) as Omit<UsersUser, "control">;
         if (!user) throw new Error("Usuário não encontrado");   
-        console.log('iniciando subscrição...');
-        const uf = new UserFinancialData();
-        
+
+        console.log('Comprando créditos...');
+        const uf = new UserFinancialData();        
         await uf.buyCredits({ uid, amount });
 
         return NextResponse.json({data:true});
