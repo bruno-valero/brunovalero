@@ -36,6 +36,13 @@ export type UsersFinancialData = {
     activePlan:{
         /** Indica qual plano de assinatura o usuário assinou para o serviço de "Leitura de PDFs" */
         readPdf:'free' | 'standard' | 'enterprise',
+    },
+    upcomingPlans?:{
+        readPdf:{
+            plan:'free' | 'standard' | 'enterprise',
+            requestDate:string,
+            takeEffectDate:string,
+        }
     }
 }
 
@@ -46,6 +53,8 @@ export type UsersControlPrivileges = {
     id:string,
     /** Título do privilégio */
     privilegeTitle:string,
+    /** Nível do privilégio (deve ser numérico), quanto maior for o nível, indica superioridade de atributos */
+    level:number,
     /** Descrição do privilégio */
     privilegeDescription:string,
     /** timestamp da última atualização deste privilégio */

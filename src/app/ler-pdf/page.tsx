@@ -72,9 +72,7 @@ export default async function LerPdfComponent() {
     const uf = new UserFinancialData();
     const plans = new PlansRestrictions();
     // await plans.createreadPdfFreePlan()
-    console.log('iniciando subscrição...');
-    await uf.subscribeToStandardPlan('W4cd8j5ZsUUI4akQ77csf0GORIv1');
-    console.log('subscrição iniciada!');
+    // console.log('iniciando subscrição...');
 
     return (
         <div id="Formularios" className="w-full max-h-screen flex flex-col items-start justify-start overflow-x-hidden overflow-y-auto">      

@@ -68,6 +68,35 @@ export const invoiceHandler = async(event: Stripe.Event) => {
     // Handle invoice.sent event
   } else if (event.type === 'invoice.upcoming') {
     const invoice = event.data.object;
+
+    if (invoice.subscription) {
+      let sub:Stripe.Subscription;
+      const s = invoice.subscription;
+      if (typeof s !== 'string' && !!s) {
+        sub = s;
+      } else if (typeof s === 'string') {
+        sub = await stripe.subscriptions.retrieve(s);
+      } else {
+        return true;
+      };
+
+      const uid = sub.metadata.uid;
+      const switchToFreeSubscription = sub.metadata.switchToFreeSubscription;
+      const switchToStandardSubscription = sub.metadata.switchToStandardSubscription;
+      const switchToEnterpriseSubscription = sub.metadata.switchToEnterpriseSubscription;
+      if (!!switchToFreeSubscription) {
+        await userFinancials.subscribeToFreePlan(uid);
+        await userFinancials.updateUpcomingPlan({ uid, upcomingPlanData:null });
+      } else if (!!switchToStandardSubscription) {
+        await userFinancials.subscribeToStandardPlan(uid);
+        await userFinancials.updateUpcomingPlan({ uid, upcomingPlanData:null });
+      } else if (!!switchToEnterpriseSubscription) {
+        await userFinancials.subscribeToEnterprisePlan(uid);
+        await userFinancials.updateUpcomingPlan({ uid, upcomingPlanData:null });
+      }
+      
+    } 
+
     // Handle invoice.upcoming event
   } else if (event.type === 'invoice.updated') {
     const invoice = event.data.object;

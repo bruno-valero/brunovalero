@@ -36,6 +36,13 @@ export type UsersFinancialData = {
     activePlan:{
         /** Indica qual plano de assinatura o usuário assinou para o serviço de "Leitura de PDFs" */
         readPdf:'free' | 'standard' | 'enterprise',
+    },
+    upcomingPlans?:{
+        readPdf:{
+            plan:'free' | 'standard' | 'enterprise',
+            requestDate:string,
+            takeEffectDate:string,
+        }
     }
 }
 

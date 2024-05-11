@@ -2,7 +2,7 @@ import colors from "@/src/constants/colors";
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import { FaThList } from "react-icons/fa";
 import { FaClipboardQuestion } from "react-icons/fa6";
-import { MdQuiz } from "react-icons/md";
+import { RiQuestionnaireFill } from "react-icons/ri";
 import { twMerge } from "tailwind-merge";
 import { PdfFunctions, PdfHooks } from "../index";
 
@@ -19,17 +19,18 @@ export default function QuizMenu({questionHooks, functions}:{questionHooks: PdfH
     return (
         width &&
         <>
-            <button onClick={() => functions.gotToQuiz()} className={twMerge("bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center gap-2", width < 500 && 'p-2 text-sm')}  >                            
-                <MdQuiz color={colors.valero(.8)} size={22} />
-                <span  className='' style={{color:colors.valero(.8)}} >Quiz</span>
+            <button onClick={() => functions.goToAskQuestion(questionHooks.details[0])} className={twMerge("bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center gap-2", width < 500 && 'p-2 text-sm')} >
+                {/* <FaThList style={{color:colors.valero(.8)}} size={22} /> */}
+                <RiQuestionnaireFill style={{color:colors.valero(.8)}} size={width < 500 ? 18 : 25} />
+                <span  className='' style={{color:colors.valero(.8)}} >Perguntar</span>                                     
             </button>
 
-            <button onClick={() => functions.goToQuestions(true)} className={twMerge("bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center gap-2", width < 500 && 'p-2 text-sm')}  >                                                        
+            <button onClick={() => functions.goToQuestions(true, questionHooks.details[0])} className={twMerge("bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center gap-2", width < 500 && 'p-2 text-sm')}  >                                                        
                 <FaClipboardQuestion color={colors.valero(.8)} size={22} />
                 <span  className='' style={{color:colors.valero(.8)}} >Perguntas</span>
             </button> 
 
-            <button onClick={() => functions.goToPdfList()} className={twMerge("bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center gap-2", width < 500 && 'p-2 text-sm')}  >                                                                                                                
+            <button onClick={() => functions.goToPdfList(questionHooks.details[0])} className={twMerge("bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center gap-2", width < 500 && 'p-2 text-sm')}  >                                                                                                                
                 <FaThList style={{color:colors.valero(.8)}} size={22} />
                 <span  className='' style={{color:colors.valero(.8)}} >PDFs</span>
             </button>                         

@@ -95,13 +95,13 @@ export default function DetailsSection({ questionHooks, functions }:DetailsSecti
                         text='Obtenha respostas precisas para suas dúvidas, independentemente do conteúdo.'
                         image={questions.src}
                         buttonText="Perguntar"
-                        buttonAction={() => functions.goToAskQuestion()}
+                        buttonAction={() => functions.goToAskQuestion(details)}
                         /> 
                         <DetailsCard
                         text='Enriqueça sua experiência de aprendizado com a geração de um quiz personalizado sobre o conteúdo do seu documento.'
                         image={quiz.src}
                         buttonText="Iniciar"
-                        buttonAction={() => functions.gotToQuiz()}
+                        buttonAction={() => functions.gotToQuiz(details)}
                         /> 
                     </div>
                 </div>

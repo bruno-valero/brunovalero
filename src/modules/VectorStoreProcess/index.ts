@@ -89,9 +89,9 @@ export default class VectorStoreProcess {
                 source:item.metadata?.source,
                 type:'pdf',
                 genres:genres ?? [],
-                title:item.metadata?.pdf?.info?.Title ?? 'desconhecido',
-                author:item.metadata?.pdf?.info?.Author ?? 'desconhecido',
-                page:`${item.metadata?.loc?.pageNumber}` ?? 'desconhecido',                
+                title:(item.metadata?.pdf?.info?.Title ?? '').trim() || 'desconhecido',
+                author:(item.metadata?.pdf?.info?.Author ?? '').trim() || 'desconhecido',
+                page:`${(item.metadata?.loc?.pageNumber ?? '').trim()}` || 'desconhecido',                
                 docId,                
             };
             return {

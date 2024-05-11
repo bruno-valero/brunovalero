@@ -227,8 +227,8 @@ export default class UserPrivileges {
                     questions:200, // R$10,00
                     coverGenerationForPrivateDocs:10, // R$8,00
                     quizGeneration:{
-                        privateDocs:5, // R$10,00
-                        publicDocs:3, // R$6,00
+                        privateDocs:3, // R$6,00
+                        publicDocs:5, // R$10,00
                     },    
                     // total = 40
                     // planValue = 50

@@ -59,7 +59,7 @@ export default class Images {
     protected async uploadImageToStorage({ userId, fileName, imageURL, uploadContent }:{ userId:string, fileName:string, imageURL:string, uploadContent:'cover' }) {
         const { storage } = this.firebase;
 
-        const imageId = new Date().getTime()
+        const imageId = new Date().getTime();
         const pathTypes = {
             cover:`services/readPdf/covers/${userId}/${fileName}/${imageId}`,
             min:`services/readPdf/covers/${userId}/${fileName}/${imageId}-min`,
@@ -84,16 +84,16 @@ export default class Images {
         const width = 1024;
         const height = 1792;
         const md = {
-            width:Math.ceil(width * .5),
-            height:Math.ceil(height * .5),
+            width:Math.ceil(Number(width) * .5),
+            height:Math.ceil(Number(height) * .5),
         }
         const sm = {
-            width:Math.ceil(width * .3),
-            height:Math.ceil(height * .3),
+            width:Math.ceil(Number(width) * .3),
+            height:Math.ceil(Number(height) * .3),
         }
         const min = {
-            width:Math.ceil(width * .1),
-            height:Math.ceil(height * .1),
+            width:Math.ceil(Number(width) * .1),
+            height:Math.ceil(Number(height) * .1),
         }
 
         const buffer = Buffer.from(await blob.arrayBuffer());
@@ -173,10 +173,12 @@ export default class Images {
         const imageCover = [...covers, newImage];
         
 
-        const price = descriptionPrice + imagePrice
+        const price = descriptionPrice + imagePrice;
+        const defaultPrice = 0.8;
+
         if (!isFree) {
             console.log('cobrando pagamento...');
-            await this.financialData.spendCredits({ uid:userId, amount:price, autoBuy, minCredits });
+            await this.financialData.spendCredits({ uid:userId, amount:defaultPrice, autoBuy, minCredits });
             console.log('atualizando o banco de dados...')
             await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).update({ imageCover });
         } else {

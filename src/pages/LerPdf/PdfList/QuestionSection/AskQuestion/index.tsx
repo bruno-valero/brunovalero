@@ -47,6 +47,11 @@ export default function AskQuestion({ questionHooks, functions }:AskQuestionProp
     const { register, handleSubmit, formState:{ errors } } = useForm<Question>({ resolver:zodResolver(questionSchema) });   
 
     async function sendQuestion({ question }:Question) {
+        const log = functions.isLogged();
+        if (!log) return;
+        const hasInsufficientCredits = functions.hasInsufficientCredits({ privilege:'questions' });
+        if (hasInsufficientCredits) return;
+
         console.log(question)
         const apiPath = `/api/readPdf/send-question`;
         const post = new Post(apiPath);
@@ -59,7 +64,7 @@ export default function AskQuestion({ questionHooks, functions }:AskQuestionProp
         }
         console.log(`resposta: ${data}`);
         // setShowQuestion(data as QuestionPdf);
-        functions.gotToQuestion(data as QuestionPdf)
+        functions.gotToQuestion(data as QuestionPdf, details)
     }
 
     return (
