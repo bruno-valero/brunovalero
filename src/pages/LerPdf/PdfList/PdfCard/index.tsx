@@ -2,24 +2,19 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Separator } from "@/components/ui/separator";
 import { Pdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
 import colors from "@/src/constants/colors";
-import Post from "@/src/modules/Request/Post";
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import cutTextMask from "@/utils/functions/masks/cutTextMask";
 import { useRef } from "react";
 import { twMerge } from "tailwind-merge";
-import { PdfHooks } from "..";
+import { PdfFunctions, PdfHooks } from "..";
 import AddImageButton from "./AddImageButton";
 import ChangeImageButton from "./ChangeImageButton";
 import ChangeTitleButton from "./ChangeTitleButton";
 
 
-export default function PdfCard({ pdf, choosePdf, questionHooks }:{ pdf:Pdf, choosePdf:(pdf:Pdf | null) => void, questionHooks: PdfHooks }) {
+export default function PdfCard({ pdf, functions, questionHooks }:{ pdf:Pdf, functions: PdfFunctions, questionHooks: PdfHooks }) {
 
-    const inputNameRef = useRef<HTMLInputElement>(null);
-
-    const imageWidth = 180
-    const imageHeight = imageWidth*1.75
-    const imageCover = pdf?.imageCover?.filter(item => item.active)?.[0]?.sizes.sm.url as string | undefined;
+    const inputNameRef = useRef<HTMLInputElement>(null);    
 
     const globalState = useGlobalProvider();
     const [, setResetedState] = globalState.resetedState ?? [];
@@ -28,14 +23,9 @@ export default function PdfCard({ pdf, choosePdf, questionHooks }:{ pdf:Pdf, cho
     const [publicError, setPublicError] = globalState.publicError ?? [];
     const dimensions = globalState.dimensions;
 
-    async function addCover() {
-        const path = `/api/readPdf/add-cover`;
-        const post = new Post(path);
-        post.addData({ docId:pdf.id, uid:globalUser.data?.uid, autoBuy:false });
-        const resp = await post.send();
-        const data = await resp?.json();
-        console.log(data);
-    }
+    const imageWidth = dimensions.width > 500 ?  220 : 180
+    const imageHeight = imageWidth*1.75
+    const imageCover = pdf?.imageCover?.filter(item => item.active)?.[0]?.sizes.sm.url as string | undefined;
 
     const { privilegesData } = questionHooks ?? { genres:0, selectedGenres:[1,2] };
     // alert(JSON.stringify(privilegesData, null, 2))
@@ -61,9 +51,9 @@ export default function PdfCard({ pdf, choosePdf, questionHooks }:{ pdf:Pdf, cho
                                 {pdf.customTitle ?? pdf.metadata.title} pop
                             </div>
                             <div className="w-full flex gap-2 items-start justify-start overflow-x-auto" >
-                                    <AddImageButton {...{ pdf, imageWidth, imageHeight }} />
+                                    <AddImageButton {...{ pdf, imageWidth, imageHeight, functions }} />
                                 {pdf.imageCover.length >= 1 && pdf.imageCover.map((item, i) => (
-                                    <ChangeImageButton {...{ pdf, imageWidth, imageHeight, imageCovers:pdf.imageCover, item, i }} />
+                                    <ChangeImageButton {...{ pdf, imageWidth, imageHeight, imageCovers:pdf.imageCover, item, i, functions }} />
                                 ))}
                             </div>
                         </PopoverContent>
@@ -79,7 +69,7 @@ export default function PdfCard({ pdf, choosePdf, questionHooks }:{ pdf:Pdf, cho
                                 <span className="text-lg font-bold" style={{color:colors.valero()}} >Trocar Título</span>
                                 <Separator className="mb-2" />
                                 {/* <input ref={inputNameRef} type="text" defaultValue={pdf.customTitle ?? pdf.metadata.title ?? ''} className="outline-none p-2 border-none w-full rounded" style={{backgroundColor:colors.valero(.1)}} /> */}
-                                <ChangeTitleButton pdf={pdf} text={inputNameRef.current?.value} />
+                                <ChangeTitleButton pdf={pdf} text={inputNameRef.current?.value} functions={functions} />
                             </PopoverContent>
                         </Popover>
 
@@ -90,7 +80,7 @@ export default function PdfCard({ pdf, choosePdf, questionHooks }:{ pdf:Pdf, cho
                     </div>
                 </div>
                 <div className="group relative w-full flex flex-col gap-1 items-center justify-center" >               
-                    <button onClick={() => choosePdf(pdf)} className="text-white font-semibold text-sm bottom-2 rounded p-2 w-full mt-2" style={{backgroundColor:colors.pdf()}} >
+                    <button onClick={() => functions.choosePdf(pdf)} className="text-white font-semibold text-sm bottom-2 rounded p-2 w-full mt-2" style={{backgroundColor:colors.pdf()}} >
                         Abrir
                     </button>
                 </div>

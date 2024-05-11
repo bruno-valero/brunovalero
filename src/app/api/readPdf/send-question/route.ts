@@ -1,3 +1,4 @@
+import { Control } from "@/src/config/firebase-admin/collectionTypes/control";
 import { UsersUser } from "@/src/config/firebase-admin/collectionTypes/users";
 import { admin_firestore } from "@/src/config/firebase-admin/config";
 import VectorStoreProcess from "@/src/modules/VectorStoreProcess";
@@ -22,11 +23,13 @@ export async function POST(req:Request) {
         console.log('Iniciando a requisição para esponder a pergnta...');
 
         const resp = await admin_firestore.collection('control').doc('vectorStore').get();
-        const vectorStore = resp.exists ? resp.data() : null;
+        const vectorStore = (resp.exists ? resp.data() : null) as Control['vectorStore'] | null;
         if(!vectorStore) throw new Error("Vector Store não encontrada");
-        const items = Object.entries(vectorStore).filter(item => !!item[1]);
+        const items = Object.entries(vectorStore.indexes).filter(item => !!item[1]);
         const v = new VectorStoreProcess();
+        console.log(`items ${JSON.stringify(items, null, 2)}`)
         const vectorIndex = await v.checkNamespacesAmount(items[0][0]);
+        console.log(`A Quentão será buscada no index ${vectorIndex}`)
         const response = await readPdf.askQuestion({ question, docId, user, autoBuy, minCredits:5, vectorIndex });
 
         return NextResponse.json({data:response});

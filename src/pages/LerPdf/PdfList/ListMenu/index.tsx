@@ -1,18 +1,20 @@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
+import { ScrollComponent } from "@/src/components/structural/ScrollComponent";
 import colors from "@/src/constants/colors";
 import Post from "@/src/modules/Request/Post";
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
+import cutTextMask from "@/utils/functions/masks/cutTextMask";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { ChangeEvent, RefObject } from "react";
 import { FaFilter } from "react-icons/fa";
 import { MdPriceChange } from "react-icons/md";
 import { TiPlus } from "react-icons/ti";
 import { twMerge } from "tailwind-merge";
-import { PdfHooks } from "..";
+import { PdfFunctions, PdfHooks } from "..";
 
 
-export default function ListMenu({ getPdfRef, questionHooks }:{ getPdfRef:RefObject<HTMLInputElement>, questionHooks: PdfHooks }) {
+export default function ListMenu({ getPdfRef, questionHooks, functions }:{ getPdfRef:RefObject<HTMLInputElement>, questionHooks: PdfHooks, functions: PdfFunctions }) {
 
     const globalState = useGlobalProvider();
     const [, setResetedState] = globalState.resetedState ?? [1,2];
@@ -76,8 +78,16 @@ export default function ListMenu({ getPdfRef, questionHooks }:{ getPdfRef:RefObj
     function toggleGenres(item: string) {
         setSelectedGenres(prev => {
             return !prev.includes(item) ? [...prev, item] : prev.filter(data => data !== item)
-            })
+        })
 
+    };
+
+    function uploadPDF() {
+        const log = functions.isLogged();
+        if (!log) return;
+        const hasInsufficientCredits = functions.hasInsufficientCredits({ privilege:'pdfUpload' });
+        if (hasInsufficientCredits) return;
+        getPdfRef.current?.click();
     }
 
     
@@ -89,21 +99,23 @@ export default function ListMenu({ getPdfRef, questionHooks }:{ getPdfRef:RefObj
                         <FaFilter color={colors.valero(.8)} size={dimensions.width < 500 ? 15 : 25} />
                         <span  className='' style={{color:colors.valero(.8)}} >Filtro</span>
                     </PopoverTrigger>
-                    <PopoverContent>
-                        <ul className="p-2 flex flex-col gap-1" >
-                            <li className="w-full" >
-                                <button onClick={() => setSelectedGenres([])} className="rounded w-full shadow p-2" style={{backgroundColor:selectedGenres.length === 0 ? colors.valero() : 'white', color:selectedGenres.length === 0 ? 'white' : colors.valero()}} >
-                                    Selecionar Todos
-                                </button>
-                            </li>
-                            {genres.map(item => (
+                    <PopoverContent className="p-1" >
+                        <ScrollComponent className="h-[300px] p-2 flex flex-col" >
+                            <ul className="flex flex-col gap-2" >
                                 <li className="w-full" >
-                                    <button onClick={() => toggleGenres(item)} className="rounded w-full shadow p-2" style={{backgroundColor:selectedGenres.includes(item) ? colors.valero() : 'white', color:selectedGenres.includes(item) ? 'white' : colors.valero()}} >
-                                        {item}
+                                    <button onClick={() => setSelectedGenres([])} className="rounded w-full shadow p-2" style={{backgroundColor:selectedGenres.length === 0 ? colors.valero() : 'white', color:selectedGenres.length === 0 ? 'white' : colors.valero()}} >
+                                        Selecionar Todos
                                     </button>
                                 </li>
-                            ))}
-                        </ul>
+                                    {genres.map(item => (
+                                        <li className="w-full" >
+                                            <button onClick={() => toggleGenres(item)} className="rounded w-full shadow p-2" style={{backgroundColor:selectedGenres.includes(item) ? colors.valero() : 'white', color:selectedGenres.includes(item) ? 'white' : colors.valero()}} >
+                                                {item}
+                                            </button>
+                                        </li>
+                                    ))}
+                            </ul>
+                        </ScrollComponent>
                     </PopoverContent>
                 </Popover>
                 
@@ -120,12 +132,15 @@ export default function ListMenu({ getPdfRef, questionHooks }:{ getPdfRef:RefObj
                 <Popover>
                     <PopoverTrigger className={twMerge("bg-gray-100 shadow p-3 text-white font-bold rounded flex gap-2 items-center justify-center", dimensions.width < 500 && 'p-2')} >
                         <MdPriceChange color={colors.valero(.8)} size={dimensions.width < 500 ? 15 : 25} />
-                        <span className='' style={{color:colors.valero(.8)}} >Plano {financialData?.activePlan.readPdf === 'free' ? 'Básico' : (financialData?.activePlan.readPdf == 'standard' ? 'Empreendedor' : 'Prêmium')}</span>
+                        <span className='' style={{color:colors.valero(.8)}} > {dimensions.width > 500 && `Plano`} {financialData?.activePlan.readPdf === 'free' ? 'Básico' : (financialData?.activePlan.readPdf == 'standard' ? (dimensions.width < 500 ? cutTextMask('Empreendedor', 5) : `Empreendedor`) : (dimensions.width < 500 ? cutTextMask('Prêmium', 5) : `Prêmium`))}</span>
                     </PopoverTrigger>
                     <PopoverContent className="w-[400px]" >
-                        <div>
-                            <span className="text-base font-semibold" >
-                                Todos os Mêses há <span className="text-green-700" >Benefícios gratuitos.</span>
+                        <div className="flex flex-col gap-1" >
+                            <span className="font-bold" >
+                                {`Plano ${financialData?.activePlan.readPdf === 'free' ? 'Básico' : (financialData?.activePlan.readPdf == 'standard' ? `Empreendedor` : `Prêmium`)}`}
+                            </span>
+                            <span className="text-base font-normal" >
+                                Todos os Mêses há <span className="text-green-700 font-semibold" >Benefícios gratuitos.</span>
                             </span>
                         </div>
                         <Separator className="mb-4 mt-2 bg-gray-700" />
@@ -170,7 +185,7 @@ export default function ListMenu({ getPdfRef, questionHooks }:{ getPdfRef:RefObj
                                     <Separator className="my-2" />
                                 </>
                             )}
-                            <button className="bg-green-600 text-white font-semibold text-lg py-2 px-5 rounded shadow my-3" >
+                            <button onClick={() => functions.scrollToPlans()} className="bg-green-600 text-white font-semibold text-lg py-2 px-5 rounded shadow my-3" >
                                 Veja os Planos
                             </button>
                         </div>
@@ -180,7 +195,7 @@ export default function ListMenu({ getPdfRef, questionHooks }:{ getPdfRef:RefObj
                 <Popover>
                     <PopoverTrigger className={twMerge("p-3 text-white font-bold rounded shadow flex items-center justify-center gap-2", dimensions.width < 500 && 'p-2')} style={{backgroundColor:colors.valero()}} >
                         <TiPlus color="white" size={dimensions.width < 500 ? 15 : 25} />
-                        <span>Novo Documento</span>   
+                        <span>{dimensions.width < 500 ? cutTextMask(`Novo Documento`, 10) : `Novo Documento`}</span>   
                     </PopoverTrigger>
                     <PopoverContent className="flex flex-col" >   
                         <span className="mt-2 text-green-700 font-semibold" >
@@ -189,7 +204,7 @@ export default function ListMenu({ getPdfRef, questionHooks }:{ getPdfRef:RefObj
                         <span className="font-semibold mt-2 mb-3 text-gray-800 text-sm" >
                             Seu documento será armazenado de forma priada, <span className="font-black" >ningém terá acesso a ele.</span>
                         </span>                   
-                        <button onClick={() => getPdfRef.current?.click()} className="p-3 w-full text-white font-bold rounded shadow flex items-center justify-center gap-2" style={{backgroundColor:colors.valero()}} >                            
+                        <button onClick={() => uploadPDF()} className="p-3 w-full text-white font-bold rounded shadow flex items-center justify-center gap-2" style={{backgroundColor:colors.valero()}} >                            
                             <span>Enviar Documento</span>                                        
                         </button>
                     </PopoverContent>

@@ -2,10 +2,11 @@ import { Pdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
 import fromCollection from "@/src/config/firebase/firestore";
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import { useState } from "react";
+import { PdfFunctions } from "..";
 
 
 
-export default function ChangeImageButton({ pdf, imageWidth, imageHeight, imageCovers, item, i:index }:{ pdf: Pdf, imageWidth:number, imageHeight:number, imageCovers:Pdf['imageCover'], item:Pdf['imageCover'][0], i:number }) {
+export default function ChangeImageButton({ pdf, imageWidth, imageHeight, imageCovers, item, i:index, functions }:{ pdf: Pdf, imageWidth:number, imageHeight:number, imageCovers:Pdf['imageCover'], item:Pdf['imageCover'][0], i:number, functions: PdfFunctions }) {
 
     const globalState = useGlobalProvider();
     const [, setResetedState] = globalState.resetedState ?? [];
@@ -17,6 +18,13 @@ export default function ChangeImageButton({ pdf, imageWidth, imageHeight, imageC
     const [load, setLoad] = useState(false) ?? [];
 
     async function changeImage() {
+        const log = functions.isLogged();
+        if (!log) return;
+        
+        const insChangingPublic =  functions.insChangingPublic({ pdf, title:`Trocar Capas`, message:`Não é permitido trocar capas de documentos públicos.\n\nTroque as capas dos documentos que você mesmo fez o upload.` })
+        if (insChangingPublic) return;
+        
+        
         setLoad(true);
 
         const imageCover = imageCovers.map((item, i) => {

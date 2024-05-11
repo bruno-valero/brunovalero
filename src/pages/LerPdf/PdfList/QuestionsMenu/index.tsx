@@ -10,6 +10,7 @@ import { useRef } from "react";
 import { FiSearch } from "react-icons/fi";
 import { RiQuestionnaireFill } from "react-icons/ri";
 import { twMerge } from "tailwind-merge";
+import { PdfFunctions } from "..";
 
 interface QuestionsMenuProps {
     questionHooks:{
@@ -21,13 +22,7 @@ interface QuestionsMenuProps {
         showQuestionList:UseState<boolean>,
         search:UseState<string>,
     },
-    functions: {
-        goToQuestions: (show: boolean) => void;
-        goToPdfList: () => void;
-        goToQuestionList: () => void;
-        goToAskQuestion: () => void;
-        choosePdf: (pdf: Pdf | null) => void;
-    }
+    functions: PdfFunctions
     
 }
 
@@ -71,11 +66,11 @@ export default function QuestionsMenu({ questionHooks, functions }:QuestionsMenu
                             <span  className='' style={{color:colors.valero(.8)}} >Quiz</span>
                         </button>
                     </div> */}
-                    <button onClick={() => goToPdfList()} className={twMerge("bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center gap-2", width < 500 && 'p-2 text-sm')} >                
+                    <button onClick={() => goToPdfList(details)} className={twMerge("bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center gap-2", width < 500 && 'p-2 text-sm')} >                
                         <FaThList style={{color:colors.valero(.8)}} size={width < 500 ? 15 : 25} />
                         <span  className='' style={{color:colors.valero(.8)}} >PDFs</span>                                     
                     </button>
-                    <button onClick={() => goToAskQuestion()} className={twMerge("bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center gap-2", width < 500 && 'p-2 text-sm')} >
+                    <button onClick={() => goToAskQuestion(details)} className={twMerge("bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center gap-2", width < 500 && 'p-2 text-sm')} >
                         {/* <FaThList style={{color:colors.valero(.8)}} size={22} /> */}
                         <RiQuestionnaireFill style={{color:colors.valero(.8)}} size={width < 500 ? 18 : 25} />
                         <span  className='' style={{color:colors.valero(.8)}} >Perguntar</span>                                     
@@ -83,18 +78,18 @@ export default function QuestionsMenu({ questionHooks, functions }:QuestionsMenu
                 </>
             ) : (
                 <>
-                    <button onClick={() => goToQuestionList()} className={twMerge("bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center gap-2", width < 500 && 'p-2 text-sm')} >
+                    <button onClick={() => goToQuestionList(details)} className={twMerge("bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center gap-2", width < 500 && 'p-2 text-sm')} >
                         <FaCircleQuestion style={{color:colors.valero(.8)}} size={22} />
                         {/* <FaThList style={{color:colors.valero(.8)}} size={22} /> */}
                         <span  className='' style={{color:colors.valero(.8)}} >Perguntas</span>                                     
                     </button>
                     <div className={twMerge("bg-gray-100 rounded shadow gap-2 flex items-center justify-center", width < 500 && '')}  >                
-                        <button className={twMerge("p-3 pr-2 text-white font-bold rounded flex gap-2 items-center justify-center", width < 500 && 'p-2 text-sm')} >
+                        <button onClick={() => functions.gotToQuiz(details)} className={twMerge("p-3 pr-2 text-white font-bold rounded flex gap-2 items-center justify-center", width < 500 && 'p-2 text-sm')} >
                             <MdQuiz color={colors.valero(.8)} size={22} />
                             <span  className='' style={{color:colors.valero(.8)}} >Quiz</span>
                         </button>
                     </div>
-                    <button onClick={() => goToPdfList()} className={twMerge("bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center gap-2", width < 500 && 'p-2 text-sm')} >                
+                    <button onClick={() => goToPdfList(details)} className={twMerge("bg-gray-100 shadow p-3 text-white font-bold rounded flex items-center justify-center gap-2", width < 500 && 'p-2 text-sm')} >                
                         <FaThList style={{color:colors.valero(.8)}} size={22} />
                         <span  className='' style={{color:colors.valero(.8)}} >PDFs</span>                                     
                     </button>

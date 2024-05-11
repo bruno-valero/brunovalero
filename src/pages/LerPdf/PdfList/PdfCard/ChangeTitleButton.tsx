@@ -3,10 +3,11 @@ import fromCollection from "@/src/config/firebase/firestore";
 import colors from "@/src/constants/colors";
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import { useState } from "react";
+import { PdfFunctions } from "..";
 
 
 
-export default function ChangeTitleButton({ pdf, text }:{ pdf: Pdf, text?:string }) {
+export default function ChangeTitleButton({ pdf, text, functions }:{ pdf: Pdf, text?:string, functions: PdfFunctions }) {
 
     const globalState = useGlobalProvider();
     const [, setResetedState] = globalState.resetedState ?? [];
@@ -19,6 +20,9 @@ export default function ChangeTitleButton({ pdf, text }:{ pdf: Pdf, text?:string
     const [title, setTitle] = useState(pdf?.customTitle ?? pdf?.metadata?.title ?? '') ?? [];
 
     async function changeTitle(text?:string) {
+        const insChangingPublic = functions.insChangingPublic({ pdf, title:`Trocar Títulos`, message:`Não é permitido trocar os títulos de documentos públicos.\n\n` })
+        if (insChangingPublic) return;     
+
         setLoad(true);
         if (!text) return;
         await fromCollection('services', db!).getDocById('readPdf').getCollection('data').getDocById(pdf.id).update({ customTitle:text });

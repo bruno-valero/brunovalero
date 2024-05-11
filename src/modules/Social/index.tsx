@@ -27,7 +27,7 @@ export default class Social {
         if (!whastsapp && ! this._whastsapp) throw new Error("Email não informado.");
 
         const emailBody = encodeURIComponent((message ?? '').replace(/  /g, ''));
-        const url = `https://wa.me/55${whastsapp ?? this._whastsapp}?text=${emailBody}`;
+        const url = `https://wa.me/${!!(whastsapp ?? this._whastsapp) && `55${whastsapp ?? this._whastsapp}`}?text=${emailBody}`;
 
         const link = document.createElement('a');
         link.href = url;
