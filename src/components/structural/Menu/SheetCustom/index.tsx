@@ -57,7 +57,7 @@ export function SheetCustom({ children }:SheetCustomProps) {
     if (typeof financialData?.credits !== 'undefined') {
       const comp = [...components];
       comp.splice(1, 0, {
-        title: `Créditos: R$${financialData?.credits ?? 0},00`,
+        title: `Créditos: R$${(financialData?.credits ?? 0).toFixed(2)},00`,
         // href: "/carteirinha",
         description:"Utilize os Créditos para acessar recursos pagos.",
           action:async() => globalUser.data ? await globalUser.userAuth.logout() : await globalUser.createWithLogin(),
@@ -105,7 +105,7 @@ export function SheetCustom({ children }:SheetCustomProps) {
               <Button variant="ghost" className={twMerge('w-[100%] flex items-center justify-start text-xl', /^\/$/i.test(path ?? '') && 'bg-gray-400 text-white')} onClick={() => router.push('/')} >Home</Button>
             </div>
             <div className={twMerge("flex items-start justify-start")}>
-              <Button variant="ghost" className={twMerge('w-[100%] flex items-center justify-start text-xl', /formulario/i.test(path ?? '') && 'bg-gray-400 text-white')} onClick={() => router.push('/formulario')} >Formulario</Button>
+              <Button variant="ghost" className={twMerge('w-[100%] flex items-center justify-start text-xl', /ler-pdf/i.test(path ?? '') && 'bg-gray-400 text-white')} onClick={() => router.push('/ler-pdf')} >Ler PDFs</Button>
             </div>            
           </div>
         </SheetContent>

@@ -48,6 +48,7 @@ export const invoiceHandler = async(event: Stripe.Event) => {
 
       const plan = sub.metadata.plan as 'free' | 'standard' | 'enterprise';
       const uid = sub.metadata.uid;
+      await userFinancials.payment.createMoneyTransaction({ invoiceId:invoice.id, uid, type:"subscription" });
       await userFinancials.updateUserActivePdfPlanFirebase(uid, plan);
       
     } else if (invoice.payment_intent) {

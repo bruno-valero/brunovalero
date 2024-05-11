@@ -5,6 +5,8 @@ import colors from "@/src/constants/colors";
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import cutTextMask from "@/utils/functions/masks/cutTextMask";
 import { useRef } from "react";
+import { MdOutlinePublic } from "react-icons/md";
+import { SiPrivateinternetaccess } from "react-icons/si";
 import { twMerge } from "tailwind-merge";
 import { PdfFunctions, PdfHooks } from "..";
 import AddImageButton from "./AddImageButton";
@@ -77,10 +79,11 @@ export default function PdfCard({ pdf, functions, questionHooks }:{ pdf:Pdf, fun
                     <div className="w-full flex flex-col gap-1 items-start justify-center">
                         <span className="font-light text-sm" >{pdf.metadata.totalPages} páginas</span>
                         <span className="font-light text-sm" >{Number(pdf.metadata.totalWords).toLocaleString()} palavras</span>
+                        <span className="font-light text-sm flex gap-2 items-center justify-center"  > {pdf.userId !== globalUser.data?.uid ? <><MdOutlinePublic /> Público</> : <><SiPrivateinternetaccess /> privado</> }</span>
                     </div>
                 </div>
                 <div className="group relative w-full flex flex-col gap-1 items-center justify-center" >               
-                    <button onClick={() => functions.choosePdf(pdf)} className="text-white font-semibold text-sm bottom-2 rounded p-2 w-full mt-2" style={{backgroundColor:colors.pdf()}} >
+                    <button onClick={() => functions.choosePdf(pdf)} className="text-white font-semibold text-sm bottom-2 rounded p-2 w-full mt-1" style={{backgroundColor:colors.pdf()}} >
                         Abrir
                     </button>
                 </div>
