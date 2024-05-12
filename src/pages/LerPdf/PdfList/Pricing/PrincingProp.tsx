@@ -47,10 +47,10 @@ export default function PrincingProp({ bonus, paid, desc }:{ bonus:{ amount:numb
                             </span>
                         </span>
                         {paid.amount2 && paid.desc2 && (
-                            <span className="flex gap-2">
+                            <span className="">
                                 <span className="font-semibold" >
                                 {moneyMask(paid.amount2)}
-                                </span>
+                                </span>{` `}
                                 <span>
                                 {paid.desc2}
                                 </span>

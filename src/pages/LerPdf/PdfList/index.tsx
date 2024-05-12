@@ -11,7 +11,6 @@ import PdfCard from "./PdfCard";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollComponent } from "@/src/components/structural/ScrollComponent";
 import { UsersControlPrivileges, UsersFinancialData } from "@/src/config/firebase-admin/collectionTypes/users/control";
-import colors from "@/src/constants/colors";
 import useQuestionsList from "@/src/hooks/useQuestionsList";
 import useQuizList from "@/src/hooks/useQuizList";
 import useUserPrivileges, { PrivilegesData } from "@/src/hooks/useUserPrivileges";
@@ -19,13 +18,12 @@ import Post from "@/src/modules/Request/Post";
 import StripeFrontEnd from "@/src/modules/stripe/frontend/StripeFrontEnd";
 import CardSetup from "@/src/modules/stripe/frontend/StripeFrontEnd/tsx/CardSetup";
 import { UseState } from "@/utils/common.types";
-import tsToMask from "@/utils/functions/dateTime/tsToMask";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CiCreditCard1 } from "react-icons/ci";
 import DetailsSection from "./DetailsSection";
 import DetaisMenu from "./DetaisMenu";
 import ListMenu from "./ListMenu";
-import Pricing from "./Pricing";
+import PricingSection from "./Pricing/PricingSection";
 import QuestionSection from "./QuestionSection";
 import QuestionsMenu from "./QuestionsMenu";
 import QuizMenu from "./QuizMenu";
@@ -88,7 +86,7 @@ export default function PdfList() {
     const [publicError, setPublicError] = globalState.publicError ?? [];
     const dimensions = globalState.dimensions;
     const financialData = globalState.financialData;
-    const [alertBuyPoints, setAlertBuyPoints] = globalState.alertBuyPoints;
+    const [alertBuyPoints, setAlertBuyPoints] = globalState.alertBuyPoints ?? [];
 
     const {pdfList:[pdfList, ], genres, filteredList, selectedGenres:[selectedGenres, setSelectedGenres]} = usePdfList() ?? {};
     const [details, setDetails] = useState<Pdf | null>(null);
@@ -419,28 +417,9 @@ export default function PdfList() {
                 
             </div>
 
-            <div ref={pansRef} className={twMerge("flex gap-6 flex-col justify-start items-center p-8 w-full bg-white min-h-screen")} >
-                {questionHooks.financialData?.upcomingPlans?.readPdf.plan && (
-                    <div className={twMerge("w-[769px] rounded shadow p-5 flex flex-col gap-2", dimensions.width < 800 && 'w-[90%]')} style={{backgroundColor:colors.valero()}} >
-                        <span className="text-white text-base font-light" >
-                            Você solicitou a mundança de assinatura para o plano{` `} 
-                            <span className="font-bold" >
-                            {
-                                questionHooks.financialData?.upcomingPlans?.readPdf.plan  === 'free' ? 'Básico' :
-                                (questionHooks.financialData?.upcomingPlans?.readPdf.plan === 'standard' ? 'Empreendedor' : 'Prêmium')
-                            }
-                            </span>. Ele entrá em vigor no final do período vigente do plano atual, na data {tsToMask({ts:Number(questionHooks.financialData?.upcomingPlans?.readPdf.takeEffectDate ?? 0), format:['day', 'month', 'year'], seps:['/', '/']})}.
-                        </span>
-                        <span className="text-white text-lg font-semibold" >
-                            Faltam {Math.round((Number(questionHooks.financialData?.upcomingPlans?.readPdf.takeEffectDate ?? 0) - new Date().getTime()) / 1000 / 60 / 60 / 24)} dias para a mudança.
-                        </span>
-                    </div>
-                )}
-                <div className={twMerge("flex gap-6 justify-center items-start w-full bg-white min-h-screen", dimensions.width < 500 && 'flex-col px-0 justify-start items-center')} >
-                    <Pricing questionHooks={questionHooks} plan="free" moPrice={0} functions={functions} />
-                    <Pricing questionHooks={questionHooks} plan="standard" moPrice={20} functions={functions} />
-                    <Pricing questionHooks={questionHooks} plan="enterprise" moPrice={50} functions={functions} />
-                </div>
+            <div ref={pansRef} className="w-full p-8" >
+
+                <PricingSection functions={functions} />
 
             </div>
         </>
