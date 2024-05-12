@@ -142,6 +142,9 @@ export default function ListMenu({ getPdfRef, questionHooks, functions }:{ getPd
                             <span className="text-base font-normal" >
                                 Todos os Mêses há <span className="text-green-700 font-semibold" >Benefícios gratuitos.</span>
                             </span>
+                            <span className="text-base font-normal" >
+                                Veja os benefícios que você ainda não usou.
+                            </span>
                         </div>
                         <Separator className="mb-4 mt-2 bg-gray-700" />
                         <div className="flex flex-col" >

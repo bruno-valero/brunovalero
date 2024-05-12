@@ -6,14 +6,13 @@ import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import moneyMask from "@/utils/functions/masks/moneyMask";
 import { useState } from "react";
 import { twMerge } from "tailwind-merge";
-import { PdfFunctions, PdfHooks } from "..";
 import BasicPlanProps from "./pansProps/BasicPlanProps";
 import EnterprisePlanProps from "./pansProps/EnterprisePlanProps";
 import StandardPlanProps from "./pansProps/StandardPlanProps";
 
 
 
-export default function Pricing({ questionHooks, plan, moPrice, functions }:{ questionHooks:PdfHooks, plan:'free' | 'standard' | 'enterprise', moPrice:number, functions: PdfFunctions }) {
+export default function Pricing({ plan, moPrice, functions }:{ plan:'free' | 'standard' | 'enterprise', moPrice:number, functions:{isLogged: () => boolean, hasPaymentMethods: () => boolean} }) {
 
     const globalState = useGlobalProvider();
     const [, setResetedState] = globalState.resetedState ?? [];
@@ -22,10 +21,9 @@ export default function Pricing({ questionHooks, plan, moPrice, functions }:{ qu
     const { envs } = globalState.fromServer ?? {};
     const [publicError, setPublicError] = globalState.publicError ?? [];
     const { height, width } = globalState.dimensions ?? {};
+    const financialData = globalState.financialData;
 
     const [loadPlanSwitch, setLoadPlanSwitch] = useState(false);
-
-    const { financialData } = questionHooks ?? {};
 
     const planWidth = !width ? 0 : width > 500 ? width / 3.8 : width * 0.8;
 

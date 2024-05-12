@@ -27,7 +27,7 @@ export function SheetCustom({ children }:SheetCustomProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const globalState = useGlobalProvider();
-  const [, setResetedState] = globalState.resetedState;
+  const [, setResetedState] = globalState.resetedState ?? [];
   const globalUser = globalState.globalUser;
   const { width } = globalState.dimensions ?? {};
   const financialData = globalState.financialData;
@@ -57,10 +57,10 @@ export function SheetCustom({ children }:SheetCustomProps) {
     if (typeof financialData?.credits !== 'undefined') {
       const comp = [...components];
       comp.splice(1, 0, {
-        title: `Créditos: R$${(financialData?.credits ?? 0).toFixed(2)},00`,
+        title: `Créditos: R$${(financialData?.credits ?? 0)?.toFixed(2)},00`,
         // href: "/carteirinha",
         description:"Utilize os Créditos para acessar recursos pagos.",
-          action:async() => globalUser.data ? await globalUser.userAuth.logout() : await globalUser.createWithLogin(),
+          action:async() => router.push('/user/adm-data'),
       },)
       return comp;
     } else {
@@ -69,6 +69,7 @@ export function SheetCustom({ children }:SheetCustomProps) {
   }, [financialData, components])
 
   return (
+    width &&
     <div ref={wrapperRef} className="grid grid-cols-2 gap-2 h-[100vh] w-[100vw] relative overflow-hidden">
       <Sheet key={side} >
         <div className='absolute right-0 top-0 w-full flex justify-around items-center shadow-md h-[80px] px-2 z-50' >
