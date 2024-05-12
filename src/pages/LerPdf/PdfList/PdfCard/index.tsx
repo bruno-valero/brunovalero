@@ -25,7 +25,7 @@ export default function PdfCard({ pdf, functions, questionHooks }:{ pdf:Pdf, fun
     const [publicError, setPublicError] = globalState.publicError ?? [];
     const dimensions = globalState.dimensions;
 
-    const imageWidth = dimensions.width > 500 ?  220 : 180
+    const imageWidth = (dimensions?.width ?? 0) > 500 ?  220 : 180
     const imageHeight = imageWidth*1.75
     const imageCover = pdf?.imageCover?.filter(item => item.active)?.[0]?.sizes.sm.url as string | undefined;
 

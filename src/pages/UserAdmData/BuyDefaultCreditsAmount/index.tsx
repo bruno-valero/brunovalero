@@ -18,7 +18,7 @@ export default function BuyDefaultCreditsAmount({ amount }:{ amount:number }) {
     const [publicError, setPublicError] = globalState.publicError ?? [];
     const { width } = globalState.dimensions ?? {};
     const financialData = globalState.financialData;
-    const [alertBuyPoints, setAlertBuyPoints] = globalState.alertBuyPoints;
+    const [alertBuyPoints, setAlertBuyPoints] = globalState.alertBuyPoints ?? [];
 
     const [Loading, setLoading] = useState(false);
 
@@ -38,6 +38,7 @@ export default function BuyDefaultCreditsAmount({ amount }:{ amount:number }) {
     }
 
     return (
+        width &&
         <Popover>
             <PopoverTrigger className={twMerge("flex flex-col gap-2 items-center justify-center p-5 px-7 rounded shadow bg-green-800 text-white", width < 768 && "p-4 px-4")} >
                 <span className={twMerge("font-semibold text-sm text-nowrap", width < 768 && "text-wrap font-normal")} >Comprar créditos</span>

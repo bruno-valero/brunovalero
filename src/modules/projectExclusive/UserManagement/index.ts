@@ -9,6 +9,7 @@ import UserFinancialData from "./UserFinancialData";
 
 export type PaymentMethodsResponse = {
     id:string,
+    isDefaultPm:boolean,
     card:{
         brand:string | null,
         country:string | null,
@@ -104,11 +105,17 @@ export default class UserManagement {
     async getPaymentMethodsToFrontEnd({ uid, userData }:{ uid: string; userData?: Omit<UsersUser, "control"> | undefined; }) {
 
         const { pms, stripeId } = await this.getPaymentMethods({ uid, userData });
-
+        
         const fd = new UserFinancialData();
+        // defaultPm
+        const cus = await fd.stripe.stripe.customers.retrieve(stripeId);
+        if (cus.deleted) throw new Error("O usuário foi deletado.");
+        const defaultPm = cus.metadata.defaultPm
+
         const pmsResponse = pms.data.map((item) => {
             const data:PaymentMethodsResponse = {
                 id:fd.sha256(item.id),
+                isDefaultPm: defaultPm === item.id,
                 card:{
                     brand:item.card?.brand ?? null,
                     country:item.card?.country ?? null,

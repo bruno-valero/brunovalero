@@ -7,10 +7,13 @@
     "sourceMap": true,
     "strict": true,
     "target": "es2017",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "paths": {
+      "@/*": ["./*"]
+    }
   },
   "compileOnSave": true,
   "include": [
     "src"
-  ]
+  ],  
 }

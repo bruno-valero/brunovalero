@@ -11,7 +11,7 @@ export async function POST(req:Request) {
         if (!userData) throw new Error("usuário inválido");        
         const userMan = new UserManagement();
         
-       const { frontEnd } = await userMan.getPaymentMethodsToFrontEnd({ uid:userData.uid, userData })
+       const { frontEnd } = await userMan.getPaymentMethodsToFrontEnd({ uid:userData.uid, userData });
     //    alert(JSON.stringify(frontEnd, null, 2))
         return NextResponse.json({data:frontEnd});
     } catch (e:any) {
