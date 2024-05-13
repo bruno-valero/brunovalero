@@ -16,11 +16,11 @@ export default function ContactSectionWrapper({children}:WrapperProps) {
 
   return (
     dimensions && (
-      <div className="flex relative overflow-hidden items-start justify-center w-full max-sm:min-h-[150vh] min-h-[100vh]" style={{backgroundColor:'white', minHeight:dimensions.width > 1000 && (dimensions.width / dimensions.height) < 1.77 ? '180vh': '100vh'}} >
+      <div className="flex relative overflow-hidden items-start justify-center w-full max-sm:min-h-[150vh] min-h-[100vh]" style={{backgroundColor:'white', minHeight:dimensions.width > 1000 && (dimensions.width / dimensions.height) < 1.77 ? '180vh': '120vh'}} >
         <div className="absolute inset-x-0 top-[-90px] z-0">
             <WaveDivision color={colors.valero()} screenWidth={dimensions.width} />
         </div>
-        <div className='w-full h-full absolute' style={{backgroundColor:colors.valero(), top:300}} >
+        <div className='w-full min-h-[100vh] absolute' style={{backgroundColor:colors.valero(), top:300}} >
             {children}
         </div>
       </div>
