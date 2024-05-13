@@ -152,7 +152,7 @@ export default function QuizSection({ functions, questionHooks }:{ functions:Pdf
                             <textarea {...register('quizFocus')} placeholder="Digite o tema do novo Quiz..." className="w-full outline-none rounded p-3 text-lg focus:border-[2px]" style={{borderBottomWidth:2, borderColor:colors.valero(.7), color:colors.valero()}} />
                             {errors.quizFocus && <span className="text-sm text-wrap text-red-700 font-semibold mb-2" >{errors.quizFocus.message}</span>}
                             <button type="submit" disabled={loadQuizCreation} className="text-white text-base font-normal p-2 rounded w-full" style={{backgroundColor:colors.valero()}} >
-                                {loadQuizCreation ? `Aguarde...` :`Criar Quiz`}
+                                {loadQuizCreation ? `Aguarde de 1 a 2 minutos...` :`Criar Quiz`}
                             </button>
                         </form>                   
                     </PopoverContent>
