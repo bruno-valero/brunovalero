@@ -99,7 +99,8 @@ export default abstract class FirebaseAuthProtocol {
       this.user = user;
       return {user}
   
-    } catch (e:any) {    
+    } catch (e:any) {  
+      // @ts-ignore  
       const errorCode = e.code;
       const eMessage = e.message as string;
       // The email of the user's account used.

@@ -1,4 +1,5 @@
 import lerPDFs from '@/src/images/lerPDFs.png';
+import SetLoadingFalse from '../components/structural/SetLoadingFalse';
 import CardSectionCard from '../pages/Home/CardSection/Card';
 import CardSectionWrapper from '../pages/Home/CardSection/Wrapper';
 import ContactSectionForm from '../pages/Home/ContactSection/ContactForm';
@@ -9,6 +10,7 @@ export default function Home() {
 
   return (
     <div className="w-full max-h-screen flex flex-col items-start justify-start overflow-x-hidden overflow-y-auto">   
+      <SetLoadingFalse />
       <div className='w-full h-full flex flex-col items-start justify-start overflow-x-hidden overflow-y-auto' >
         <HomePageMainSection />
         {/* <div className='bg-black text-white min-h-screen' >

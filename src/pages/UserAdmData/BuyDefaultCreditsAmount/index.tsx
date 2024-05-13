@@ -26,7 +26,9 @@ export default function BuyDefaultCreditsAmount({ amount }:{ amount:number }) {
 
         setLoading(true);
 
-        const url = '/api/readPdf/buy-credits'
+        const cloudFunction = 'https://southamerica-east1-brunovalero-49561.cloudfunctions.net/readPdfBuyCredits';
+        const apiPath = '/api/readPdf/buy-credits';
+        const url = envs.useCloudFunctions ? cloudFunction : apiPath;
         const post = new Post(url);
         post.addData({ uid:globalUser.data!.uid, amount });
 

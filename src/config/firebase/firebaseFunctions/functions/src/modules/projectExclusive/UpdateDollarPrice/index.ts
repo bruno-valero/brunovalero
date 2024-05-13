@@ -1,7 +1,7 @@
-import { CollectionTypes } from "@/src/config/firebase-admin/collectionTypes/collectionTypes";
-import { admin_firestore } from "@/src/config/firebase-admin/config";
-import fromCollection from "@/src/config/firebase/firestore";
 import { Firestore } from "firebase/firestore";
+import { CollectionTypes } from "../../../../src/config/firebase-admin/collectionTypes/collectionTypes";
+import { admin_firestore } from "../../../../src/config/firebase-admin/config";
+import fromCollection from "../../../../src/config/firebase/firestore";
 
 
 export type Cotacao = {"code":"USD","codein":"BRL","name":string,"high":string,"low":string,"varBid":string,"pctChange":string,"bid":string,"ask":string,"timestamp":string,"create_date":string}[]

@@ -1,15 +1,15 @@
-import { isProduction } from "@/envs";
-import { UsersUser } from "@/src/config/firebase-admin/collectionTypes/users";
-import { UsersControl, UsersFinancialData } from "@/src/config/firebase-admin/collectionTypes/users/control";
-import { admin_firestore } from "@/src/config/firebase-admin/config";
-import { ControlPlanReadPdfPlans } from "@/src/config/firebase/firebaseFunctions/functions/src/config/firebase-admin/collectionTypes/control";
-import StripeBackend from "@/src/modules/stripe/backend/StripeBackend";
 import Stripe from "stripe";
 import UserManagement from "..";
+import { isProduction } from "../../../../../envs";
+import { UsersUser } from "../../../../../src/config/firebase-admin/collectionTypes/users";
+import { UsersControl, UsersFinancialData } from "../../../../../src/config/firebase-admin/collectionTypes/users/control";
+import { admin_firestore } from "../../../../../src/config/firebase-admin/config";
+import StripeBackend from "../../../../../src/modules/stripe/backend/StripeBackend";
 import Payment from "../../UploadPdfProcess/Payment";
 import UserPrivileges from "../UserPrivileges";
 
 import crypto from 'crypto';
+import { ControlPlanReadPdfPlans } from "../../../../../src/config/firebase-admin/collectionTypes/control";
 
 export default class UserFinancialData {
 

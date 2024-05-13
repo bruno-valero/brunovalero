@@ -1,6 +1,6 @@
-import { Pdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
-import { admin_firestore, admin_storage } from "@/src/config/firebase-admin/config";
 import { getDownloadURL } from "firebase-admin/storage";
+import { Pdf } from "../../../../src/config/firebase-admin/collectionTypes/pdfReader";
+import { admin_firestore, admin_storage } from "../../../../src/config/firebase-admin/config";
 
 
 export default class MigrateData {

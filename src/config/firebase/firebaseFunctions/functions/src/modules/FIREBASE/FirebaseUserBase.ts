@@ -1,4 +1,6 @@
+// @ts-ignore
 import { Auth, User } from 'firebase/auth';
+// @ts-ignore
 import { Firestore } from 'firebase/firestore';
 import { ZodType, ZodTypeDef } from 'zod';
 
@@ -179,6 +181,7 @@ export default class FirebaseUserBase<T> extends FirebaseDocumentProtocol<T> {
    * @param {Partial<T>} data - Dados a serem atualizados no banco de dados.
    * @returns {Promise<null | undefined>} retorna null ou undefined
    */
+  // @ts-ignore
   async update(data:Partial<T>) {
     if (!this.user) return null;
     try {
@@ -196,6 +199,7 @@ export default class FirebaseUserBase<T> extends FirebaseDocumentProtocol<T> {
    * @param {(arg?:any) => any} callback - Função callback executada toda vez que houverem mudanças neste usuário
    * @returns {null | undefined} - null | undefined
    */
+  // @ts-ignore
   onSnapshot(user:User | null, callback:(arg?:any) => any):null | undefined {
     if (!user) return null;
     this.user = user;

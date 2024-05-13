@@ -1,6 +1,6 @@
-import { ControlPlanReadPdfPlans } from "@/src/config/firebase-admin/collectionTypes/control";
-import { Pdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
-import { admin_firestore } from "@/src/config/firebase-admin/config";
+import { ControlPlanReadPdfPlans } from "../../../../src/config/firebase-admin/collectionTypes/control";
+import { Pdf } from "../../../../src/config/firebase-admin/collectionTypes/pdfReader";
+import { admin_firestore } from "../../../../src/config/firebase-admin/config";
 import UserActions from "../UserActions";
 import UserFinancialData from "../UserManagement/UserFinancialData";
 
@@ -233,7 +233,7 @@ export default class PlansRestrictions {
         const plan = (resp.exists ? resp.data() : null) as ControlPlanReadPdfPlans | null;
         return plan;
     }
-
+    // @ts-ignore
     async hasPermission({ uid, action, service, docId }:{ uid:string, action: "coverGeneration" | "pdfUploads" | "questions" | "quizGeneration", service: "readPdf", docId:string}) {
 
         const fiancialData = await this.userFinancialData.getFinancialData({ uid });

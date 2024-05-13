@@ -55,6 +55,7 @@ export default class FileForge {
     }
 
     async blobFromData(rawData?:string) {
+        // @ts-ignore
         const blob = await this.blob();
     }
 
@@ -114,6 +115,7 @@ export default class FileForge {
         });
     };
 
+    // @ts-ignore
     protected async filePathToBlob(filePath:string, type?:string) {
         if (typeof window === 'undefined') {
             const fs = await import("fs")

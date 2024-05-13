@@ -1,8 +1,8 @@
-import { isProduction } from "@/envs";
-import { UsersUser, userSchema } from "@/src/config/firebase-admin/collectionTypes/users";
-import { admin_auth, admin_firestore } from "@/src/config/firebase-admin/config";
 import Stripe from "stripe";
 import z from "zod";
+import { isProduction } from "../../../../envs";
+import { UsersUser, userSchema } from "../../../../src/config/firebase-admin/collectionTypes/users";
+import { admin_auth, admin_firestore } from "../../../../src/config/firebase-admin/config";
 import StripeBackend from "../../stripe/backend/StripeBackend";
 import UserFinancialData from "./UserFinancialData";
 
