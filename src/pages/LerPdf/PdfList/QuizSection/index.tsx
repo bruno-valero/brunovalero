@@ -34,6 +34,7 @@ export default function QuizSection({ functions, questionHooks }:{ functions:Pdf
     const { db, storage } = globalState.firebase ?? {};
     const [publicError, setPublicError] = globalState.publicError ?? [];
     const dimensions = globalState.dimensions;
+    const { envs } = globalState.fromServer ?? {};
 
     const [tries, setTries] = useState<Record<string, QuizPdfTry[]>>({});
     const [loadQuizCreation, setLoadQuizCreation] = useState(false);
@@ -74,7 +75,11 @@ export default function QuizSection({ functions, questionHooks }:{ functions:Pdf
 
         setLoadQuizCreation(true);
         console.log(data);
-        const path = `/api/readPdf/add-quiz`;
+
+        const cloudFunction = 'https://southamerica-east1-brunovalero-49561.cloudfunctions.net/readPdfAddQuiz';
+        const apiPath = `/api/readPdf/add-quiz`;
+        const url = envs.useCloudFunctions ? cloudFunction : apiPath;
+        const path = url;
         const post = new Post(path);
         post.addData({ docId:details?.id, uid:globalUser.data?.uid, autoBuy:false, quizFocus:data.quizFocus });
         const resp = await post.send();

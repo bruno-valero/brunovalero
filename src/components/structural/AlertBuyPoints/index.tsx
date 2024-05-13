@@ -34,6 +34,7 @@ export function AlertBuyPoints() {
   const globalState = useGlobalProvider();
   const globalUser = globalState.globalUser;
   const [alertBuyPoints, setAlertBuyPoints] = globalState.alertBuyPoints;
+  const { envs } = globalState.fromServer;
 
   const [loading, setLoading] = useState(false);
 
@@ -49,7 +50,9 @@ export function AlertBuyPoints() {
     if (!globalUser.data?.uid) return;
     setLoading(true);
 
-    const url = '/api/readPdf/buy-credits'
+    const cloudFunction = 'https://southamerica-east1-brunovalero-49561.cloudfunctions.net/readPdfBuyCredits';
+    const apiPath = '/api/readPdf/buy-credits';
+    const url = envs.useCloudFunctions ? cloudFunction : apiPath;
     const post = new Post(url);
     post.addData({ uid:globalUser.data.uid, amount:data.points });
 

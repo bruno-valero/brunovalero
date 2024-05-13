@@ -1,5 +1,5 @@
-import envs from "@/envs";
 import { ChatOpenAI, ChatOpenAICallOptions, DallEAPIWrapper } from "@langchain/openai";
+import envs from "../../../../envs";
 import UpdateDollarPrice from "../UpdateDollarPrice";
 
 import OpenAI from "openai";

@@ -1,9 +1,5 @@
-import envs from "@/envs";
 import Stripe from "stripe";
-import { customerHandler } from "./webhooksHandler/customerHandler";
-import { invoiceHandler } from "./webhooksHandler/invoiceHandler";
-import { paymentMethodHandler } from "./webhooksHandler/paymentMethodHandler";
-import { setupIntentHandler } from "./webhooksHandler/setupIntentHandler";
+import envs from "../../../../../envs";
 
 
 export default class StripeBackend {
@@ -40,19 +36,19 @@ export default class StripeBackend {
       
     };
 
-    async handleWebhooks(event: Stripe.Event) {
+    // async handleWebhooks(event: Stripe.Event) {
 
-        // const pi = await paymentIntentHandler(event);
-        const pm = await paymentMethodHandler(event);
-        const ivc = await invoiceHandler(event);
-        const si = await setupIntentHandler(event);
-        const cus = await customerHandler(event);
+    //     // const pi = await paymentIntentHandler(event);
+    //     const pm = await paymentMethodHandler(event);
+    //     const ivc = await invoiceHandler(event);
+    //     const si = await setupIntentHandler(event);
+    //     const cus = await customerHandler(event);
         
-        if (pm || ivc || si || cus) {
-            // Evento não encontrado
-        }
+    //     if (pm || ivc || si || cus) {
+    //         // Evento não encontrado
+    //     }
 
-    }
+    // }
 
     async createSetupIntent({customer, metadata, moreParams}:{customer:string, metadata:Record<string, string>, moreParams?:Partial<Stripe.SetupIntentCreateParams>}) {
         if (!customer) throw new Error('Id do customer não enviado');

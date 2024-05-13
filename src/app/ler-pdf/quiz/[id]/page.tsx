@@ -1,3 +1,4 @@
+import SetLoadingFalse from "@/src/components/structural/SetLoadingFalse";
 import { QuizPdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
 import { admin_firestore } from "@/src/config/firebase-admin/config";
 import QuizComponent from "@/src/pages/QuizComponent";
@@ -51,6 +52,7 @@ export default async function Quiz({ params }:QuizProps) {
 
     return (
         <div className="w-screen h-screen overflow-hidden flex flex-col items-center justify-center relative" >
+            <SetLoadingFalse />
             <QuizComponent quiz={quiz} />
             <div className="min-h-20 h-20" ></div>
         </div>

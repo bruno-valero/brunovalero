@@ -22,6 +22,7 @@ export default function ListMenu({ getPdfRef, questionHooks, functions }:{ getPd
     const { db, storage } = globalState.firebase ?? {};
     const [publicError, setPublicError] = globalState.publicError ?? [1,2];
     const dimensions = globalState.dimensions;
+    const { envs } = globalState.fromServer ?? {};
 
     const { genres, selectedGenres:[selectedGenres, setSelectedGenres], privilegesData, financialData } = questionHooks ?? { genres:0, selectedGenres:[1,2] };
 
@@ -41,7 +42,11 @@ export default function ListMenu({ getPdfRef, questionHooks, functions }:{ getPd
         const file = ref(storage!, path);
         await uploadBytes(file, pdf);
         const url = await getDownloadURL(file);
-        const post = new Post('/api/readPdf/upload');
+
+        const cloudFunction = 'https://southamerica-east1-brunovalero-49561.cloudfunctions.net/readPdfUpload';
+        const apiPath = '/api/readPdf/upload';
+        const reqUrl = envs.useCloudFunctions ? cloudFunction : apiPath;
+        const post = new Post(reqUrl);
 
         const uid = globalUser.data.uid;
         const pdfUrl = url;

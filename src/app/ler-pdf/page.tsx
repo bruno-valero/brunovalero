@@ -1,4 +1,5 @@
 // import {  } from 'firebase-admin'
+import SetLoadingFalse from "@/src/components/structural/SetLoadingFalse";
 import PlansRestrictions from "@/src/modules/projectExclusive/PlansRestrictions";
 import MigrateData from "@/src/modules/projectExclusive/UploadPdfProcess/MigrateData";
 import UserFinancialData from "@/src/modules/projectExclusive/UserManagement/UserFinancialData";
@@ -80,6 +81,7 @@ export default async function LerPdfComponent() {
     return (
         <div id="Formularios" className="w-full max-h-screen flex flex-col items-start justify-start overflow-x-hidden overflow-y-auto">      
         
+        <SetLoadingFalse />
         <LerPdf />
 
         </div>

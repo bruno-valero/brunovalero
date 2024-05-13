@@ -1,19 +1,19 @@
-import envs, { isProduction } from "@/envs";
+import envs, { isProduction } from "../../../../envs";
 import VectorStoreProcess from "../../VectorStoreProcess";
 import PdfGenres from "../PdfGenres";
 
-import { CollectionTypes } from "@/src/config/firebase-admin/collectionTypes/collectionTypes";
-import { admin_firestore } from "@/src/config/firebase-admin/config";
+import { CollectionTypes } from "../../../../src/config/firebase-admin/collectionTypes/collectionTypes";
+import { admin_firestore } from "../../../../src/config/firebase-admin/config";
 
-import { Pdf, QuestionPdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
-import { UsersUser } from "@/src/config/firebase-admin/collectionTypes/users";
-import firebaseInit from "@/src/config/firebase/init";
 import { FirebaseApp, getApps, initializeApp } from "firebase/app";
 import { Auth, getAuth } from 'firebase/auth';
 import { Database, getDatabase } from 'firebase/database';
 import { Firestore, getFirestore } from 'firebase/firestore';
 import { FirebaseStorage, getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import sharp from 'sharp';
+import { Pdf, QuestionPdf } from "../../../../src/config/firebase-admin/collectionTypes/pdfReader";
+import { UsersUser } from "../../../../src/config/firebase-admin/collectionTypes/users";
+import firebaseInit from "../../../../src/config/firebase/init";
 import StripeBackend from "../../stripe/backend/StripeBackend";
 import PlansRestrictions from "../PlansRestrictions";
 import UserActions from "../UserActions";
@@ -77,8 +77,10 @@ export default class UploadPdfProcess {
     async completeUpload({ pdfUrl, docId, userId, vectorIndex }:{ pdfUrl:string, docId:string, userId?:string, vectorIndex:string }) {        
         userId = userId ?? 'public';
         const blob = await (await fetch(pdfUrl)).blob();
+        // @ts-ignore
         const { data, metadata, price:pricePdfLoader } = await this.uploadToVectorStore({ docId, blob });
         let realGenres:string[]
+        // @ts-ignore
         let realGenresPrice = 0;
         const { genres, price:genrePrice } = await this.generateGenres(docId, vectorIndex);
         realGenres = genres;
@@ -89,6 +91,7 @@ export default class UploadPdfProcess {
             realGenres = regenerated;
         }
         const { textResponse:description, price:descriptionPrice } = await this.description.generateDescription(docId, vectorIndex);
+        // @ts-ignore
         const { imageURL, inputContent, descriptionSummary, price:imagePrice } = await this.generateImageFromDescription(description, 'slim');
 
         
@@ -96,6 +99,7 @@ export default class UploadPdfProcess {
         const price = pricePdfLoader + genrePrice + descriptionPrice + imagePrice + quiz.price;
         
         const fileName = `${docId}`;
+        // @ts-ignore
         const { blob:imageBlob, path, url, sizes } = await this.uploadImageToStorage({ userId, fileName, imageURL, uploadContent:'cover', width:'1024', height:'1792' });
         
         metadata.genres = realGenres;
@@ -128,6 +132,7 @@ export default class UploadPdfProcess {
         }
         
         const blob = await (await fetch(pdfUrl)).blob();
+        // @ts-ignore
         const { data, metadata } = await this.uploadToVectorStore({ docId, blob });
         let realGenres:string[]
         let realGenresPrice = 0;
@@ -360,7 +365,7 @@ export default class UploadPdfProcess {
     protected async generateImageFromDescription(text:string, size:'slim' | 'wide') {
 
         const {content, summary} = await this.description.summaryDescription(text);
-
+        // @ts-ignore
         const { imageURL, inputContent, price } = await this.aiFeatures.generateImage(content.content, size);
         
         return {imageURL, inputContent:content, descriptionSummary:summary, price};

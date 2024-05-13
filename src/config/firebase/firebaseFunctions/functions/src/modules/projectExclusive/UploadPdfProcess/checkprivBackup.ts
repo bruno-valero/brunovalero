@@ -1,6 +1,6 @@
-import { QuizPdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
-import { UsersControl, UsersControlPrivileges } from "@/src/config/firebase-admin/collectionTypes/users/control";
-import { admin_firestore } from "@/src/config/firebase-admin/config";
+import { QuizPdf } from "../../../../src/config/firebase-admin/collectionTypes/pdfReader";
+import { UsersControl, UsersControlPrivileges } from "../../../../src/config/firebase-admin/collectionTypes/users/control";
+import { admin_firestore } from "../../../../src/config/firebase-admin/config";
 
 
 type Item = (typeof checkPrivileges.prototype.actionList)[0]

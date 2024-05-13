@@ -12,6 +12,7 @@ import colors from '@/src/constants/colors';
 import brand from '@/src/images/brand.png';
 import Social from '@/src/modules/Social';
 import { useGlobalProvider } from '@/src/providers/GlobalProvider';
+import { BarLoader } from 'react-spinners';
 import { Alert } from '../../Alert';
 import { AlertBuyPoints } from '../../AlertBuyPoints';
 
@@ -31,6 +32,7 @@ export function SheetCustom({ children }:SheetCustomProps) {
   const globalUser = globalState.globalUser;
   const { width } = globalState.dimensions ?? {};
   const financialData = globalState.financialData;
+  const { sameRoute, changeRoute } = globalState.changingRoute;
 
   
 
@@ -60,7 +62,7 @@ export function SheetCustom({ children }:SheetCustomProps) {
         title: `Créditos: R$${(financialData?.credits ?? 0)?.toFixed(2)},00`,
         // href: "/carteirinha",
         description:"Utilize os Créditos para acessar recursos pagos.",
-          action:async() => router.push('/user/adm-data'),
+          action:async() => changeRoute('/user/adm-data'),
       },)
       return comp;
     } else {
@@ -89,6 +91,11 @@ export function SheetCustom({ children }:SheetCustomProps) {
         </div>
 
         <div className='absolute z-0 top-[80px] w-[100vw] overflow-x-hidden overflow-y-auto flex min-h-screen' style={{height:((wrapperRef.current?.offsetHeight ?? 0) - 80)}} >
+        {!(sameRoute()) && (
+          <div className='absolute w-full z-20' style={{backgroundColor:colors.valero()}} >
+            <BarLoader color={'white'} height={5} width={'100%'} className='self-center inline-block' speedMultiplier={.5} />                
+          </div>
+        )}
           <Alert />
           <AlertBuyPoints />
           {children}
@@ -103,10 +110,10 @@ export function SheetCustom({ children }:SheetCustomProps) {
           </SheetHeader>
           <div className="flex flex-col gap-1 py-4 mt-5">
             <div className={twMerge("flex items-start justify-start")}>
-              <Button variant="ghost" className={twMerge('w-[100%] flex items-center justify-start text-xl', /^\/$/i.test(path ?? '') && 'bg-gray-400 text-white')} onClick={() => router.push('/')} >Home</Button>
+              <Button variant="ghost" className={twMerge('w-[100%] flex items-center justify-start text-xl', /^\/$/i.test(path ?? '') && 'bg-gray-400 text-white')} onClick={() => changeRoute('/')} >Home</Button>
             </div>
             <div className={twMerge("flex items-start justify-start")}>
-              <Button variant="ghost" className={twMerge('w-[100%] flex items-center justify-start text-xl', /ler-pdf/i.test(path ?? '') && 'bg-gray-400 text-white')} onClick={() => router.push('/ler-pdf')} >Ler PDFs</Button>
+              <Button variant="ghost" className={twMerge('w-[100%] flex items-center justify-start text-xl', /ler-pdf/i.test(path ?? '') && 'bg-gray-400 text-white')} onClick={() => changeRoute('/ler-pdf')} >Ler PDFs</Button>
             </div>            
           </div>
         </SheetContent>

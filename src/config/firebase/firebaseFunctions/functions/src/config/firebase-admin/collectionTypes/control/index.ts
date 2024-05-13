@@ -159,6 +159,7 @@ export type ControlPlanReadPdfPlans = {
 };
 
 type PlanValue = number | 'unlimited';
+// @ts-ignore
 type PlanAmountAndPrice ={
     amount:number | 'unlimited',
     price:number,

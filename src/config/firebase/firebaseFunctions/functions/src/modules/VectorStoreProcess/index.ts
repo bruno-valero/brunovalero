@@ -1,16 +1,16 @@
-import envs from "@/envs";
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
 import { TokenTextSplitter, TokenTextSplitterParams } from 'langchain/text_splitter';
+import envs from "../../../envs";
 
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { PineconeStore } from "@langchain/pinecone";
 import { Pinecone } from "@pinecone-database/pinecone";
 
-import { Control } from "@/src/config/firebase-admin/collectionTypes/control";
-import { admin_firestore } from "@/src/config/firebase-admin/config";
 import { PromptTemplate } from '@langchain/core/prompts';
 import { ChatOpenAI } from "@langchain/openai";
 import { RetrievalQAChain } from 'langchain/chains';
+import { Control } from "../../../src/config/firebase-admin/collectionTypes/control";
+import { admin_firestore } from "../../../src/config/firebase-admin/config";
 import FileForge from "../FileForge";
 import { PdfGenresOptions } from "../projectExclusive/PdfGenres";
 import UpdateDollarPrice from "../projectExclusive/UpdateDollarPrice";
@@ -237,6 +237,7 @@ export default class VectorStoreProcess {
     }
 
     async checkNamespacesAmount(index:string) {
+        // @ts-ignore
         const { amount, ids } = await this.getNamespacesAmount(index);      
         if (amount > 9990)   {
             const resp = await admin_firestore.collection('control').doc('vectorStore').get();

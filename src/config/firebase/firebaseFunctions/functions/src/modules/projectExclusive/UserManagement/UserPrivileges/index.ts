@@ -1,7 +1,7 @@
-import { UsersUser } from "@/src/config/firebase-admin/collectionTypes/users";
-import { UsersControlPrivileges } from "@/src/config/firebase-admin/collectionTypes/users/control";
-import { admin_firestore } from "@/src/config/firebase-admin/config";
-import tsToMask from "@/utils/functions/dateTime/tsToMask";
+import { UsersUser } from "../../../../../src/config/firebase-admin/collectionTypes/users";
+import { UsersControlPrivileges } from "../../../../../src/config/firebase-admin/collectionTypes/users/control";
+import { admin_firestore } from "../../../../../src/config/firebase-admin/config";
+import tsToMask from "../../../../../utils/functions/dateTime/tsToMask";
 
 export default class UserPrivileges {
 

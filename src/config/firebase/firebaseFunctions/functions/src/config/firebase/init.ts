@@ -37,6 +37,7 @@ export default function firebaseInit({ envs, initializeApp, getAuth, getDatabase
   };
 
   // console.log('firebaseConfig: ', firebaseConfig)
+  // @ts-ignore
   const apps = getApps();
   const app = initializeApp(firebaseConfig); 
   const auth = getAuth(app);

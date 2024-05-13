@@ -1,14 +1,17 @@
+export const isProduction = false;
+
 const envs:Envs = { 
+  isProduction,
   // ------------------------------------------------------------------------------ 
   // FIREBASE 
-  FIREBASE_API_KEY: process.env.FIREBASE_API_KEY, 
-  FIREBASE_AUTH_DOMAIN: process.env.FIREBASE_AUTH_DOMAIN, 
-  FIREBASE_DATABASE_URL: process.env.FIREBASE_DATABASE_URL, 
-  FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID, 
-  FIREBASE_STORAGE_BUCKET: process.env.FIREBASE_STORAGE_BUCKET, 
-  FIREBASE_MESSAGING_SENDER_ID: process.env.FIREBASE_MESSAGING_SENDER_ID, 
-  FIREBASE_APP_ID: process.env.FIREBASE_APP_ID, 
-  FIREBASE_MEASUREMENT_ID: process.env.FIREBASE_MEASUREMENT_ID, 
+  FIREBASE_API_KEY: process.env.ENV_FIREBASE_API_KEY, 
+  FIREBASE_AUTH_DOMAIN: process.env.ENV_FIREBASE_AUTH_DOMAIN, 
+  FIREBASE_DATABASE_URL: process.env.ENV_FIREBASE_DATABASE_URL, 
+  FIREBASE_PROJECT_ID: process.env.ENV_FIREBASE_PROJECT_ID, 
+  FIREBASE_STORAGE_BUCKET: process.env.ENV_FIREBASE_STORAGE_BUCKET, 
+  FIREBASE_MESSAGING_SENDER_ID: process.env.ENV_FIREBASE_MESSAGING_SENDER_ID, 
+  FIREBASE_APP_ID: process.env.ENV_FIREBASE_APP_ID, 
+  FIREBASE_MEASUREMENT_ID: process.env.ENV_FIREBASE_MEASUREMENT_ID, 
   // ------------------------------------------------------------------------------
   // SUPRABASE
   SUPRABASE_PASSWORD:process.env.SUPRABASE_PASSWORD,
@@ -30,12 +33,16 @@ const envs:Envs = {
   // PRODUCTION 
   STRIPE_PRODUCTION_PUBLIC_KEY: process.env.STRIPE_PRODUCTION_PUBLIC_KEY, 
   STRIPE_PRODUCTION_SECRET_KEY: process.env.STRIPE_PRODUCTION_SECRET_KEY, 
+  // ----------- 
+  // WEBHOOKS 
+  WEBHOOK_KEY:process.env.STRIPE_WEBHOOK_KEY,
 }; 
  
-export const isProduction = false;
+
 export default envs; 
  
 export type Envs = { 
+  isProduction:boolean,
   // ------------------------------------------------------------------------------ 
   // FIREBASE 
   FIREBASE_API_KEY: string | undefined, 
@@ -67,4 +74,7 @@ export type Envs = {
   // PRODUCTION 
   STRIPE_PRODUCTION_PUBLIC_KEY: string | undefined, 
   STRIPE_PRODUCTION_SECRET_KEY: string | undefined, 
+  // ----------- 
+  // WEBHOOKS 
+  WEBHOOK_KEY:string | undefined,
 }; 

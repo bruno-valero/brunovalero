@@ -12,7 +12,8 @@ import { UseState } from '@/utils/common.types';
 import { Envs } from '@/envs';
 import { Firestore } from 'firebase/firestore';
 import { FirebaseStorage } from 'firebase/storage';
-import { createContext, useContext, useState } from 'react';
+import { usePathname, useRouter } from "next/navigation";
+import { createContext, useCallback, useContext, useState } from 'react';
 import z from "zod";
 import { userSchema } from "../config/firebase-admin/collectionTypes/users";
 import { UsersFinancialData } from "../config/firebase-admin/collectionTypes/users/control";
@@ -26,7 +27,12 @@ export type GlobalProviderType = {
   login: { 
     user:UseState<User | null>, 
     credential:UseState<OAuthCredential | null>, 
-  } 
+  } ,
+  changingRoute: {
+    changeRoute: (route: string) => void;
+    setCurrRoute: () => void;
+    sameRoute: () => boolean;
+  },
   publicError:UseState<PublicError>, 
   alertBuyPoints:UseState<AlertBuyPoints>, 
   financialData: UsersFinancialData | null,
@@ -58,11 +64,15 @@ export type PublicError = { title:string, message:string };
 export type AlertBuyPoints = { title?:string, message?:string, alert:boolean };
 
 export default function GlobalContextProvider({ children, fromServer }:GlobalContextProviderProps) { 
+  const router = useRouter();
+  const pathname = usePathname()
 
   const [user, setUser] = useState<GlobalProviderType['login']['user'][0]>(null); 
   const [credential, setCredential] = useState<GlobalProviderType['login']['credential'][0]>(null); 
   const [publicError, setPublicError] = useState<PublicError>({ title:'', message:'' }); 
   const [alertBuyPoints, setAlertBuyPoints] = useState<AlertBuyPoints>({ alert:false }); 
+
+  const [changingRoute, setChangingRoute] = useState('/'); 
 
   const { app, auth, database, db, storage } =  firebaseInit({ envs:fromServer.envs, initializeApp, getAuth, getDatabase, getFirestore, getStorage, getApps });
   const { dimensions } = useResize();
@@ -71,11 +81,28 @@ export default function GlobalContextProvider({ children, fromServer }:GlobalCon
   // Dados financeiros do usuário
   const { financialData:[ financialData ] } = useUserFinancialData({ globalUser:globalUser.current, db:db! }) ?? {};
 
+  const changeRoute = useCallback((route:string) => {
+    setChangingRoute(route);
+
+    setTimeout(() => {      
+      router.push(route);
+    }, 100);
+  }, [setChangingRoute, router]);
+
+  const setCurrRoute = useCallback(() => {
+    setChangingRoute(pathname ?? 'null');
+  }, [setChangingRoute, pathname]);
+
+  const sameRoute = useCallback(() => {
+    return pathname === changingRoute;
+  }, [pathname, changingRoute]);
+
   const context:GlobalProviderType = {
     login:{
       user:[user, setUser], 
       credential:[credential, setCredential], 
     }, 
+    changingRoute: {changeRoute, setCurrRoute, sameRoute},
     publicError:[publicError, setPublicError], 
     alertBuyPoints:[alertBuyPoints, setAlertBuyPoints], 
     financialData,
