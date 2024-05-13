@@ -14,7 +14,14 @@ export async function POST(req:Request) {
         const fd = new UserFinancialData();
         const { pms , stripeId} = await userMan.getPaymentMethods({ uid:userData.uid, userData });
         const pm = userMan.filterPaymentMethodByHashedId(hashedPmId, pms);
-        if (pm) {
+        
+        // verifica se há mais de um método de pagamento, se houver, torna outro dos métodos como o cartão principal
+        const cus = await fd.stripe.stripe.customers.retrieve(stripeId);
+        if (pm && !cus.deleted) {
+            if (cus.metadata.defaultPm === pm.id && pms.data.length > 1) {
+                const newPm = pms.data.filter(item => item.id !== pm.id)[0];
+                await fd.setUserDefaultPaymentMethod({ stripeId, paymentMethod:newPm });
+            }
             await fd.stripe.stripe.paymentMethods.detach(pm.id);
         }
     //    const { frontEnd } = await userMan.getPaymentMethodsToFrontEnd({ uid:userData.uid, userData })
