@@ -30,7 +30,7 @@ export default function Home() {
           text={`Mais produtividade com leitura automática de PDFs, resumo do documento e perguntas sobre o conteúdo`}
           path={'/ler-pdf'}
           />         */}
-          <CardSectionCardPopOver 
+          <CardSectionCardPopOver
           imageSrc={lerPDFs.src}
           title='Leitura de PDFs'
           text={`Mais produtividade com leitura automática de PDFs, resumo do documento e perguntas sobre o conteúdo`}
