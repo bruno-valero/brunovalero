@@ -1,6 +1,6 @@
-import { UserActionsMonth } from "@/src/config/firebase-admin/collectionTypes/collectionTypes";
-import { admin_firestore } from "@/src/config/firebase-admin/config";
-import tsToMask from "@/utils/functions/dateTime/tsToMask";
+import { UserActionsMonth } from "../../../../src/config/firebase-admin/collectionTypes/collectionTypes";
+import { admin_firestore } from "../../../../src/config/firebase-admin/config";
+import tsToMask from "../../../../utils/functions/dateTime/tsToMask";
 
 
 export default class UserActions {

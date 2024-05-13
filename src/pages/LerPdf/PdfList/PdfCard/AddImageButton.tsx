@@ -17,6 +17,7 @@ export default function AddImageButton({ pdf, imageWidth, imageHeight, functions
     const { db, storage } = globalState.firebase ?? {};
     const [publicError, setPublicError] = globalState.publicError ?? [];
     const dimensions = globalState.dimensions;
+    const { envs } = globalState.fromServer ?? {};
 
     const [load, setLoad] = useState(false);
 
@@ -31,7 +32,10 @@ export default function AddImageButton({ pdf, imageWidth, imageHeight, functions
 
 
         setLoad(true);
-        const path = `/api/readPdf/add-cover`;
+        const cloudFunction = 'https://southamerica-east1-brunovalero-49561.cloudfunctions.net/readPdfAddCover';
+        const apiPath = `/api/readPdf/add-cover`;
+        const url = envs.useCloudFunctions ? cloudFunction : apiPath;
+        const path = url;
         const post = new Post(path);
         post.addData({ docId:pdf.id, uid:globalUser.data?.uid, autoBuy:false });
         const resp = await post.send();

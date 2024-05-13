@@ -50,7 +50,10 @@ export default function Pricing({ plan, moPrice, functions }:{ plan:'free' | 'st
         const hasPaymentMethods = functions.hasPaymentMethods();
         if (!hasPaymentMethods) return true;
 
-        const post = new Post(`/api/readPdf/switch-plan`);
+        const cloudFunction = 'https://southamerica-east1-brunovalero-49561.cloudfunctions.net/readPdfSwitchPlan';
+        const apiPath = `/api/readPdf/switch-plan`;
+        const url = envs.useCloudFunctions ? cloudFunction : apiPath;
+        const post = new Post(url);
 
         post.addData({ plan, uid:globalUser.data.uid });
 

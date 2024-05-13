@@ -27,6 +27,7 @@ export default function QuizFinish({ quiz, tries, questions }: QuizQuestionProps
     const globalUser = globalState.globalUser;
     const { db, storage } = globalState.firebase ?? {};
     const [publicError, setPublicError] = globalState.publicError ?? [];
+    const { envs } = globalState.fromServer ?? {};
 
     function millisecondsToTime(ms:number, notMillis?:boolean) {
         let seconds = Math.floor((ms / 1000) % 60);
@@ -97,7 +98,11 @@ export default function QuizFinish({ quiz, tries, questions }: QuizQuestionProps
         if (!quiz || !globalUser.data) return;
         type Data = { docId:string, uid:string, quizTryQuestions:QuizPdfTry['questions'], quiz:QuizPdf }
         const data:Data =  { docId:quiz.docId, uid:globalUser.data.uid, quizTryQuestions:newTry, quiz };
-        const path = `/api/readPdf/add-quiz-try`;
+
+        const cloudFunction = 'https://southamerica-east1-brunovalero-49561.cloudfunctions.net/readPdfAddQuizTry';
+        const apiPath = `/api/readPdf/add-quiz-try`;
+        const url = envs.useCloudFunctions ? cloudFunction : apiPath;
+        const path = url;
         const post = new Post(path);
         post.addData(data);
         const resp = await post.send();

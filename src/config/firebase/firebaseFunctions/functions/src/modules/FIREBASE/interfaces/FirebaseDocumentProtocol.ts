@@ -1,8 +1,8 @@
-import Schema from '@/src/classes/Schema/index';
-import { GetDocById } from '@/src/config/firebase/firestore';
 import { Auth, Unsubscribe, User } from 'firebase/auth';
 import { Firestore } from 'firebase/firestore';
 import { ZodType, ZodTypeDef } from 'zod';
+import { GetDocById } from '../../../../src/config/firebase/firestore';
+import Schema from '../../Schema';
 import UserAuth from '../UserAuth';
 import FirebaseAuthProtocol from './FirebaseAuthProtocol';
 

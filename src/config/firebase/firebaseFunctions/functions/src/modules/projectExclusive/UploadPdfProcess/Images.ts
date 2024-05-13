@@ -1,19 +1,19 @@
-import firebaseInit from "@/src/config/firebase/init";
 import { FirebaseApp } from "firebase/app";
 import { Auth } from "firebase/auth";
 import { Database } from "firebase/database";
 import { Firestore } from "firebase/firestore";
 import { FirebaseStorage } from "firebase/storage";
+import firebaseInit from "../../../../src/config/firebase/init";
 
-import envs from "@/envs";
-import { Pdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
-import { admin_firestore } from "@/src/config/firebase-admin/config";
 import { getApps, initializeApp } from "firebase/app";
 import { getAuth } from 'firebase/auth';
 import { getDatabase } from 'firebase/database';
 import { getFirestore } from 'firebase/firestore';
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import sharp from 'sharp';
+import envs from "../../../../envs";
+import { Pdf } from "../../../../src/config/firebase-admin/collectionTypes/pdfReader";
+import { admin_firestore } from "../../../../src/config/firebase-admin/config";
 import PlansRestrictions from "../PlansRestrictions";
 import UserActions from "../UserActions";
 import UserFinancialData from "../UserManagement/UserFinancialData";
@@ -135,7 +135,7 @@ export default class Images {
     protected async generateImageFromDescription(text:string, size:'slim' | 'wide') {
 
         const {content, summary} = await this.description.summaryDescription(text);
-
+        // @ts-ignore
         const { imageURL, inputContent, price } = await this.aiFeatures.generateImage(content.content, size);
         
         
@@ -155,8 +155,9 @@ export default class Images {
         }
 
         const { textResponse:description, price:descriptionPrice } = await this.description.generateDescription(docId, vectorIndex);
+        // @ts-ignore
         const { imageURL, inputContent, descriptionSummary, price:imagePrice } = await this.generateImageFromDescription(description, 'slim');
-
+        // @ts-ignore
         const { blob:imageBlob, path, url } = await this.uploadImageToStorage({ userId, fileName:docId, imageURL, uploadContent:'cover' });
 
         const doc = await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).get();
@@ -172,7 +173,7 @@ export default class Images {
 
         const imageCover = [...covers, newImage];
         
-
+        // @ts-ignore
         const price = descriptionPrice + imagePrice;
         const defaultPrice = 0.8;
 

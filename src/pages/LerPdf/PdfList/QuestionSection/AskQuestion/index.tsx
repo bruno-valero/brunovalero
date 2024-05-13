@@ -38,6 +38,7 @@ export default function AskQuestion({ questionHooks, functions }:AskQuestionProp
     const { db, storage } = globalState.firebase ?? {};
     const [publicError, setPublicError] = globalState.publicError ?? [];
     const dimensions = globalState.dimensions;
+    const { envs } = globalState.fromServer ?? {};
 
 
     const [ questionList, setQuestionList ] = questionHooks?.questionList ?? [];
@@ -57,8 +58,10 @@ export default function AskQuestion({ questionHooks, functions }:AskQuestionProp
 
         setLoad(true);
         console.log(question)
+        const cloudFunctionPath = `https://southamerica-east1-brunovalero-49561.cloudfunctions.net/readPdfSendQuestion`;
         const apiPath = `/api/readPdf/send-question`;
-        const post = new Post(apiPath);
+        const url = envs.useCloudFunctions ? cloudFunctionPath : apiPath;
+        const post = new Post(url);
         post.addData({ question, docId:details?.id??null, uid:globalUser.data?.uid });
         const resp = await post.send();
         const { error, data } = await resp?.json();

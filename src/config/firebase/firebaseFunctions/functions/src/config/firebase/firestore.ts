@@ -1,5 +1,5 @@
-﻿import { Obj } from '@/utils/common.types';
-import { addDoc, collection, CollectionReference, deleteDoc, deleteField, doc, DocumentData, DocumentReference, Firestore, getDoc, getDocs, onSnapshot, query, QueryFieldFilterConstraint, setDoc, updateDoc } from "firebase/firestore";
+﻿import { addDoc, collection, CollectionReference, deleteDoc, deleteField, doc, DocumentData, DocumentReference, Firestore, getDoc, getDocs, onSnapshot, query, QueryFieldFilterConstraint, setDoc, updateDoc } from "firebase/firestore";
+import { Obj } from '../../../utils/common.types';
 
 // type FromCollectionProps = {
 //   name:string,
@@ -13,7 +13,7 @@ type FirestoreRef = DocumentReference<DocumentData, DocumentData> | CollectionRe
 export default function fromCollection (name:string, ref:FirestoreRef) {
 
   const coll = collection(ref as Firestore, name);
-
+  // @ts-ignore
   const createDoc = async (data:Obj<any>) => {
     if (!data) data = {};
     try {
@@ -91,6 +91,7 @@ export default function fromCollection (name:string, ref:FirestoreRef) {
   
   function getDocById (name:string) {   
     const document = doc(coll, name); 
+    // @ts-ignore
     const data = async () => {
       try {
         const querySnapshot = await getDoc(document)

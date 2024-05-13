@@ -1,9 +1,8 @@
 import { Envs, isProduction } from "@/envs";
-import Post from "@/src/classes/Request/Post";
+import Post from "@/src/modules/Request/Post";
 import { Stripe as StripeJs, loadStripe } from '@stripe/stripe-js';
 import { useCallback, useEffect, useState } from "react";
 import Stripe from "stripe";
-import CardSetup from "./tsx/CardSetup";
 
 
 export default class StripeFrontEnd {
@@ -133,10 +132,10 @@ export default class StripeFrontEnd {
         return { requestSetupIntent, clientSecret, setClientSecret };      
     };
 
-    JSX() {
-        return {
-            CardSetup,
-        };
-    };
+    // JSX() {
+    //     return {
+    //         CardSetup,
+    //     };
+    // };
 
 };

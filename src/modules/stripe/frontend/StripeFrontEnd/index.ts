@@ -1,4 +1,4 @@
-import { Envs, isProduction } from "@/envs";
+import { Envs } from "@/envs";
 import Post from "@/src/classes/Request/Post";
 import { Stripe as StripeJs, loadStripe } from '@stripe/stripe-js';
 import { useCallback, useEffect, useState } from "react";
@@ -107,7 +107,7 @@ export default class StripeFrontEnd {
         const [stripe, setStripe] = useState<StripeJs | null>(null);
         useEffect(() => {
             const load = async() => {
-                const apiKey = isProduction ? this.envs?.STRIPE_PRODUCTION_PUBLIC_KEY! : this.envs?.STRIPE_PUBLIC_KEY!
+                const apiKey = this.envs.isProduction ? this.envs?.STRIPE_PRODUCTION_PUBLIC_KEY! : this.envs?.STRIPE_PUBLIC_KEY!
                 const str = await loadStripe(apiKey);                
                 setStripe(str);
             }

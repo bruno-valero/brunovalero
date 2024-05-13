@@ -1,7 +1,9 @@
 export const isProduction = false;
+export const useCloudFunctions = true;
 
 const envs:Envs = { 
   isProduction,
+  useCloudFunctions,
   // ------------------------------------------------------------------------------ 
   // FIREBASE 
   FIREBASE_API_KEY: process.env.FIREBASE_API_KEY, 
@@ -43,6 +45,7 @@ export default envs;
  
 export type Envs = { 
   isProduction:boolean,
+  useCloudFunctions:boolean,
   // ------------------------------------------------------------------------------ 
   // FIREBASE 
   FIREBASE_API_KEY: string | undefined, 
