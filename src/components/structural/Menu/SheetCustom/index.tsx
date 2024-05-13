@@ -78,7 +78,7 @@ export function SheetCustom({ children }:SheetCustomProps) {
           <SheetTrigger asChild>
             <Button variant="ghost" ><GiHamburgerMenu size={width < 500 ? 28 : 35} /></Button>
           </SheetTrigger>
-          <button className=' h-[100%] flex items-center justify-center' onClick={() => router.push('/')} >
+          <button className=' h-[100%] flex items-center justify-center' onClick={() => changeRoute('/')} >
             <div className='flex items-center justify-center gap-2 h-[75%] px-3 rounded-full' >
               <img src={brand.src} alt="Bruno Valero" className={twMerge('h-[95%] object-cover rounded-full', width < 500 && 'h-[60%]')} />
               <span className={twMerge('text-3xl font-semibold text-white', width < 500 && 'text-base')} style={{color:colors.valero()}} >

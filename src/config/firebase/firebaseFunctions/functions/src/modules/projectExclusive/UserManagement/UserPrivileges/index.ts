@@ -122,8 +122,8 @@ export default class UserPrivileges {
             lastMonthUpdate:tsToMask({ ts:dateNow, format:['day', 'month', 'year'], seps:['-', '-'] }),
             privilegeData:{
                 readPdf:{                    
-                    pdfUpload:1, // R$0,60
-                    questions:10, // R$0,50
+                    pdfUpload:0, // R$0,0
+                    questions:5, // R$0,25
                     coverGenerationForPrivateDocs:0,
                     quizGeneration:{
                         privateDocs:0,

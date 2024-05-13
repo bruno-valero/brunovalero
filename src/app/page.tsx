@@ -1,6 +1,6 @@
 import lerPDFs from '@/src/images/lerPDFs.png';
 import SetLoadingFalse from '../components/structural/SetLoadingFalse';
-import CardSectionCard from '../pages/Home/CardSection/Card';
+import CardSectionCardPopOver from '../pages/Home/CardSection/CardPopOver';
 import CardSectionWrapper from '../pages/Home/CardSection/Wrapper';
 import ContactSectionForm from '../pages/Home/ContactSection/ContactForm';
 import ContactSectionWrapper from '../pages/Home/ContactSection/ContactWrapper';
@@ -24,7 +24,13 @@ export default function Home() {
           text={`Entenda seus clientes ou gerencie seus funcionárions com os Formulários Personalizados.`}
           path={'/formulario'}
           />         */}
-          <CardSectionCard 
+          {/* <CardSectionCard 
+          imageSrc={lerPDFs.src}
+          title='Leitura de PDFs'
+          text={`Mais produtividade com leitura automática de PDFs, resumo do documento e perguntas sobre o conteúdo`}
+          path={'/ler-pdf'}
+          />         */}
+          <CardSectionCardPopOver
           imageSrc={lerPDFs.src}
           title='Leitura de PDFs'
           text={`Mais produtividade com leitura automática de PDFs, resumo do documento e perguntas sobre o conteúdo`}

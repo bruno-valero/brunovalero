@@ -29,7 +29,7 @@ export default function HomePageMainSection() {
     dimensions && (
       <div ref={divRef} className="relative overflow-hidden flex items-start justify-center w-full min-h-[80vh]" style={{backgroundColor:colors.valero()}} >
           <div className="p-8 absolute z-10 h-[50%] flex items-center justify-center flex-col" >
-              <h1 className="text-white text-4xl font-black">Organize, Agilize e Simplifique o seu Negócio</h1>
+              <h1 className="text-white text-4xl font-black p-2 rounded-full" style={{backgroundColor:colors.valero()}} >Organize, Agilize e Simplifique o seu Negócio</h1>
           </div>
           <button className="p-8 absolute z-10 bottom-0 h-[50%] flex items-center justify-center flex-col" onClick={handlePress} >
               <img src={agilize.src} alt="Agilize seu Negócio" className='h-full object-cover rounded shadow-lg' />
