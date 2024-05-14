@@ -110,10 +110,10 @@ export function SheetCustom({ children }:SheetCustomProps) {
           </SheetHeader>
           <div className="flex flex-col gap-1 py-4 mt-5">
             <div className={twMerge("flex items-start justify-start")}>
-              <Button variant="ghost" className={twMerge('w-[100%] flex items-center justify-start text-xl', /^\/$/i.test(path ?? '') && 'bg-gray-400 text-white')} onClick={() => changeRoute('/')} >Home</Button>
+              <Button variant="ghost" className={twMerge('w-[100%] flex items-center justify-start text-xl', /^\/$/i.test(path ?? '') && 'bg-gray-400 text-white')} style={{backgroundColor:/^\/$/i.test(path ?? '') ? colors.valero() : 'white', color:/^\/$/i.test(path ?? '') ? 'white' : colors.valero()}} onClick={() => changeRoute('/')} >Home</Button>
             </div>
             <div className={twMerge("flex items-start justify-start")}>
-              <Button variant="ghost" className={twMerge('w-[100%] flex items-center justify-start text-xl', /ler-pdf/i.test(path ?? '') && 'bg-gray-400 text-white')} onClick={() => changeRoute('/ler-pdf')} >Ler PDFs</Button>
+              <Button variant="ghost" className={twMerge('w-[100%] flex items-center justify-start text-xl', /ler-pdf/i.test(path ?? '') && 'bg-gray-400 text-white')} style={{backgroundColor:/ler-pdf/i.test(path ?? '') ? colors.valero() : 'white', color:/ler-pdf/i.test(path ?? '') ? 'white' : colors.valero()}} onClick={() => changeRoute('/ler-pdf')} >Ler PDFs</Button>
             </div>            
           </div>
         </SheetContent>
