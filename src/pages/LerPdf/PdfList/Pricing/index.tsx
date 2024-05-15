@@ -1,4 +1,5 @@
 import { Separator } from "@/components/ui/separator";
+import { Control } from "@/src/config/firebase-admin/collectionTypes/control";
 import colors from "@/src/constants/colors";
 import Post from "@/src/modules/Request/Post";
 import Social from "@/src/modules/Social";
@@ -12,7 +13,7 @@ import StandardPlanProps from "./pansProps/StandardPlanProps";
 
 
 
-export default function Pricing({ plan, moPrice, functions }:{ plan:'free' | 'standard' | 'enterprise', moPrice:number, functions:{isLogged: () => boolean, hasPaymentMethods: () => boolean} }) {
+export default function Pricing({ plan, moPrice, functions, pricing }:{ plan:'free' | 'standard' | 'enterprise', moPrice:number, functions:{isLogged: () => boolean, hasPaymentMethods: () => boolean}, pricing?:Control['pricing']['readPdf'] }) {
 
     const globalState = useGlobalProvider();
     const [, setResetedState] = globalState.resetedState ?? [];
@@ -78,9 +79,9 @@ export default function Pricing({ plan, moPrice, functions }:{ plan:'free' | 'st
                 {moneyMask(moPrice)}/mês
             </span>
             <Separator className="my-2 bg-gray-600" />
-            {plan === 'free' && <BasicPlanProps />}
-            {plan === 'standard' && <StandardPlanProps />}
-            {plan === 'enterprise' && <EnterprisePlanProps />}
+            {plan === 'free' && <BasicPlanProps pricing={pricing} />}
+            {plan === 'standard' && <StandardPlanProps pricing={pricing} />}
+            {plan === 'enterprise' && <EnterprisePlanProps pricing={pricing} />}
             
             {/* <Separator className="mt-4 bg-gray-600" /> */}
             <button onClick={() => getPlan()} disabled={loadPlanSwitch || financialData?.activePlan.readPdf === plan} className="rounded shadow mt-5 mb-2 w-full py-3 font-bold" style={{backgroundColor:financialData?.activePlan.readPdf === plan ? 'white': (plan === 'enterprise' ? colors.valero(.9) : colors.valero()), borderWidth:financialData?.activePlan.readPdf === plan ? 1 : 0, borderColor:colors.valero(), color:financialData?.activePlan.readPdf === plan ? colors.valero() : 'white'}} >

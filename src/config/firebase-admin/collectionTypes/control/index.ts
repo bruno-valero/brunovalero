@@ -11,7 +11,29 @@ export type Control = {
     vectorStore:{
         // Informa quas são os indexes disponíveis e quais estão ativos
         indexes:Record<string, boolean>,
-    }
+    },
+    /** Preços dos serviços e planos */
+    pricing:{   
+        /** Preços dos serviços e planos relacionados ao serviço de leitura de pdfs */
+        readPdf:{
+            /** Preços dos serviços relacionados à leitura de pdfs */
+            actionsValue: {            
+                pdfUpload:4,
+                questions:0.35,
+                coverGenerationForPrivateDocs:6.7,
+                quizGeneration:{
+                    privateDocs:7,
+                    publicDocs:7,
+                },
+            },
+            /** Preços dos planos relacionados à leitura de pdfs */
+            plansValue:{
+                free:0,
+                standard:25,
+                enterprise:70,
+            }           
+        }     
+    },
 };
 
 /** Contém variaveis importantes para o funcionamento do negócio */

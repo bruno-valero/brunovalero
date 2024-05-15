@@ -23,6 +23,7 @@ import AiFeatures from "./AiFeatures";
 import CheckPrivileges from "./CheckPrivileges";
 import Description from "./Description";
 import Payment from "./Payment";
+import PdfPricing from "./Pricing";
 import Quiz from "./Quiz";
 
 
@@ -166,7 +167,9 @@ export default class UploadPdfProcess {
             dateOfCreation:String(new Date().getTime()),
         };
 
-        const defaultPrice = Math.ceil(Number(newDoc.metadata.totalWords) / 100_000) * 0.29
+        const pricing = new PdfPricing()
+        const pricedata = await pricing.get();
+        const defaultPrice = Math.ceil(Number(newDoc.metadata.totalWords) / 100_000) * (pricedata?.actionsValue.pdfUpload ?? 0)
         
         if (!isFree) {
             console.log('cobrando pagamento...')
@@ -226,8 +229,12 @@ export default class UploadPdfProcess {
         const textResponse = encodeURIComponent(resp.text as string);       
         const chunksRelated = resp.sourceDocuments;
 
+        const pricing = new PdfPricing()
+        const pricedata = await pricing.get();
+        const defaultPrice = pricedata?.actionsValue.questions ?? 0;
+
         if (!isFree) {
-            await this.financialData.spendCredits({ uid, amount:0.05, autoBuy, minCredits });
+            await this.financialData.spendCredits({ uid, amount:defaultPrice, autoBuy, minCredits });
         }
 
         // const oi:ReadPdf = '';
