@@ -25,7 +25,7 @@ export const readPdfAddCover = onRequest(
   { region:'southamerica-east1', timeoutSeconds:300, cors:['http://localhost:3000', 'http://192.168.100.86:3000', 'https://brunovalero.com', 'https://www.brunovalero.com', 'https://brunovalero.com.br', 'https://www.brunovalero.com.br']},
   async (req, res) => {
   logger.info("Hello logs!", {structuredData: true});
-  const resp = await readPdfAddCoverRoute(req)
+  const resp = await readPdfAddCoverRoute(req);
   res.send(resp);
 });
 
@@ -33,7 +33,7 @@ export const readPdfAddQuiz = onRequest(
   { region:'southamerica-east1', timeoutSeconds:300, cors:['http://localhost:3000', 'http://192.168.100.86:3000', 'https://brunovalero.com', 'https://www.brunovalero.com', 'https://brunovalero.com.br', 'https://www.brunovalero.com.br']},
   async (req, res) => {
   logger.info("Hello logs!", {structuredData: true});
-  const resp = await readPdfAddQuizRoute(req)
+  const resp = await readPdfAddQuizRoute(req);
   res.send(resp);
 });
 
@@ -41,7 +41,7 @@ export const readPdfAddQuizTry = onRequest(
   { region:'southamerica-east1', timeoutSeconds:300, cors:['http://localhost:3000', 'http://192.168.100.86:3000', 'https://brunovalero.com', 'https://www.brunovalero.com', 'https://brunovalero.com.br', 'https://www.brunovalero.com.br']},
   async (req, res) => {
   logger.info("Hello logs!", {structuredData: true});
-  const resp = await readPdfAddQuizTryRoute(req)
+  const resp = await readPdfAddQuizTryRoute(req);
   res.send(resp);
 });
 
@@ -49,7 +49,7 @@ export const readPdfBuyCredits = onRequest(
   { region:'southamerica-east1', timeoutSeconds:300, cors:['http://localhost:3000', 'http://192.168.100.86:3000', 'https://brunovalero.com', 'https://www.brunovalero.com', 'https://brunovalero.com.br', 'https://www.brunovalero.com.br']},
   async (req, res) => {
   logger.info("Hello logs!", {structuredData: true});
-  const resp = await readPdfBuyCreditsRoute(req)
+  const resp = await readPdfBuyCreditsRoute(req);
   res.send(resp);
 });
 
@@ -57,7 +57,7 @@ export const readPdfSendQuestion = onRequest(
   { region:'southamerica-east1', timeoutSeconds:300, cors:['http://localhost:3000', 'http://192.168.100.86:3000', 'https://brunovalero.com', 'https://www.brunovalero.com', 'https://brunovalero.com.br', 'https://www.brunovalero.com.br']},
   async (req, res) => {
   logger.info("Hello logs!", {structuredData: true});
-  const resp = await readPdfSendQuestionRoute(req)
+  const resp = await readPdfSendQuestionRoute(req);
   res.send(resp);
 });
 
@@ -65,7 +65,7 @@ export const readPdfSwitchPlan = onRequest(
   { region:'southamerica-east1', timeoutSeconds:300, cors:['http://localhost:3000', 'http://192.168.100.86:3000', 'https://brunovalero.com', 'https://www.brunovalero.com', 'https://brunovalero.com.br', 'https://www.brunovalero.com.br']},
   async (req, res) => {
   logger.info("Hello logs!", {structuredData: true});
-  const resp = await readPdfSwitchPlanRoute(req)
+  const resp = await readPdfSwitchPlanRoute(req);
   res.send(resp);
 });
 
@@ -73,6 +73,6 @@ export const readPdfUpload = onRequest(
   { region:'southamerica-east1', timeoutSeconds:300, cors:['http://localhost:3000', 'http://192.168.100.86:3000', 'https://brunovalero.com', 'https://www.brunovalero.com', 'https://brunovalero.com.br', 'https://www.brunovalero.com.br']},
   async (req, res) => {
   logger.info("Hello logs!", {structuredData: true});
-  const resp = await readPdfUploadRoute(req)
+  const resp = await readPdfUploadRoute(req);
   res.send(resp);
 });
