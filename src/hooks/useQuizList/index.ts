@@ -2,6 +2,7 @@ import { QuizPdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
 import fromCollection from "@/src/config/firebase/firestore";
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import { UseState } from "@/utils/common.types";
+import { where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 
 export default function useQuizList({ pdfId }:{ pdfId?:string }) {
@@ -22,11 +23,20 @@ export default function useQuizList({ pdfId }:{ pdfId?:string }) {
                 const questions = snap.map(item => item.data) as QuizPdf[];
                 setShowQuizList(questions);
                 console.log(`Quizes: ${JSON.stringify(questions, null, 2)}`);
-            }, snaps, `pdf ${pdfId} Quizes`)                
+            }, snaps, `pdf ${pdfId} Quizes`, undefined, [where('userId', '==', user?.uid)])                
             
-            if (user) {  
-                            
-            } 
+
+        });
+
+        globalUser.userAuth.onAuthStateChanged(async(user) => {            
+            if (!pdfId) return;
+            fromCollection('services', db!).getDocById('readPdf').getCollection('data').getDocById(pdfId).getCollection('quiz').onSnapshotExecute((snap) => {
+                const questions = snap.map(item => item.data) as QuizPdf[];
+                setShowQuizList(questions);
+                console.log(`Quizes: ${JSON.stringify(questions, null, 2)}`);
+            }, snaps, `pdf ${pdfId} Quizes public`, undefined, [where('public', '==', true)])                
+            
+
         });
 
         return () => {

@@ -16,7 +16,7 @@ export default async function readPdfBuyCreditsRoute(req:Request) {
         console.log('altenticando usuário');
         const userSnap = await admin_firestore.collection('users').doc(uid).get();
         const user = (userSnap.exists ? userSnap.data() : null) as Omit<UsersUser, "control">;
-        if (!user) throw new Error("Usuário não encontrado");   
+        if (!user) throw new Error("Usuário não encontrado");
 
         console.log('Comprando créditos...');
         const uf = new UserFinancialData();        
