@@ -1,4 +1,5 @@
 import colors from "@/src/constants/colors";
+import useUserPricing from "@/src/hooks/useUserPricing";
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import tsToMask from "@/utils/functions/dateTime/tsToMask";
 import { twMerge } from "tailwind-merge";
@@ -17,6 +18,8 @@ export default function PricingSection({ functions }:{ functions:{isLogged: () =
     const { width } = globalState.dimensions ?? {};
     const financialData = globalState.financialData;
     const [alertBuyPoints, setAlertBuyPoints] = globalState.alertBuyPoints ?? [];
+
+    const { pricing:[pricing] } = useUserPricing();
 
     return (
         width &&
@@ -39,9 +42,9 @@ export default function PricingSection({ functions }:{ functions:{isLogged: () =
                 </div>
             )}
             <div className={twMerge("flex gap-6 justify-center items-start w-full bg-white min-h-screen", width < 500 && 'flex-col px-0 justify-start items-center')} >
-                <Pricing plan="free" moPrice={0} functions={functions} />
-                <Pricing plan="standard" moPrice={20} functions={functions} />
-                <Pricing plan="enterprise" moPrice={50} functions={functions} />
+                <Pricing plan="free" moPrice={pricing?.readPdf.plansValue['free'] ?? 0} functions={functions} pricing={pricing?.readPdf}  />
+                <Pricing plan="standard" moPrice={pricing?.readPdf.plansValue['standard'] ?? 20} functions={functions} pricing={pricing?.readPdf} />
+                <Pricing plan="enterprise" moPrice={pricing?.readPdf.plansValue['enterprise'] ?? 50} functions={functions} pricing={pricing?.readPdf} />
             </div>
         </div>
     );

@@ -20,6 +20,7 @@ import UserFinancialData from "../UserManagement/UserFinancialData";
 import AiFeatures from "./AiFeatures";
 import CheckPrivileges from "./CheckPrivileges";
 import Description from "./Description";
+import PdfPricing from "./Pricing";
 
 
 export default class Images {
@@ -174,7 +175,10 @@ export default class Images {
         
 
         const price = descriptionPrice + imagePrice;
-        const defaultPrice = 0.8;
+
+        const pricing = new PdfPricing()
+        const pricedata = await pricing.get();
+        const defaultPrice = pricedata?.actionsValue.coverGenerationForPrivateDocs ?? 0;
 
         if (!isFree) {
             console.log('cobrando pagamento...');
