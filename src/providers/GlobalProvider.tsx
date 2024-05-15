@@ -116,7 +116,8 @@ export default function GlobalContextProvider({ children, fromServer }:GlobalCon
       db,  
       storage, 
     } 
-  }; 
+  };
+  
 
   return ( 
     <GlobalProvider.Provider value={context}>       

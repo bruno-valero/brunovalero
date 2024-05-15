@@ -2,6 +2,7 @@ import { QuestionPdf } from "@/src/config/firebase-admin/collectionTypes/pdfRead
 import fromCollection from "@/src/config/firebase/firestore";
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import { UseState } from "@/utils/common.types";
+import { where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 
 export default function useQuestionsList({ pdfId }:{ pdfId?:string }) {
@@ -29,15 +30,13 @@ export default function useQuestionsList({ pdfId }:{ pdfId?:string }) {
         const snaps = {} as Record<string, any>
         globalUser.userAuth.onAuthStateChanged(async(user) => {            
             if (!pdfId) return;
+            if (!user) return;
             fromCollection('services', db!).getDocById('readPdf').getCollection('data').getDocById(pdfId).getCollection('questions').onSnapshotExecute((snap) => {
                 const questions = snap.map(item => item.data) as QuestionPdf[];
                 setPdfQuestions(questions);
                 console.log(`questions: ${JSON.stringify(questions, null, 2)}`);
-            }, snaps, `pdf ${pdfId} questions`)                
-            
-            if (user) {  
-                            
-            } 
+            }, snaps, `pdf ${pdfId} questions`, undefined, [where('userId', '==', user.uid)])                
+
         });
 
         return () => {
