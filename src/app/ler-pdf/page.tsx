@@ -2,6 +2,7 @@
 import SetLoadingFalse from "@/src/components/structural/SetLoadingFalse";
 import PlansRestrictions from "@/src/modules/projectExclusive/PlansRestrictions";
 import MigrateData from "@/src/modules/projectExclusive/UploadPdfProcess/MigrateData";
+import PdfPricing from "@/src/modules/projectExclusive/UploadPdfProcess/Pricing";
 import UserFinancialData from "@/src/modules/projectExclusive/UserManagement/UserFinancialData";
 import LerPdf from "@/src/pages/LerPdf";
 
@@ -74,6 +75,9 @@ export default async function LerPdfComponent() {
     const uf = new UserFinancialData();
     const plans = new PlansRestrictions();
     const migrate = new MigrateData();
+    const pricing = new PdfPricing();
+    // await pricing.update()
+    // price_1PGgacId2TB6ArT0kVqLUSe7
     // await migrate.migratePdfToPublic({ pdfId:`1714724582219`, uid:`W4cd8j5ZsUUI4akQ77csf0GORIv1` })
     // await plans.createreadPdfFreePlan()
     // console.log('iniciando subscrição...');

@@ -21,6 +21,7 @@ import PlansRestrictions from "../PlansRestrictions";
 import UserActions from "../UserActions";
 import UserFinancialData from "../UserManagement/UserFinancialData";
 import CheckPrivileges from "./CheckPrivileges";
+import PdfPricing from "./Pricing";
 
 type UploadImageToStorage = ({ userId, fileName, imageURL, uploadContent }:{ userId:string, fileName:string, imageURL:string, uploadContent:'cover' | 'quizSlim' | 'quizWide' }) => Promise<{ blob: Blob; url: string; path: string; }>;
 export default class Quiz {
@@ -264,7 +265,11 @@ export default class Quiz {
         await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).collection('quiz').doc(quiz.id).set(quiz);
 
         const price = quiz.price;
-        const defaultPrice = 2;
+
+        const pricing = new PdfPricing()
+        const pricedata = await pricing.get();        
+        const defaultPrice = quiz.public ? (pricedata?.actionsValue.quizGeneration.publicDocs ?? 0) : (pricedata?.actionsValue.quizGeneration.privateDocs ?? 0);
+        
         if (!isFree) {
             await this.financialData.spendCredits({ uid:userId, amount:defaultPrice, autoBuy, minCredits });
         }

@@ -21,8 +21,15 @@ import PlansRestrictions from "../PlansRestrictions";
 import UserActions from "../UserActions";
 import UserFinancialData from "../UserManagement/UserFinancialData";
 import CheckPrivileges from "./CheckPrivileges";
+import PdfPricing from "./Pricing";
 // @ts-ignore
 type UploadImageToStorage = ({ userId, fileName, imageURL, uploadContent }:{ userId:string, fileName:string, imageURL:string, uploadContent:'cover' | 'quizSlim' | 'quizWide' }) => Promise<{ blob: Blob; url: string; path: string; }>;
+
+
+
+
+
+
 export default class Quiz {
 
     protected vectorStore:VectorStoreProcess;
@@ -264,9 +271,14 @@ export default class Quiz {
         };
         const quiz = await this.generateQuiz({ quizFocus, docId, isPublic, userId, vectorIndex });
         await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).collection('quiz').doc(quiz.id).set(quiz);
+
         // @ts-ignore
         const price = quiz.price;
-        const defaultPrice = 2;
+
+        const pricing = new PdfPricing()
+        const pricedata = await pricing.get();        
+        const defaultPrice = quiz.public ? (pricedata?.actionsValue.quizGeneration.publicDocs ?? 0) : (pricedata?.actionsValue.quizGeneration.privateDocs ?? 0);
+        
         if (!isFree) {
             await this.financialData.spendCredits({ uid:userId, amount:defaultPrice, autoBuy, minCredits });
         }

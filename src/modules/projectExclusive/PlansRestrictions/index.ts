@@ -21,10 +21,14 @@ export default class PlansRestrictions {
 
     };
 
-    async createreadPdfFreePlan() {
+    /**
+     * 
+     * @param priceValue O valor deve estar em centavos
+     */
+    async createreadPdfFreePlan(priceValue?:number) {
 
         const stripePrice = await this.userFinancialData.stripe.stripe.prices.create({
-            unit_amount:0,
+            unit_amount:priceValue ?? 0,
             recurring:{
                 interval:'month',                
             },
@@ -90,10 +94,14 @@ export default class PlansRestrictions {
         await this.create('readPdf', 'free', data)
     }
 
-    async createreadPdfStandardPlan() {
+    /**
+     * 
+     * @param priceValue O valor deve estar em centavos
+     */
+    async createreadPdfStandardPlan(priceValue?:number) {
 
         const stripePrice = await this.userFinancialData.stripe.stripe.prices.create({
-            unit_amount:2000,
+            unit_amount:priceValue ?? 2000,
             recurring:{
                 interval:'month',                
             },
@@ -159,10 +167,14 @@ export default class PlansRestrictions {
         await this.create('readPdf', 'standard', data)
     }
 
-    async createreadPdfEnterprisePlan() {
+    /**
+     * 
+     * @param priceValue O valor deve estar em centavos
+     */
+    async createreadPdfEnterprisePlan(priceValue?:number) {
 
         const stripePrice = await this.userFinancialData.stripe.stripe.prices.create({
-            unit_amount:5000,
+            unit_amount:priceValue ?? 5000,
             recurring:{
                 interval:'month',                
             },

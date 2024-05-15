@@ -20,6 +20,7 @@ import UserFinancialData from "../UserManagement/UserFinancialData";
 import AiFeatures from "./AiFeatures";
 import CheckPrivileges from "./CheckPrivileges";
 import Description from "./Description";
+import PdfPricing from "./Pricing";
 
 
 export default class Images {
@@ -153,7 +154,7 @@ export default class Images {
 
             await this.financialData.checkMinCredits({ uid:userId, autoBuy, minCredits });
         }
-
+        // @ts-ignore
         const { textResponse:description, price:descriptionPrice } = await this.description.generateDescription(docId, vectorIndex);
         // @ts-ignore
         const { imageURL, inputContent, descriptionSummary, price:imagePrice } = await this.generateImageFromDescription(description, 'slim');
@@ -173,9 +174,12 @@ export default class Images {
 
         const imageCover = [...covers, newImage];
         
-        // @ts-ignore
-        const price = descriptionPrice + imagePrice;
-        const defaultPrice = 0.8;
+
+        // const price = descriptionPrice + imagePrice;
+
+        const pricing = new PdfPricing()
+        const pricedata = await pricing.get();
+        const defaultPrice = pricedata?.actionsValue.coverGenerationForPrivateDocs ?? 0;
 
         if (!isFree) {
             console.log('cobrando pagamento...');
