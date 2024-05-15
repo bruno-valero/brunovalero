@@ -28,11 +28,11 @@ export default function useUserPricing() {
 
         const snaps = {} as Record<string, any>;
         globalUser.userAuth.onAuthStateChanged(async(user) => {            
-            if (!user) return;
+            // if (!user) return;
             fromCollection('control', db!).getDocById(`pricing`).onSnapshotExecute((snap) => {
                 const previleges = snap?.data as Control['pricing'] | undefined;
                 setPricing(previleges ?? null);
-            }, snaps, `pdf ${user.uid} pricing`);            
+            }, snaps, `pdf pricing`);            
             
         });
 
