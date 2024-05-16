@@ -46,7 +46,7 @@ import { useEffect, useRef } from "react";
           </AlertDialogHeader>
           <AlertDialogFooter>
             {/* <AlertDialogCancel>Cancel</AlertDialogCancel> */}
-            <AlertDialogAction>Entendi</AlertDialogAction>
+            <AlertDialogAction onClick={() => publicError.action?.()} >Entendi</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

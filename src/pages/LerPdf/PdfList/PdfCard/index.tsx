@@ -4,6 +4,7 @@ import { Pdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
 import colors from "@/src/constants/colors";
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import cutTextMask from "@/utils/functions/masks/cutTextMask";
+import moneyMask from "@/utils/functions/masks/moneyMask";
 import { useRef } from "react";
 import { MdOutlinePublic } from "react-icons/md";
 import { SiPrivateinternetaccess } from "react-icons/si";
@@ -47,7 +48,7 @@ export default function PdfCard({ pdf, functions, questionHooks }:{ pdf:Pdf, fun
                             <span className="text-lg font-bold" style={{color:colors.valero()}} >Opções de Imagem</span>
                             <Separator className="mb-2" />
                             <div className="text-sm font-semibold mb-2 text-green-700" >
-                                {privilegesData.coverGenerationForPrivateDocs ? `Você possui ${privilegesData.coverGenerationForPrivateDocs} gerações de imagem da capa gratuitas.` : `Gere uma nova imagem representando o conteúdo por apenas R$${0.80.toFixed(2)}`}
+                                {privilegesData.coverGenerationForPrivateDocs ? `Você possui ${privilegesData.coverGenerationForPrivateDocs} gerações de imagem da capa gratuitas.` : `Gere uma nova imagem representando o conteúdo por apenas ${moneyMask(questionHooks.pricing?.readPdf.actionsValue.coverGenerationForPrivateDocs ?? {})}`}
                             </div>
                             <div className={twMerge("text-sm font-semibold mb-2")} >
                                 {pdf.customTitle ?? pdf.metadata.title} pop
