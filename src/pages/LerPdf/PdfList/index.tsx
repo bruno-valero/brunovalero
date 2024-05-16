@@ -136,7 +136,7 @@ export default function PdfList() {
 
     const isLogged = useCallback(() => {
         if (!globalUser.data) {
-            setPublicError({ title:'É necessário Login', message:`Faça login antes de prosseguir.`, action:() => globalUser.userAuth.googleLogin() });
+            setPublicError({ title:'É necessário Login', message:`Faça login antes de prosseguir.`, action:() => globalUser.createWithLogin() });
             return false;
         }   
         return true;     
