@@ -61,7 +61,7 @@ export default function UserAdmData() {
 
     const isLogged = useCallback(() => {
         if (!globalUser.data) {
-            setPublicError({ title:'É necessário Login', message:`Faça login antes de prosseguir.` });
+            setPublicError({ title:'É necessário Login', message:`Faça login antes de prosseguir.`, action:() => globalUser.userAuth.googleLogin() });
             return false;
         }   
         return true;     

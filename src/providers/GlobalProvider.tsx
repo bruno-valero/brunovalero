@@ -60,7 +60,7 @@ interface GlobalContextProviderProps {
   };   
 } 
 
-export type PublicError = { title:string, message:string };
+export type PublicError = { title:string, message:string, action?:() => void };
 export type AlertBuyPoints = { title?:string, message?:string, alert:boolean };
 
 export default function GlobalContextProvider({ children, fromServer }:GlobalContextProviderProps) { 

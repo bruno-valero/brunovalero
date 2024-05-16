@@ -10,9 +10,11 @@ import PdfCard from "./PdfCard";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollComponent } from "@/src/components/structural/ScrollComponent";
+import { Control } from "@/src/config/firebase-admin/collectionTypes/control";
 import { UsersControlPrivileges, UsersFinancialData } from "@/src/config/firebase-admin/collectionTypes/users/control";
 import useQuestionsList from "@/src/hooks/useQuestionsList";
 import useQuizList from "@/src/hooks/useQuizList";
+import useUserPricing from "@/src/hooks/useUserPricing";
 import useUserPrivileges, { PrivilegesData } from "@/src/hooks/useUserPrivileges";
 import Post from "@/src/modules/Request/Post";
 import StripeFrontEnd from "@/src/modules/stripe/frontend/StripeFrontEnd";
@@ -57,6 +59,7 @@ export type PdfFunctions = {
 export type PdfHooks = {
     financialData: UsersFinancialData | null,
     genres:string[],
+    pricing:Control['pricing'],
     quizList:UseState<QuizPdf[]>,
     selectedGenres:UseState<string[]>,
     showQuestions:UseState<boolean>,
@@ -98,6 +101,7 @@ export default function PdfList() {
     const stripeJs = stripe.useLoadStripe();
     const { clientSecret, requestSetupIntent } = stripe.useSetupIntent();
     // const { financialData:[ financialData ] } = useUserFinancialData() ?? {};
+    const { pricing:[pricing] } = useUserPricing();
     const { previleges, privilegesData } = useUserPrivileges() ?? {};
     const questionListHook = useQuestionsList({ pdfId:details?.id })
     const quizListHook = useQuizList({ pdfId:details?.id })
@@ -115,6 +119,7 @@ export default function PdfList() {
     const questionHooks = {
         financialData,
         genres,
+        pricing,
         selectedGenres:[selectedGenres, setSelectedGenres],
         showQuestions:[showQuestions, setShowQuestions],
         questionList:[questionList, setQuestionList],
@@ -131,11 +136,11 @@ export default function PdfList() {
 
     const isLogged = useCallback(() => {
         if (!globalUser.data) {
-            setPublicError({ title:'É necessário Login', message:`Faça login antes de prosseguir.` });
+            setPublicError({ title:'É necessário Login', message:`Faça login antes de prosseguir.`, action:() => globalUser.userAuth.googleLogin() });
             return false;
         }   
         return true;     
-    }, [setPublicError]); 
+    }, [setPublicError]);
 
     const resetScroll = useCallback(() => {
         if (!wrapperRef.current) return;
