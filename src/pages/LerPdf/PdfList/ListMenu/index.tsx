@@ -5,6 +5,7 @@ import colors from "@/src/constants/colors";
 import Post from "@/src/modules/Request/Post";
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import cutTextMask from "@/utils/functions/masks/cutTextMask";
+import moneyMask from "@/utils/functions/masks/moneyMask";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { ChangeEvent, RefObject } from "react";
 import { FaFilter } from "react-icons/fa";
@@ -207,7 +208,7 @@ export default function ListMenu({ getPdfRef, questionHooks, functions }:{ getPd
                     </PopoverTrigger>
                     <PopoverContent className="flex flex-col" >   
                         <span className="mt-2 text-green-700 font-semibold" >
-                            {privilegesData.pdfUpload ? `Você possui ${privilegesData.pdfUpload} uploads de PDFs gratuitos` : `Faça o upload de um PDF por apenas R$${0.29.toFixed(2)} a cada ${(100_000).toLocaleString()} palavras.`}
+                            {privilegesData.pdfUpload ? `Você possui ${privilegesData.pdfUpload} uploads de PDFs gratuitos` : `Faça o upload de um PDF por apenas ${moneyMask(questionHooks.pricing?.readPdf.actionsValue.pdfUpload ?? 0)} a cada ${(100_000).toLocaleString()} palavras.`}
                         </span>  
                         <span className="font-semibold mt-2 mb-3 text-gray-800 text-sm" >
                             Seu documento será armazenado de forma priada, <span className="font-black" >ningém terá acesso a ele.</span>
