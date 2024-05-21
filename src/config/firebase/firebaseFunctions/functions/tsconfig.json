@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "module": "NodeNext",
-    "noImplicitReturns": true,
+    "noImplicitReturns": false,
     "noUnusedLocals": true,
     "allowJs": true,
     "outDir": "lib",

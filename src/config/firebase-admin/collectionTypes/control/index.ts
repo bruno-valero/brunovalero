@@ -76,7 +76,8 @@ export type ControlPlanReadPdfPlans = {
     /** nome customizável do plano */
     customName:'Básico' | 'Empreendedor' | 'Prêmium',
 
-    stripePrice:Stripe.Price,
+    stripePrice?:Stripe.Price,
+    stripePriceDev?:Stripe.Price,
     /** Informações sobre as perguntas por mês que o usuário tem permissão de fazer */
     questionsPerMonth:{
         /** Número de perguntas por mês que o usuário tem permissão de fazer */
