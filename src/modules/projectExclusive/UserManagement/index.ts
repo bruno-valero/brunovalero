@@ -89,7 +89,7 @@ export default class UserManagement {
                     uid:user.uid,
                 }
             });
-            await admin_firestore.collection('users').doc(uid).update({idType:cus.id});
+            await admin_firestore.collection('users').doc(uid).update({[idType]:cus.id});
             return cus.id;
         }
         return user[idType];
