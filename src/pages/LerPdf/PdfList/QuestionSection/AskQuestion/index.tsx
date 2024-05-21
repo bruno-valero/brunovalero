@@ -38,7 +38,6 @@ export default function AskQuestion({ questionHooks, functions }:AskQuestionProp
     const [ showQuestion, setShowQuestion ] = questionHooks?.showQuestion ?? [];
     const [askQuestion, setAskQuestion] = questionHooks?.askQuestion ?? [];
     const [details, setDetails] = questionHooks?.details ?? [];
-    const privileges = questionHooks.privilegesData ?? [];
 
     const { register, handleSubmit, formState:{ errors } } = useForm<Question>({ resolver:zodResolver(questionSchema) });   
 
