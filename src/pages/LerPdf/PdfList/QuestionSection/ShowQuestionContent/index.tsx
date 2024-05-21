@@ -1,20 +1,13 @@
-import { Pdf, QuestionPdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
 import colors from "@/src/constants/colors";
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
-import { UseState } from "@/utils/common.types";
 import { useState } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { GiOpenBook } from "react-icons/gi";
+import { PdfHooks } from "../..";
 
 
 interface ShowQuestionContentProps {
-    questionHooks:{
-        showQuestions:UseState<boolean>,
-        questionList:UseState<QuestionPdf[]>,
-        showQuestion:UseState<QuestionPdf | null>,
-        askQuestion:UseState<boolean>,
-        details:UseState<Pdf | null>,
-    }
+    questionHooks:PdfHooks
 }
 
 
