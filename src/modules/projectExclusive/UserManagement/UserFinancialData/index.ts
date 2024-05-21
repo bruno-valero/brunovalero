@@ -471,9 +471,9 @@ export default class UserFinancialData {
         const user = resp.data() as Omit<UsersUser, 'control'>
 
         const plansResp = await admin_firestore.collection('control').doc('plans').collection('readPdf').doc('free').get();
-        const freePlan = plansResp.data() as ControlPlanReadPdfPlans;
+        const plan = plansResp.data() as ControlPlanReadPdfPlans;
 
-        await this.subscribeToPlan({ user, plan:freePlan.stripePrice });
+        await this.subscribeToPlan({ user, plan:plan[isProduction ? 'stripePrice' : 'stripePriceDev']! });
     }
 
     async subscribeToStandardPlan(uid:string) {
@@ -481,9 +481,9 @@ export default class UserFinancialData {
         const user = resp.data() as Omit<UsersUser, 'control'>
 
         const plansResp = await admin_firestore.collection('control').doc('plans').collection('readPdf').doc('standard').get();
-        const freePlan = plansResp.data() as ControlPlanReadPdfPlans;
+        const plan = plansResp.data() as ControlPlanReadPdfPlans;
 
-        await this.subscribeToPlan({ user, plan:freePlan.stripePrice });
+        await this.subscribeToPlan({ user, plan:plan[isProduction ? 'stripePrice' : 'stripePriceDev']! });
     }
 
     async subscribeToEnterprisePlan(uid:string) {
@@ -491,9 +491,9 @@ export default class UserFinancialData {
         const user = resp.data() as Omit<UsersUser, 'control'>
 
         const plansResp = await admin_firestore.collection('control').doc('plans').collection('readPdf').doc('enterprise').get();
-        const freePlan = plansResp.data() as ControlPlanReadPdfPlans;
+        const plan = plansResp.data() as ControlPlanReadPdfPlans;
 
-        await this.subscribeToPlan({ user, plan:freePlan.stripePrice });
+        await this.subscribeToPlan({ user, plan:plan[isProduction ? 'stripePrice' : 'stripePriceDev']! });
     }
 
     async updateUpcomingPlan({ uid, upcomingPlanData }:{ uid:string, upcomingPlanData:NonNullable<UsersControl['financialData']['upcomingPlans']>['readPdf'] | null }) {

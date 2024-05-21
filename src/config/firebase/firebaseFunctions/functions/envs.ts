@@ -1,4 +1,4 @@
-export const isProduction = false;
+export const isProduction = true;
 
 const envs:Envs = { 
   isProduction,

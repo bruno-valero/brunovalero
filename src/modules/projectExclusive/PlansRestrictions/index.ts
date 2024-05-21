@@ -1,3 +1,4 @@
+import { isProduction } from "@/envs";
 import { ControlPlanReadPdfPlans } from "@/src/config/firebase-admin/collectionTypes/control";
 import { Pdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
 import { admin_firestore } from "@/src/config/firebase-admin/config";
@@ -47,7 +48,7 @@ export default class PlansRestrictions {
         })
 
         const data:ControlPlanReadPdfPlans = {
-            stripePrice,
+            [isProduction ? 'stripePrice' : 'stripePriceDev']:stripePrice,
             customName:'Básico',
             questionsPerMonth:{
                 amount:'unlimited',
@@ -121,7 +122,7 @@ export default class PlansRestrictions {
 
         const data:ControlPlanReadPdfPlans = {
             customName:'Empreendedor',
-            stripePrice,
+            [isProduction ? 'stripePrice' : 'stripePriceDev']:stripePrice,
             questionsPerMonth:{
                 amount:'unlimited',
                 price:0.06
@@ -194,7 +195,7 @@ export default class PlansRestrictions {
 
         const data:ControlPlanReadPdfPlans = {
             customName:'Prêmium',
-            stripePrice,
+            [isProduction ? 'stripePrice' : 'stripePriceDev']:stripePrice,
             questionsPerMonth:{
                 amount:'unlimited',
                 price:0.06
