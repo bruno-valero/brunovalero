@@ -312,6 +312,8 @@ export default function PdfList() {
     const hasInsufficientCredits = useCallback(({message, title, privilege}:{message?:string, title?:string, privilege?:'coverGenerationForPrivateDocs' | 'pdfUpload' | 'questions' | 'quizGenerationPrivateDocs' | 'quizGenerationPublicDocs'}) => {
         const credits = financialData?.credits ?? 0;
         let priv = 0;
+        // alert(`privilege: ${privilege}`);
+        // alert(`privilegesData[privilege]: ${JSON.stringify(privilegesData, null, 2)}`);
         if (privilege && privilegesData[privilege]) {
             priv = privilegesData[privilege];
         }
@@ -320,7 +322,7 @@ export default function PdfList() {
             return true;
         }
         return false;
-    }, [setAlertBuyPoints, financialData]);
+    }, [setAlertBuyPoints, financialData, privilegesData]);
 
     const hasPaymentMethods = useCallback(() => {
         const paymentMethods = (financialData?.paymentMethods ?? 0);
