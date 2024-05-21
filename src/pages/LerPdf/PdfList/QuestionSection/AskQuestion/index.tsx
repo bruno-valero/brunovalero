@@ -1,9 +1,8 @@
 import { Textarea } from "@/components/ui/textarea";
-import { Pdf, QuestionPdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
+import { QuestionPdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
 import colors from "@/src/constants/colors";
 import Post from "@/src/modules/Request/Post";
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
-import { UseState } from "@/utils/common.types";
 import cutTextMask from "@/utils/functions/masks/cutTextMask";
 import { useForm } from "react-hook-form";
 import { IoSendSharp } from "react-icons/io5";
@@ -12,16 +11,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from "react";
 import { RxDotFilled } from "react-icons/rx";
 import z from "zod";
-import { PdfFunctions } from "../..";
+import { PdfFunctions, PdfHooks } from "../..";
 
 interface AskQuestionProps {
-    questionHooks:{
-        showQuestions:UseState<boolean>,
-        questionList:UseState<QuestionPdf[]>,
-        showQuestion:UseState<QuestionPdf | null>,
-        askQuestion:UseState<boolean>,
-        details:UseState<Pdf | null>,
-    },
+    questionHooks:PdfHooks,
     functions:PdfFunctions,
 }
 
@@ -45,6 +38,7 @@ export default function AskQuestion({ questionHooks, functions }:AskQuestionProp
     const [ showQuestion, setShowQuestion ] = questionHooks?.showQuestion ?? [];
     const [askQuestion, setAskQuestion] = questionHooks?.askQuestion ?? [];
     const [details, setDetails] = questionHooks?.details ?? [];
+    const privileges = questionHooks.privilegesData ?? [];
 
     const { register, handleSubmit, formState:{ errors } } = useForm<Question>({ resolver:zodResolver(questionSchema) });   
 
