@@ -1,4 +1,4 @@
-export const isProduction = false;
+export const isProduction = true;
 export const useCloudFunctions = true;
 
 const envs:Envs = { 
