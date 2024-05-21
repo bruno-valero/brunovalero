@@ -247,8 +247,8 @@ export default class UserFinancialData {
         const snap = await admin_firestore.collection('users').doc(uid).get();
         const user = (snap.exists ? snap.data() : null) as UsersUser | null;
         if (!user) return null;
-
-        const stripeId = user[this.stripeId]
+        // user[this.stripeId]
+        const stripeId = await this.userManagement.getStripeId({ uid:user.uid, userData:user });
         const paymentMethods = await this.stripe.stripe.customers.listPaymentMethods(stripeId);
         const pmAmount = paymentMethods.data.length;
         await admin_firestore.collection('users').doc(uid).collection('control').doc('financialData').update({ paymentMethods:pmAmount })
