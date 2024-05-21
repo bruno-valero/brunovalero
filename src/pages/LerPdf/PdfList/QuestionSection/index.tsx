@@ -1,23 +1,14 @@
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import { useMemo } from "react";
 
-import { Pdf, QuestionPdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
+import { QuestionPdf } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
 import colors from "@/src/constants/colors";
-import { UseState } from "@/utils/common.types";
-import { PdfFunctions } from "..";
+import { PdfFunctions, PdfHooks } from "..";
 import AskQuestion from "./AskQuestion";
 import ShowQuestionContent from "./ShowQuestionContent";
 
 interface QuestionSectionProps {
-    questionHooks:{
-        showQuestions:UseState<boolean>,
-        questionList:UseState<QuestionPdf[]>,
-        showQuestion:UseState<QuestionPdf | null>,
-        askQuestion:UseState<boolean>,
-        details:UseState<Pdf | null>,
-        showQuestionList:UseState<boolean>,
-        search:UseState<string>,
-    },
+    questionHooks:PdfHooks,
     functions:PdfFunctions,
     
 }
