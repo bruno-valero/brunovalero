@@ -27,7 +27,7 @@ export default function ListMenu({ getPdfRef, questionHooks, functions }:{ getPd
 
     const { genres, selectedGenres:[selectedGenres, setSelectedGenres], privilegesData, financialData } = questionHooks ?? { genres:0, selectedGenres:[1,2] };
 
-
+    // alert(JSON.stringify(privilegesData, null, 2))
     async function uploadToStorage(pdf:File) {
         if (!globalUser.data) {
             setPublicError({
