@@ -40,9 +40,9 @@ export default class PdfPricing {
         }
         await admin_firestore.collection('control').doc('pricing').set(update);
         const plans = new PlansRestrictions();
-        await plans.createreadPdfFreePlan(this.data.plansValue.free);
-        await plans.createreadPdfStandardPlan(this.data.plansValue.standard);
-        await plans.createreadPdfEnterprisePlan(this.data.plansValue.enterprise);
+        await plans.createreadPdfFreePlan(this.data.plansValue.free * 100 );
+        await plans.createreadPdfStandardPlan(this.data.plansValue.standard * 100 );
+        await plans.createreadPdfEnterprisePlan(this.data.plansValue.enterprise * 100 );
     };
 
     async get() {
