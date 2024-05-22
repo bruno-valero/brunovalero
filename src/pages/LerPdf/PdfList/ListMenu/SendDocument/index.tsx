@@ -84,7 +84,7 @@ export default function SendDocument({ questionHooks, functions }:{ questionHook
         if (getPdfRef.current) {
             getPdfRef.current.value = '';
         };
-        
+
         setLoad(false);        
     };
 
@@ -98,6 +98,7 @@ export default function SendDocument({ questionHooks, functions }:{ questionHook
 
 
     return (
+        dimensions &&
         <Popover>
             <PopoverTrigger className={twMerge("p-3 text-white font-bold rounded shadow flex items-center justify-center gap-2", dimensions.width < 500 && 'p-2')} style={{backgroundColor:colors.valero()}} >
                 <TiPlus color="white" size={dimensions.width < 500 ? 15 : 25} />
