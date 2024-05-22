@@ -94,8 +94,10 @@ export default class UserFinancialData {
                 amount:String(amount),               
             }
         })
-
         const pi = await stripe.stripe.paymentIntents.retrieve(pI.id);
+        // console.log(`pi: ${pi.id}`)
+        if (pi.status !== 'succeeded') throw new Error("Houve um erro no pagamento");
+
         await this.updatePointsAmount(pi, amount);
     };
 
