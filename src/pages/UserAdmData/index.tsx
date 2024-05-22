@@ -124,6 +124,7 @@ export default function UserAdmData() {
         const metadata = {
             uid:globalUser.data?.uid ?? '',
         }
+        alert(JSON.stringify(cus, null, 2))
         await requestSetupIntent({ customer, metadata });
     };
 

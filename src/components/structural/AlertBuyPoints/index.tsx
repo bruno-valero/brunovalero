@@ -37,6 +37,7 @@ export function AlertBuyPoints() {
   const { envs } = globalState.fromServer;
 
   const [loading, setLoading] = useState(false);
+  const [requestError, setRequestError] = useState('');
 
   const { formState:{ errors }, handleSubmit, register } = useForm<Points>({ resolver:zodResolver(pointsSchema) })
 
@@ -58,9 +59,18 @@ export function AlertBuyPoints() {
 
     const resp = await post.send();
     const respData = await resp?.json() as { data?:boolean, error?:string };
-
+    // alert(JSON.stringify(respData, null, 2))
     setLoading(false);
-    closeRef.current?.click();
+    if (!respData.error) {
+      closeRef.current?.click();
+    } else {
+      const regex = new RegExp('Your card was declined', 'ig');
+      if (regex.test(respData.error)) {
+        setRequestError(`Seu cartão foi recusado.`);
+        return;
+      };
+      setRequestError(`A cobrança não foi realizada. Verirque seu cartão.`);
+    };
   } 
 
   return (
@@ -89,11 +99,18 @@ export function AlertBuyPoints() {
               </div>
               {errors.points && <span className="text-sm font-semibold text-red-500" >{errors.points.message}</span>}              
 
+                {/* esse botao fica invisivel */}
                 <button ref={confirmRef} type="submit" disabled={loading} className="text-white rounded shadow p-3 px-5 hidden" style={{backgroundColor:colors.valero()}} >
                   {loading ? `Aguarde...` :`Comprar`}
                 </button>
 
             </form>
+
+            {requestError && (
+              <div className="w-full my-2 mb-3" >
+                <span className="text-red-600 font-bold text-lg" >{requestError}</span>
+              </div>
+            )}
 
             <div className="flex gap-2 items-center justify-center mt-1" >               
                 
