@@ -84,14 +84,20 @@ export default class VectorStoreProcess {
         const loader = new PDFLoader(blob);
         console.log('carregando blob...');
         const pdf = (await loader.load());
+
+        const checkMetadataValue = (value:any) => {
+            if (typeof value === 'string') return value;
+            return '';
+        }
+
         const data:PdfParsedData = pdf.map(item => {
             const info = {
                 source:item.metadata?.source,
                 type:'pdf',
                 genres:genres ?? [],
-                title:(item.metadata?.pdf?.info?.Title ?? '').trim() || 'desconhecido',
-                author:(item.metadata?.pdf?.info?.Author ?? '').trim() || 'desconhecido',
-                page:`${(item.metadata?.loc?.pageNumber ?? '').trim()}` || 'desconhecido',                
+                title:checkMetadataValue(item.metadata?.pdf?.info?.Title ?? '').trim() || 'desconhecido',
+                author:checkMetadataValue(item.metadata?.pdf?.info?.Author ?? '').trim() || 'desconhecido',
+                page:`${checkMetadataValue(item.metadata?.loc?.pageNumber ?? '').trim()}` || 'desconhecido',                
                 docId,                
             };
             return {
