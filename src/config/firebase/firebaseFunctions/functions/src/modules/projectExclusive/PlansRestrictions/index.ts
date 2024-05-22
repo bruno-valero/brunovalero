@@ -1,9 +1,11 @@
 import { isProduction } from "../../../../envs";
 import { ControlPlanReadPdfPlans } from "../../../../src/config/firebase-admin/collectionTypes/control";
-import { Pdf } from "../../../../src/config/firebase-admin/collectionTypes/pdfReader";
 import { admin_firestore } from "../../../../src/config/firebase-admin/config";
 import UserActions from "../UserActions";
 import UserFinancialData from "../UserManagement/UserFinancialData";
+
+
+
 
 
 
@@ -255,59 +257,63 @@ export default class PlansRestrictions {
         
         // console.log(`action: ${action}`);
         // console.log(`active Plan: ${fiancialData.activePlan.readPdf}`);
-        const plan = await this.getPlan(service, fiancialData.activePlan.readPdf);
+        // const plan = await this.getPlan(service, fiancialData.activePlan.readPdf);
         // console.log(`Plan: ${JSON.stringify(plan, null, 2)}`);
 
         if (action === 'pdfUploads') {
-            const planPerMonth = (plan?.pdfUploadsPerMonth)?.amount;
-            const planTotal = plan?.docsPeruser
-            if (typeof planPerMonth === 'undefined' || typeof planTotal === 'undefined') return false;
-            if (planPerMonth === 'unlimited' && planTotal === 'unlimited') return true;
-            // total de uploads
-            const total = (await admin_firestore.collection('services').doc('readPdf').collection('data').count().get()).data().count;
-            const numberOnTotal = typeof planTotal == 'number' 
-            const numberOnMonth = typeof planPerMonth == 'number' 
-            if (numberOnTotal && numberOnMonth) {
-                const isOnActionLimit = await this.userActions.inOnActionLimit({ uid, action, service, limit:planPerMonth });
-                if (planTotal <= total || isOnActionLimit) return false;
-            };
+            // const planPerMonth = (plan?.pdfUploadsPerMonth)?.amount;
+            // const planTotal = plan?.docsPeruser
+            // if (typeof planPerMonth === 'undefined' || typeof planTotal === 'undefined') return false;
+            // if (planPerMonth === 'unlimited' && planTotal === 'unlimited') return true;
+            // // total de uploads
+            // const total = (await admin_firestore.collection('services').doc('readPdf').collection('data').count().get()).data().count;
+            // const numberOnTotal = typeof planTotal == 'number' 
+            // const numberOnMonth = typeof planPerMonth == 'number' 
+            // if (numberOnTotal && numberOnMonth) {
+            //     const isOnActionLimit = await this.userActions.inOnActionLimit({ uid, action, service, limit:planPerMonth });
+            //     if (planTotal <= total || isOnActionLimit) return false;
+            // };
+            return true;
         } else if(action === 'questions') {
-            const planPerMonth = (plan?.questionsPerMonth)?.amount;
-            if (typeof planPerMonth === 'undefined') return false;
-            if (planPerMonth === 'unlimited') return true;
-            const isOnActionLimit = await this.userActions.inOnActionLimit({ uid, action, service, limit:planPerMonth });
-            return !isOnActionLimit;
+            // const planPerMonth = (plan?.questionsPerMonth)?.amount;
+            // if (typeof planPerMonth === 'undefined') return false;
+            // if (planPerMonth === 'unlimited') return true;
+            // const isOnActionLimit = await this.userActions.inOnActionLimit({ uid, action, service, limit:planPerMonth });
+            // return !isOnActionLimit;
+            return true;
         } else if (action === 'coverGeneration') {
             
-            const planVal = plan?.coverPerDoc.amount;
-            if(planVal === 'unlimited') return true;
+            // const planVal = plan?.coverPerDoc.amount;
+            // if(planVal === 'unlimited') return true;
 
-            const resp = await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).get();
-            const pdf = (resp.exists ? resp.data() : null) as Pdf | null;
-            if (!pdf) return false;
-            const images = pdf.imageCover.length;
-            if (images >= (planVal ?? 0)) return false;
+            // const resp = await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).get();
+            // const pdf = (resp.exists ? resp.data() : null) as Pdf | null;
+            // if (!pdf) return false;
+            // const images = pdf.imageCover.length;
+            // if (images >= (planVal ?? 0)) return false;
+            // return true;
             return true;
         } else if (action === 'quizGeneration') {
 
-            const planPrivate = plan?.quizPerDoc.privateDoc.amount;
-            const planPublic = plan?.quizPerDoc.publicDoc.amount;
+            // const planPrivate = plan?.quizPerDoc.privateDoc.amount;
+            // const planPublic = plan?.quizPerDoc.publicDoc.amount;
 
-            if(planPrivate === 'unlimited' && planPublic === 'unlimited') return true;
-            const resp = await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).get();
-            const pdf = (resp.exists ? resp.data() : null) as Pdf | null;
-            if (!pdf) return false;
-            const isPublic = pdf.userId === uid;
-            const quizNumber = (await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).collection('quiz').count().get()).data().count;
-            if (isPublic) {
-                if (planPublic === 'unlimited') return true;
-                if (quizNumber >= (planPublic ?? 0)) return false;
-                return true;
-            } else {
-                if (planPrivate === 'unlimited') return true;
-                if (quizNumber >= (planPrivate ?? 0)) return false;
-                return true;
-            }
+            // if(planPrivate === 'unlimited' && planPublic === 'unlimited') return true;
+            // const resp = await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).get();
+            // const pdf = (resp.exists ? resp.data() : null) as Pdf | null;
+            // if (!pdf) return false;
+            // const isPublic = pdf.userId === uid;
+            // const quizNumber = (await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).collection('quiz').count().get()).data().count;
+            // if (isPublic) {
+            //     if (planPublic === 'unlimited') return true;
+            //     if (quizNumber >= (planPublic ?? 0)) return false;
+            //     return true;
+            // } else {
+            //     if (planPrivate === 'unlimited') return true;
+            //     if (quizNumber >= (planPrivate ?? 0)) return false;
+            //     return true;
+            // }
+            return true;
         }
         
         
