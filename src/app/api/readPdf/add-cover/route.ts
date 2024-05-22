@@ -28,7 +28,7 @@ export async function POST(req:Request) {
         const items = Object.entries(vectorStore.indexes).filter(item => !!item[1]);
         const v = new VectorStoreProcess();
         const vectorIndex = await v.checkNamespacesAmount(items[0][0]);
-        const images = (new Images()).addNewImage({ docId, userId:user.uid, autoBuy, minCredits:5, vectorIndex });
+        const images = await (new Images()).addNewImage({ docId, userId:user.uid, autoBuy, minCredits:5, vectorIndex });
 
         return NextResponse.json({data:images});
     } catch (e:any) {

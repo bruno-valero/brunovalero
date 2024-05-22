@@ -21,6 +21,7 @@ export default function BuyDefaultCreditsAmount({ amount }:{ amount:number }) {
     const [alertBuyPoints, setAlertBuyPoints] = globalState.alertBuyPoints ?? [];
 
     const [Loading, setLoading] = useState(false);
+    const [requestError, setRequestError] = useState('');
 
     async function buyCredits(amount:number) {
 
@@ -37,6 +38,15 @@ export default function BuyDefaultCreditsAmount({ amount }:{ amount:number }) {
 
         setLoading(false);
 
+        if (respData.error) {
+            const regex = new RegExp('Your card was declined', 'ig');
+            if (regex.test(respData.error)) {
+                setRequestError(`Seu cartão foi recusado.`);
+                return;
+            };
+            setRequestError(`A cobrança não foi realizada. Verirque seu cartão.`);
+        }
+
     }
 
     return (
@@ -52,7 +62,11 @@ export default function BuyDefaultCreditsAmount({ amount }:{ amount:number }) {
                 <span>
                     Deseja comprar <span className="font-bold" >{moneyMask(amount)}</span> de Créditos?
                 </span>
-
+                {requestError && (
+                    <div className="w-full my-2 mb-3" >
+                        <span className="text-red-600 font-bold text-lg" >{requestError}</span>
+                    </div>
+                )}
                 <button onClick={() => buyCredits(amount)} disabled={Loading} className="w-full p-3 bg-green-800 text-white font-semibold text-lg rounded shadow mt-3" >
                     {Loading ? `Aguarde...` :`Confirmar`}
                 </button>

@@ -5,14 +5,13 @@ import colors from "@/src/constants/colors";
 import Post from "@/src/modules/Request/Post";
 import { useGlobalProvider } from "@/src/providers/GlobalProvider";
 import cutTextMask from "@/utils/functions/masks/cutTextMask";
-import moneyMask from "@/utils/functions/masks/moneyMask";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { ChangeEvent, RefObject } from "react";
 import { FaFilter } from "react-icons/fa";
 import { MdPriceChange } from "react-icons/md";
-import { TiPlus } from "react-icons/ti";
 import { twMerge } from "tailwind-merge";
 import { PdfFunctions, PdfHooks } from "..";
+import SendDocument from "./SendDocument";
 
 
 export default function ListMenu({ getPdfRef, questionHooks, functions }:{ getPdfRef:RefObject<HTMLInputElement>, questionHooks: PdfHooks, functions: PdfFunctions }) {
@@ -201,25 +200,8 @@ export default function ListMenu({ getPdfRef, questionHooks, functions }:{ getPd
                     </PopoverContent>
                 </Popover>
 
-                <Popover>
-                    <PopoverTrigger className={twMerge("p-3 text-white font-bold rounded shadow flex items-center justify-center gap-2", dimensions.width < 500 && 'p-2')} style={{backgroundColor:colors.valero()}} >
-                        <TiPlus color="white" size={dimensions.width < 500 ? 15 : 25} />
-                        <span>{dimensions.width < 500 ? cutTextMask(`Novo Documento`, 10) : `Novo Documento`}</span>   
-                    </PopoverTrigger>
-                    <PopoverContent className="flex flex-col" >   
-                        <span className="mt-2 text-green-700 font-semibold" >
-                            {privilegesData.pdfUpload ? `Você possui ${privilegesData.pdfUpload} uploads de PDFs gratuitos` : `Faça o upload de um PDF por apenas ${moneyMask(questionHooks.pricing?.readPdf.actionsValue.pdfUpload ?? 0)} a cada ${(100_000).toLocaleString()} palavras.`}
-                        </span>  
-                        <span className="font-semibold mt-2 mb-3 text-gray-800 text-sm" >
-                            Seu documento será armazenado de forma priada, <span className="font-black" >ningém terá acesso a ele.</span>
-                        </span>                   
-                        <button onClick={() => uploadPDF()} className="p-3 w-full text-white font-bold rounded shadow flex items-center justify-center gap-2" style={{backgroundColor:colors.valero()}} >                            
-                            <span>Enviar Documento</span>                                        
-                        </button>
-                    </PopoverContent>
-                </Popover>
+                <SendDocument {...{ questionHooks, functions }} />
 
-                <input ref={getPdfRef} type="file" accept=".pdf" onChange={uploadDocuments} className="hidden" multiple />
             </>
         )
     );

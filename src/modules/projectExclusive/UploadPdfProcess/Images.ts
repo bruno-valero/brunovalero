@@ -158,7 +158,7 @@ export default class Images {
         const { textResponse:description, price:descriptionPrice } = await this.description.generateDescription(docId, vectorIndex);
         const { imageURL, inputContent, descriptionSummary, price:imagePrice } = await this.generateImageFromDescription(description, 'slim');
 
-        const { blob:imageBlob, path, url } = await this.uploadImageToStorage({ userId, fileName:docId, imageURL, uploadContent:'cover' });
+        const { blob:imageBlob, path, url, sizes } = await this.uploadImageToStorage({ userId, fileName:docId, imageURL, uploadContent:'cover' });
 
         const doc = await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).get();
         const docContent = (doc.exists ? doc.data() : null) as Pdf | null;
@@ -169,7 +169,7 @@ export default class Images {
         });
 
         
-        const newImage = {url, active:true, storagePath:path};
+        const newImage:Pdf['imageCover'][0] = {url, active:true, storagePath:path, sizes};
 
         const imageCover = [...covers, newImage];
         
