@@ -69,10 +69,10 @@ export default function QuizSection({ functions, questionHooks }:{ functions:Pdf
     async function createQuiz(data:From) {
         const log = functions.isLogged();
         if (!log) return;
-        const privilege = globalUser?.data?.uid === details?.id ? `quizGenerationPrivateDocs` : `quizGenerationPublicDocs`
+        const privilege = globalUser?.data?.uid === details?.userId ? `quizGenerationPrivateDocs` : `quizGenerationPublicDocs`
         const hasInsufficientCredits = functions.hasInsufficientCredits({ privilege });
         if (hasInsufficientCredits) return;
-
+        // if (0 < 1) return;
         setLoadQuizCreation(true);
         console.log(data);
 
