@@ -27,7 +27,7 @@ export default async function readPdfAddQuizRoute(req:Request) {
         const items = Object.entries(vectorStore.indexes).filter(item => !!item[1]);
         const v = new VectorStoreProcess();
         const vectorIndex = await v.checkNamespacesAmount(items[0][0]);
-        const images = (new Quiz()).addQuiz({ quizFocus, docId, isPublic:false, userId:user.uid, autoBuy, minCredits:5, vectorIndex })
+        const images = await (new Quiz()).addQuiz({ quizFocus, docId, isPublic:false, userId:user.uid, autoBuy, minCredits:5, vectorIndex })
 
         return {data:images};
     } catch (e:any) {

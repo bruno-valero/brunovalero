@@ -84,7 +84,7 @@ export default function QuizSection({ functions, questionHooks }:{ functions:Pdf
         post.addData({ docId:details?.id, uid:globalUser.data?.uid, autoBuy:false, quizFocus:data.quizFocus });
         const resp = await post.send();
         const quiz = await resp?.json();
-        alert(JSON.stringify(quiz, null, 2))
+        // alert(JSON.stringify(quiz, null, 2))
         console.log(`Quiz: ${quiz}`);
         setLoadQuizCreation(false);
     };
