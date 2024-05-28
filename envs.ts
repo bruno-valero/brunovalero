@@ -14,6 +14,9 @@ const envs:Envs = {
   FIREBASE_MESSAGING_SENDER_ID: process.env.FIREBASE_MESSAGING_SENDER_ID, 
   FIREBASE_APP_ID: process.env.FIREBASE_APP_ID, 
   FIREBASE_MEASUREMENT_ID: process.env.FIREBASE_MEASUREMENT_ID, 
+  // ------------------------------------------------------------------------------ 
+  // FIREBASE_ADMIN
+  FIREBASE_ADMIN_JSON:process.env.FIREBASE_ADMIN_JSON,
   // ------------------------------------------------------------------------------
   // SUPRABASE
   SUPRABASE_PASSWORD:process.env.SUPRABASE_PASSWORD,
@@ -56,6 +59,9 @@ export type Envs = {
   FIREBASE_MESSAGING_SENDER_ID: string | undefined, 
   FIREBASE_APP_ID: string | undefined, 
   FIREBASE_MEASUREMENT_ID: string | undefined, 
+  // ------------------------------------------------------------------------------ 
+  // FIREBASE_ADMIN
+  FIREBASE_ADMIN_JSON: string | undefined, 
   // ------------------------------------------------------------------------------
   // SUPRABASE
   SUPRABASE_PASSWORD:string | undefined,

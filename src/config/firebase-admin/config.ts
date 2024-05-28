@@ -1,15 +1,16 @@
+import envs from '@/envs';
 import { credential } from 'firebase-admin';
 import { getApps, initializeApp, ServiceAccount } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
-import serviceAccount from './brunovalero-49561-2591a402058e.json';
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
 const credentials = credential
 const apps = getApps()
+const cert = JSON.parse(envs.FIREBASE_ADMIN_JSON ?? '') as ServiceAccount;
 const app = apps[0] ?? initializeApp({
-  credential:credentials.cert(serviceAccount as ServiceAccount),
+  credential:credentials.cert(cert),
 });
 
 export const admin_firestore = getFirestore(app);

@@ -1,17 +1,22 @@
 export const isProduction = true;
+export const useCloudFunctions = true;
 
 const envs:Envs = { 
   isProduction,
+  useCloudFunctions,
   // ------------------------------------------------------------------------------ 
   // FIREBASE 
-  FIREBASE_API_KEY: process.env.ENV_FIREBASE_API_KEY, 
-  FIREBASE_AUTH_DOMAIN: process.env.ENV_FIREBASE_AUTH_DOMAIN, 
-  FIREBASE_DATABASE_URL: process.env.ENV_FIREBASE_DATABASE_URL, 
-  FIREBASE_PROJECT_ID: process.env.ENV_FIREBASE_PROJECT_ID, 
-  FIREBASE_STORAGE_BUCKET: process.env.ENV_FIREBASE_STORAGE_BUCKET, 
-  FIREBASE_MESSAGING_SENDER_ID: process.env.ENV_FIREBASE_MESSAGING_SENDER_ID, 
-  FIREBASE_APP_ID: process.env.ENV_FIREBASE_APP_ID, 
-  FIREBASE_MEASUREMENT_ID: process.env.ENV_FIREBASE_MEASUREMENT_ID, 
+  FIREBASE_API_KEY: process.env.FIREBASE_API_KEY, 
+  FIREBASE_AUTH_DOMAIN: process.env.FIREBASE_AUTH_DOMAIN, 
+  FIREBASE_DATABASE_URL: process.env.FIREBASE_DATABASE_URL, 
+  FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID, 
+  FIREBASE_STORAGE_BUCKET: process.env.FIREBASE_STORAGE_BUCKET, 
+  FIREBASE_MESSAGING_SENDER_ID: process.env.FIREBASE_MESSAGING_SENDER_ID, 
+  FIREBASE_APP_ID: process.env.FIREBASE_APP_ID, 
+  FIREBASE_MEASUREMENT_ID: process.env.FIREBASE_MEASUREMENT_ID, 
+  // ------------------------------------------------------------------------------ 
+  // FIREBASE_ADMIN
+  FIREBASE_ADMIN_JSON:process.env.FIREBASE_ADMIN_JSON,
   // ------------------------------------------------------------------------------
   // SUPRABASE
   SUPRABASE_PASSWORD:process.env.SUPRABASE_PASSWORD,
@@ -43,6 +48,7 @@ export default envs;
  
 export type Envs = { 
   isProduction:boolean,
+  useCloudFunctions:boolean,
   // ------------------------------------------------------------------------------ 
   // FIREBASE 
   FIREBASE_API_KEY: string | undefined, 
@@ -53,6 +59,9 @@ export type Envs = {
   FIREBASE_MESSAGING_SENDER_ID: string | undefined, 
   FIREBASE_APP_ID: string | undefined, 
   FIREBASE_MEASUREMENT_ID: string | undefined, 
+  // ------------------------------------------------------------------------------ 
+  // FIREBASE_ADMIN
+  FIREBASE_ADMIN_JSON: string | undefined, 
   // ------------------------------------------------------------------------------
   // SUPRABASE
   SUPRABASE_PASSWORD:string | undefined,
