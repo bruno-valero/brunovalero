@@ -1,36 +1,16 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Meu Site
 
-## Getting Started
+Para conferir o produto deste projeto, visite [Meu Site.](https://www.brunovalero.com)
 
-First, run the development server:
+Este é um projeto [Next.js](https://nextjs.org/) iniciado com [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Utilizei o [Firebase](https://firebase.google.com/?hl=pt-br) como suporte:
+-  [Firebase Firestore](https://firebase.google.com/docs/firestore?hl=pt-br), como o banco de dados NoSQL.
+-  [Firebase Storage](https://firebase.google.com/docs/storage?hl=pt-br), como o banco de dados de Imagens/PDFs.
+-  [Firebase Functions](https://firebase.google.com/docs/functions?hl=pt-br), como endpoints para realizar requisições que duram acima de 5 segundos (tive que fazer isso, pois as lambda functions do Next.JS na versão gratuita somente duram atém cinco seguntos ativas).
+-  [Firebase Auth](https://firebase.google.com/docs/auth?hl=pt-br), Como autenticador, me provendo uma camada de segurança, pois me possibilita enviar token de autemicação em cada requisição e assim configurar corretamente as regras de segurança do **Firebase Firestore** e do **Firebase Storage**.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Utilizei o [Pinecone](https://www.pinecone.io) como **Banco de Dados Vetorial**, este novo tipo de banco de dados é voltado para a realização de busca semântica. Enquanto nos Banco e Dados convencionais (SQL e NoSQL) nós buscamos por valores, nos Banco de Dados Vetoriais, nós buscamos po **Significado**.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Utilizei o [Stripe](https://stripe.com/br) para configurar as transações financeiras e permitir que os clientes façam assinaturas mensais na plataforma.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
