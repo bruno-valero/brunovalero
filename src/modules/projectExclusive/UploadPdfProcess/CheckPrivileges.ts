@@ -33,7 +33,7 @@ export default class CheckPrivileges {
     }
 
 
-    async check({ quiz, currentAction, userId }:{ quiz?:QuizPdf, userId:string, currentAction:(keyof UsersControl['PrivilegesFreeServices'][0]['privilegeData']['readPdf']); }) {                
+    async check({ quiz, currentAction, userId }:{ quiz?:Partial<QuizPdf>, userId:string, currentAction:(keyof UsersControl['PrivilegesFreeServices'][0]['privilegeData']['readPdf']); }) {                
 
         const privilegesResponse = await admin_firestore.collection('users').doc(userId).collection('control').doc('PrivilegesFreeServices').get();
         const privileges = (privilegesResponse.exists ? privilegesResponse.data() : null) as UsersControl['PrivilegesFreeServices'] | null;        
@@ -42,6 +42,7 @@ export default class CheckPrivileges {
         let  hasSubtracted = false;
         
         if (Object.values(privileges ?? {}).length > 1) {
+            console.log(`Há mais de um privilágio para este usuário.`);
             let activePrivileges:string[];
             if (currentAction === 'quizGeneration') {
                 activePrivileges = Object.values(privileges ?? {}).filter(item => item.privilegeData.readPdf[currentAction as 'quizGeneration'][quiz?.public ? 'publicDocs': 'privateDocs'] > 0).map(item => item.id);
@@ -94,7 +95,9 @@ export default class CheckPrivileges {
         };
 
         console.log(`Atualizando privilégios: ${privileges}`)
-        await admin_firestore.collection('users').doc(userId).collection('control').doc('PrivilegesFreeServices').update(privileges ?? {});
+        if (Object.keys(privileges ?? {}).length > 1) {
+            await admin_firestore.collection('users').doc(userId).collection('control').doc('PrivilegesFreeServices').update(privileges!);
+        }
 
         return { isFree:hasSubtracted }
 

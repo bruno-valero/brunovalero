@@ -28,9 +28,9 @@ export async function POST(req:Request) {
         const items = Object.entries(vectorStore.indexes).filter(item => !!item[1]);
         const v = new VectorStoreProcess();
         const vectorIndex = await v.checkNamespacesAmount(items[0][0]);
-        const images = (new Quiz()).addQuiz({ quizFocus, docId, isPublic:false, userId:user.uid, autoBuy, minCredits:5, vectorIndex })
+        const quiz = await (new Quiz()).addQuiz({ quizFocus, docId, isPublic:false, userId:user.uid, autoBuy, minCredits:5, vectorIndex })
 
-        return NextResponse.json({data:images});
+        return NextResponse.json({data:quiz});
     } catch (e:any) {
         console.log('Houver um erro:', e.message);
         return NextResponse.json({error:`Houve um erro: ${e.message}`});

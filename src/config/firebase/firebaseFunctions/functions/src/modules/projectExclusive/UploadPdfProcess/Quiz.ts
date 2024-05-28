@@ -15,7 +15,7 @@ import { getDatabase } from 'firebase/database';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from "firebase/storage";
 import envs from "../../../../envs";
-import { QuizPdf, QuizPdfTry } from "../../../../src/config/firebase-admin/collectionTypes/pdfReader";
+import { Pdf, QuizPdf, QuizPdfTry } from "../../../../src/config/firebase-admin/collectionTypes/pdfReader";
 import { admin_firestore } from "../../../../src/config/firebase-admin/config";
 import PlansRestrictions from "../PlansRestrictions";
 import UserActions from "../UserActions";
@@ -24,7 +24,6 @@ import CheckPrivileges from "./CheckPrivileges";
 import PdfPricing from "./Pricing";
 // @ts-ignore
 type UploadImageToStorage = ({ userId, fileName, imageURL, uploadContent }:{ userId:string, fileName:string, imageURL:string, uploadContent:'cover' | 'quizSlim' | 'quizWide' }) => Promise<{ blob: Blob; url: string; path: string; }>;
-
 
 
 
@@ -87,7 +86,7 @@ export default class Quiz {
     protected async generateImageFromDescription(text:string, size:'slim' | 'wide') {
 
         const {content, summary} = await this.summaryDescription(text);
-        // @ts-ignore
+
         const { imageURL, inputContent, price } = await this.aiFeatures.generateImage(text, size);
         
         return {imageURL, inputContent:content, descriptionSummary:summary, price};
@@ -110,7 +109,7 @@ export default class Quiz {
         retorne as questões nesse formato:
         [["questao 1", alternativas], ["questao 2", alternativas], ...]
 
-        questões:
+        questoes:
         ${questions}
         `, true);   
 
@@ -119,7 +118,7 @@ export default class Quiz {
         const data = JSON.parse(questionAndAlternatives) as {questoes:[string, ('a' | 'b' | 'c' | 'd' | 'e')[]][]};
         const price = priceVectorSearch + priceQuestions + priceQuestionsAndAlternatives;
 
-        return { data:data.questoes, price, vectorSearchResponse:response };
+        return { data:Object.values(data)[0], price, vectorSearchResponse:response };
     };
     
     protected async generateDescription({ vectorSearchResponse }:{ vectorSearchResponse:VectorStoreProcessSearchResponse }) {
@@ -202,7 +201,8 @@ export default class Quiz {
 
     async generateQuiz({ quizFocus, docId, isPublic, userId, vectorIndex }:{ quizFocus:string, docId:string, isPublic:boolean, userId:string, vectorIndex:string }) {                
         
-        const { price:questionsPrice, data, vectorSearchResponse } = await this.generateQuestions({ quizFocus, docId, vectorIndex });        
+        const { price:questionsPrice, data, vectorSearchResponse } = await this.generateQuestions({ quizFocus, docId, vectorIndex }); 
+        console.log(`questions: ${data}`)       
         const {description, price:priceDescription} = await this.generateDescription({ vectorSearchResponse });
 
         const { price:imagesPrice, ...images } = await this.generateImages({ description })
@@ -211,9 +211,7 @@ export default class Quiz {
         const quizId = String(new Date().getTime());
         const { imageSlim, imageWide } = await this.uploadImages({ userId, quizId, imageSlimURL, imageWideURL });
         
-        // @ts-ignore
         const { imageSlimBlob, pathSlim, urlSlim } = imageSlim;
-        // @ts-ignore
         const { imageWideBlob, pathWide, urlWide } = imageWide;
         
 
@@ -260,7 +258,12 @@ export default class Quiz {
     };
 
     async addQuiz({ quizFocus, docId, isPublic, userId, autoBuy, minCredits, vectorIndex }:{ quizFocus:string, docId:string, isPublic:boolean, userId:string, autoBuy?:boolean, minCredits?:number, vectorIndex:string }) {
-        const { isFree } = await this.checkPrivileges.check({ currentAction:'quizGeneration', userId });
+        const docResp = await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).get()
+        const doc = (docResp.exists ? docResp.data() : null) as Pdf | null;
+        if (!doc) throw new Error("Documento não encontrado");        
+        isPublic = doc.userId !== userId;
+        console.log(`isPublic: ${isPublic}`)
+        const { isFree } = await this.checkPrivileges.check({ currentAction:'quizGeneration', userId, quiz:{public:isPublic} });
         console.log(`A pergnta ${isFree ? 'não será cobrada :)' : 'será cobrada!'}`);
         if (!isFree) {
 
@@ -272,7 +275,6 @@ export default class Quiz {
         const quiz = await this.generateQuiz({ quizFocus, docId, isPublic, userId, vectorIndex });
         await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).collection('quiz').doc(quiz.id).set(quiz);
 
-        // @ts-ignore
         const price = quiz.price;
 
         const pricing = new PdfPricing()
@@ -361,15 +363,12 @@ export default class Quiz {
 
     async newQuizTry({ quiz, quizTryQuestions, userId }:{ quiz:QuizPdf, quizTryQuestions:QuizPdfTry['questions'], userId:string }) {
         const quizQuestions = quiz.questions;
-        // @ts-ignore
         const quizTries = quiz.tries;
         const chunksRelated = quiz.chunksRelated;
         console.log(`quizQuestions: ${JSON.stringify(quizQuestions, null, 2)}\n\n`);
         console.log(`quizTryQuestions: ${JSON.stringify(quizTryQuestions, null, 2)}\n\n`);
-        // @ts-ignore
         const { content:performanceAnalysis, price:pricePerformanceAnalysis, performance } = await this.performanceAnalysis({ quizQuestions, quizTryQuestions });
         console.log(`performanceAnalysis: ${JSON.stringify(performanceAnalysis, null, 2)}\n\n`);
-        // @ts-ignore
         const { content:tipBasedOnPerformance, price:priceTipBasedOnPerformance } = await this.tipBasedOnPerformance({ performanceAnalysis, chunksRelated });
         console.log(`tipBasedOnPerformance: ${JSON.stringify(tipBasedOnPerformance, null, 2)}\n\n`);
         const rightQuestions = performance.filter(item => item.isRightAnswer).length;

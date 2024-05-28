@@ -10,7 +10,7 @@ import VectorStoreProcess, { VectorStoreProcessSearchResponse } from "../../Vect
 import AiFeatures from "./AiFeatures";
 
 import envs from "@/envs";
-import { QuizPdf, QuizPdfTry } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
+import { Pdf, QuizPdf, QuizPdfTry } from "@/src/config/firebase-admin/collectionTypes/pdfReader";
 import { admin_firestore } from "@/src/config/firebase-admin/config";
 import { getApps, initializeApp } from "firebase/app";
 import { getAuth } from 'firebase/auth';
@@ -252,7 +252,12 @@ export default class Quiz {
     };
 
     async addQuiz({ quizFocus, docId, isPublic, userId, autoBuy, minCredits, vectorIndex }:{ quizFocus:string, docId:string, isPublic:boolean, userId:string, autoBuy?:boolean, minCredits?:number, vectorIndex:string }) {
-        const { isFree } = await this.checkPrivileges.check({ currentAction:'quizGeneration', userId });
+        const docResp = await admin_firestore.collection('services').doc('readPdf').collection('data').doc(docId).get()
+        const doc = (docResp.exists ? docResp.data() : null) as Pdf | null;
+        if (!doc) throw new Error("Documento não encontrado");        
+        isPublic = doc.userId !== userId;
+        console.log(`isPublic: ${isPublic}`);
+        const { isFree } = await this.checkPrivileges.check({ currentAction:'quizGeneration', userId, quiz:{public:isPublic} });
         console.log(`A pergnta ${isFree ? 'não será cobrada :)' : 'será cobrada!'}`);
         if (!isFree) {
 
